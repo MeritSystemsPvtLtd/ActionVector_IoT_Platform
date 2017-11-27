@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+        Defaullt (empty) configuration file.
+-->
+<esper-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xmlns="http://www.espertech.com/schema/esper"
+                     xsi:noNamespaceSchemaLocation="esper-configuration-4-0.xsd">
+
+    <event-type name="MemoryStatsEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="RealUsage" class="float"/>
+            <map-property name="MemUsed" class="float"/>
+            <map-property name="MemMax" class="float"/>
+            <map-property name="Cache" class="float"/>
+            <map-property name="Swap" class="float"/>
+            <map-property name="SwapUsed" class="float"/>
+            <map-property name="SwapMax" class="float"/>
+            <map-property name="Buffer" class="float"/>
+            <map-property name="Utilization" class="float"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="LoadAverageEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="Load1" class="float"/>
+            <map-property name="Load5" class="float"/>
+            <map-property name="Load15" class="float"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="MemcacheReadLatencyEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="ElapsedTime" class="float"/>
+            <map-property name="MemcacheServer" class="string"/>
+            <map-property name="MemcachePort" class="string"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="HTTPResponseTimeEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="ResponseTime" class="float"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="ConcurrentProcessesEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="ConcurrentProcesses" class="int"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="SwapStatsEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="SwapUsage" class="float"/>
+            <map-property name="MaxSwaps" class="float"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="ServerStateEvent">
+        <java-util-map>
+            <map-property name="HostName" class="string"></map-property>
+            <map-property name="HostAddress" class="string"></map-property>
+            <map-property name="TimeStamp" class="int"></map-property>
+            <map-property name="OSName" class="string"></map-property>
+            <map-property name="OSRelease" class="string"></map-property>
+            <map-property name="MachineType" class="string"></map-property>
+            <map-property name="BootTime" class="int"></map-property>
+            <map-property name="CpuNum" class="int"></map-property>
+            <map-property name="CpuSpeed" class="int"></map-property>
+            <map-property name="CpuIdle" class="float"></map-property>
+            <map-property name="CpuAidle" class="float"></map-property>
+            <map-property name="CpuNice" class="float"></map-property>
+            <map-property name="CpuUser" class="float"></map-property>
+            <map-property name="CpuSystem" class="float"></map-property>
+            <map-property name="CpuWio" class="float"></map-property>
+            <map-property name="Load1" class="float"></map-property>
+            <map-property name="Load5" class="float"></map-property>
+            <map-property name="Load15" class="float"></map-property>
+            <map-property name="ProcTotal" class="int"></map-property>
+            <map-property name="ProcRun" class="int"></map-property>
+            <map-property name="DiskTotal" class="double"></map-property>
+            <map-property name="DiskFree" class="double"></map-property>
+            <map-property name="PartitionMaxUsed" class="float"></map-property>
+            <map-property name="SwapTotal" class="float"></map-property>
+            <map-property name="SwapFree" class="float"></map-property>
+            <map-property name="MemTotal" class="float"></map-property>
+            <map-property name="MemShared" class="float"></map-property>
+            <map-property name="MemCached" class="float"></map-property>
+            <map-property name="MemFree" class="float"></map-property>
+            <map-property name="MemBuffers" class="float"></map-property>
+            <map-property name="PacketsIn" class="float"></map-property>
+            <map-property name="PacketsOut" class="float"></map-property>
+            <map-property name="BytesIn" class="float"></map-property>
+            <map-property name="BytesOut" class="float"></map-property>
+        </java-util-map>
+    </event-type>
+    <event-type name="ServerLoadEvent">
+        <java-util-map>
+            <map-property name="HostName" class="string"></map-property>
+            <map-property name="HostAddress" class="string"></map-property>
+            <map-property name="TimeStamp" class="string"></map-property>
+            <map-property name="Load1" class="float"></map-property>
+            <map-property name="Load5" class="float"></map-property>
+            <map-property name="Load15" class="float"></map-property>
+        </java-util-map>
+    </event-type>
+    <event-type name="ServerNetworkStatsEvent">
+        <java-util-map>
+            <map-property name="HostName" class="string"></map-property>
+            <map-property name="HostAddress" class="string"></map-property>
+            <map-property name="TimeStamp" class="string"></map-property>
+            <map-property name="PacketsIn" class="float"></map-property>
+            <map-property name="PacketsOut" class="float"></map-property>
+            <map-property name="BytesIn" class="float"></map-property>
+            <map-property name="BytesOut" class="float"></map-property>
+        </java-util-map>
+    </event-type>
+    <event-type name="ServerCpuStatsEvent">
+        <java-util-map>
+            <map-property name="HostName" class="string"></map-property>
+            <map-property name="HostAddress" class="string"></map-property>
+            <map-property name="TimeStamp" class="string"></map-property>
+            <map-property name="CpuNum" class="int"></map-property>
+            <map-property name="CpuSpeed" class="int"></map-property>
+            <map-property name="CpuIdle" class="float"></map-property>
+            <map-property name="CpuAidle" class="float"></map-property>
+            <map-property name="CpuNice" class="float"></map-property>
+            <map-property name="CpuUser" class="float"></map-property>
+            <map-property name="CpuSystem" class="float"></map-property>
+            <map-property name="CpuWio" class="float"></map-property>
+        </java-util-map>
+    </event-type>
+</esper-configuration>

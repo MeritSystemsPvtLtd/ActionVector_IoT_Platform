@@ -1,0 +1,202 @@
+package com.meritsystems.core.configuration;
+
+import java.io.Serializable;
+import java.util.List;
+
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang.StringUtils;
+
+import com.meritsystems.core.ApplicationException;
+import com.meritsystems.core.log.Logger;
+import com.meritsystems.core.log.LoggerFactory;
+
+/**
+ * @author shashi Singleton class
+ */
+public class ConfigurationReader implements Serializable {
+
+    private static Logger logger = LoggerFactory.getLogger(ConfigurationReader.class);
+    public static final String FILE_NAME = "resources/configuration.properties";
+    public static final String SEPARATOR = "#";
+    private static Configuration configuration = null;
+    private static org.apache.commons.configuration.Configuration rawconfig = null;
+
+    /**
+     * @author shashi
+     *
+     */
+    private ConfigurationReader() {
+        super();
+    }
+
+    /**
+     * @param filename
+     * @return
+     * @throws ApplicationException
+     */
+    private static Configuration readConfiguration(String filename) {
+        logger.entering("readConfiguration " + filename);
+        configuration = new Configuration();
+
+        try {
+            rawconfig = new PropertiesConfiguration(filename);
+            mapConfiguration(rawconfig, configuration);
+        } catch (org.apache.commons.configuration.ConfigurationException configex) {
+            logger.severe(configex, "readConfiguration", configex.getMessage());
+            throw new RuntimeException(configex);
+        }
+
+        logger.exiting("readConfiguration " + configuration);
+        return configuration;
+    }
+
+    /**
+     * @param confi
+     * @param configuration
+     */
+    private static void mapConfiguration(org.apache.commons.configuration.Configuration config, Configuration configuration) {
+        logger.entering("mapConfiguration ");
+
+        String appname = config.getString(Configuration.APPNAME);
+        logger.info("App name " + appname);
+        configuration.setAppname(appname);
+
+        String sendtoETLA = config.getString(Configuration.sendtoETL);
+        logger.info("Option to send stream to ETL adapter : " + sendtoETLA);
+        configuration.setOptionETLAdapter(sendtoETLA);
+
+        String customerID = config.getString(Configuration.customerIDPro);
+        logger.info("customerID : " + customerID);
+        configuration.setCustomerID(customerID);
+
+        List<String> urls = config.getList(Configuration.URL);
+        List<String> al_service = config.getList(Configuration.SERVICE);
+        List<String> al_hostname = config.getList(Configuration.HOSTNAME);
+        List<String> al_ip = config.getList(Configuration.IPADDRESS);
+        List<String> al_password = config.getList(Configuration.PASSWORD);
+        List<String> al_username = config.getList(Configuration.USERNAME);
+
+        //watchdog
+        String szwatchdogHost = config.getString(Configuration.WATCHDOG_HOST);
+        String szwatchdogPort = config.getString(Configuration.WATCHDOG_PORT);
+        boolean szwatchdogSend = Boolean.parseBoolean(config.getString(Configuration.WATCHDOG_SEND));
+        configuration.setWatchdogHost(szwatchdogHost);
+        configuration.setWatchdogPort(szwatchdogPort);
+        configuration.setWatchdogSend(szwatchdogSend);
+        logger.info("Got URLS " + urls + "HostNames==" + al_hostname);
+
+        for (int i = 0; i < urls.size(); i++) {
+            //String[] tokens = StringUtils.split(url, SEPARATOR);
+            HostProperties hostProperties = new HostProperties();
+
+            String tmp = null;
+
+            hostProperties.setJmxurl(urls.get(i));
+
+            tmp = al_service.get(i);
+            if (tmp != null) {
+                hostProperties.setClustername(tmp);
+            }
+            tmp = al_hostname.get(i);
+            if (tmp != null) {
+                hostProperties.setHostname(tmp);
+            }
+            tmp = al_ip.get(i);
+            if (tmp != null) {
+                hostProperties.setHostIPaddress(tmp);
+            }
+
+            configuration.addHostProperties(hostProperties);
+        }
+
+
+        String password = config.getString(Configuration.PASSWORD);
+        logger.info("Password " + password);
+        configuration.setPassword(password);
+
+        String userName = config.getString(Configuration.USERNAME);
+        logger.info("UserName " + userName);
+        configuration.setUserName(userName);
+
+        List<String> metrics = config.getList(Configuration.METRICS);
+        logger.info("Got METRICS " + metrics);
+        configuration.setMetrics(metrics);
+
+        List<String> reports = config.getList(Configuration.REPORT);
+        logger.info("Got REPORT " + reports);
+        configuration.setReporters(reports);
+
+        int refreshTime = config.getInt(Configuration.INTERVAL);
+        logger.info("Got INTERVAL " + refreshTime);
+        configuration.setRefreshInterval(refreshTime);
+
+        logger.exiting("mapConfiguration ");
+
+        List<String> classLoadingSubmetrics = config.getList(Configuration.CLAS_SUBMETRICS);
+        logger.info("Got classLoadingSubmetrics  " + classLoadingSubmetrics);
+        configuration.setClassloadingSubmetrics(classLoadingSubmetrics);
+
+        List<String> compilerSubmetrics = config.getList(Configuration.COMP_SUBMETRICS);
+        logger.info("Got compilerSubmetrics  " + compilerSubmetrics);
+        configuration.setCompileSubmetrics(compilerSubmetrics);
+
+        List<String> memoryManagerSubmetrics = config.getList(Configuration.MEMM_SUBMETRICS);
+        logger.info("Got memoryManagerSubmetrics  " + memoryManagerSubmetrics);
+        configuration.setMemorymanagerSubmetrics(memoryManagerSubmetrics);
+
+        List<String> memorySubmetrics = config.getList(Configuration.MEMO_SUBMETRICS);
+        logger.info("Got memorySubmetrics  " + memoryManagerSubmetrics);
+        configuration.setMemorySubmetrics(memorySubmetrics);
+
+        List<String> memoryPoolSubmetrics = config.getList(Configuration.MEMP_SUBMETRICS);
+        logger.info("Got memorySubmetrics  " + memoryManagerSubmetrics);
+        configuration.setMemoryPoolSubmetrics(memoryPoolSubmetrics);
+
+        List<String> garbageSubmetrics = config.getList(Configuration.GARB_SUBMETRICS);
+        logger.info("Got garbageSubmetrics  " + memoryManagerSubmetrics);
+        configuration.setGarbageSubmetrics(garbageSubmetrics);
+
+        List<String> osSubmetrics = config.getList(Configuration.OS_SUBMETRICS);
+        logger.info("Got osSubmetrics  " + osSubmetrics);
+        configuration.setOsSubmetrics(osSubmetrics);
+
+        List<String> runtimeSubmetrics = config.getList(Configuration.RUN_SUBMETRICS);
+        logger.info("Got runtimeSubmetrics  " + runtimeSubmetrics);
+        configuration.setRuntimeSubmetrics(runtimeSubmetrics);
+
+        List<String> threadSubmetrics = config.getList(Configuration.THR_SUBMETRICS);
+        logger.info("Got threadSubmetrics  " + threadSubmetrics);
+        configuration.setThreadSubmetrics(threadSubmetrics);
+
+        List<String> appSubmetrics = config.getList(Configuration.APP_METRICS);
+        logger.info("Got appSubmetrics  " + appSubmetrics);
+        configuration.setAppSubmetrics(appSubmetrics);
+
+    }
+
+    /**
+     * @return @throws ApplicationException
+     */
+    public static Configuration getConfiguration() {
+        if (configuration == null) {
+            configuration = readConfiguration(FILE_NAME);
+        }
+
+        return configuration;
+    }
+
+    /**
+     * @return
+     */
+    public static org.apache.commons.configuration.Configuration getRawconfig() {
+        return rawconfig;
+    }
+
+    /**
+     * @param rawconfig
+     */
+    public static void setRawconfig(
+            org.apache.commons.configuration.Configuration rawconfig) {
+        ConfigurationReader.rawconfig = rawconfig;
+    }
+}

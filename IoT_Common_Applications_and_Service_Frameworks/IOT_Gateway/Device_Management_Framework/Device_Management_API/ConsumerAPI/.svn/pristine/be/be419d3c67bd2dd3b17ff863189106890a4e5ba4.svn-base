@@ -1,0 +1,345 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+
+
+
+import java.util.*;
+import java.util.HashMap;
+import java.io.IOException;
+import java.lang.*;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.*;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class RemoveGroupRole extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(RemoveGroupRole.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+
+        Connection con = null;
+        ResultSet rs = null;
+        StringBuffer results = new StringBuffer("<removegroup-roles>");
+
+        String opStatus = null;
+        String opDescription = null;
+        boolean test = false;
+        String username = null;
+        String sessionid = null;
+        String customerid=null;
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+        Statement statement3 = null;
+        PreparedStatement statement4 = null;
+        Statement statement5 = null;
+        HttpSession sessions = null;
+        ArrayList<String> szRole = new ArrayList<String>();
+
+        String szRoles[] = null;
+        int iGroupLen = 0;
+
+        java.util.Vector VStatusVector = new java.util.Vector();
+        ArrayList<String> szGroupName = new ArrayList<String>();
+        HashMap<String, String> hashMap = new HashMap<String, String>();
+        String szGroupLen = request.getParameter("grouplength");
+        customerid=request.getParameter("customerid");
+        System.out.println("Group length is " + szGroupLen);
+        boolean checksession = true;
+        String szGroupRoles = null;
+        String szGroup = null;
+        String szTemp[] = null;
+        String Temp[] = null;
+        String role = new String();
+        StringBuffer roles = null;
+        String tempRoles[] = null;
+        String tempRole = "";
+        try
+        {
+            sessions = request.getSession(true);
+        //username=request.getParameter("username");
+        //sessionid=request.getParameter("sessionid");
+        } catch (Exception k)
+        {
+            checksession = false;
+            opStatus = "102";
+            opDescription = "Invalid Session";
+            log.error("invalid session");
+
+        }
+
+        if (checksession)
+        {
+            try
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+                log.info("database connected");
+
+                if (con != null)
+                {
+                    try
+                    {
+                        System.out.println("Before getting groupname");
+                        statement3 = con.createStatement();
+                        System.out.println("Statement::" + statement3);
+                        ResultSet rs1 = statement3.executeQuery("SELECT * from " + DBConstants.GROUPNAME_TABLE + " order by groupname");
+                        System.out.println("result set::" + rs1);
+                        System.out.println("result set" + rs1);
+                        while (rs1.next())
+                        {
+
+                            szGroupName.add(rs1.getString("groupname"));
+                        }
+                        statement3.close();
+                        rs1.close();
+                    } catch (Exception e)
+                    {
+                        opStatus = "107";
+                        opDescription = "No data found";
+                        e.printStackTrace();
+                        log.error("no data found", e);
+                    }
+                    try
+                    {
+                        Iterator it = szGroupName.iterator();
+                        while (it.hasNext())
+                        {
+                            szGroup = (String) it.next();
+                            szGroupRoles = (String) request.getParameter(szGroup);
+                            if (szGroupRoles != null)
+                            {
+                                Temp = szGroupRoles.split(",");
+                                statement5 = con.createStatement();
+                                ResultSet rs4 = statement5.executeQuery("select role from gagrouproles where groupname ='" + szGroup + "'");
+                                while (rs4.next())
+                                {
+                                    role = (String) rs4.getString("role");
+                                    tempRoles = role.split(",");
+
+                                    System.out.println("Roles before remove::");
+                                    for (String st : tempRoles)
+                                    {
+                                        System.out.println(st);
+                                    }
+                                    if (tempRoles.length >= Temp.length)
+                                    {
+                                        test = true;
+                                        for (int l = 0; l < tempRoles.length; l++)
+                                        {
+                                            for (int k = 0; k < Temp.length; k++)
+                                            {
+                                                if (tempRoles[l].equalsIgnoreCase(Temp[k]))
+                                                {
+                                                    System.out.println("In test Temp[" + k + "]::" + Temp[k]);
+                                                    tempRoles[l] = "";
+                                                }
+                                            }
+                                        }
+                                    } else
+                                    {
+                                        System.out.println("The given input is wrong it's too long");
+                                        test = false;
+                                        break;
+                                    }
+
+                                    System.out.println("after removing the roles::");
+                                    for (String st1 : tempRoles)
+                                    {
+                                        System.out.println(st1);
+                                    }
+
+                                    if (tempRoles.length > 0 && !tempRoles.equals(null))
+                                    {
+                                        tempRole = tempRoles[0];
+                                        for (int j = 1; j < tempRoles.length; j++)
+                                        {
+                                            if (!tempRoles[j].equals(null) && !tempRoles[j].equals(""))
+                                            {
+                                                tempRole += "," + tempRoles[j];
+                                            }
+                                        }
+                                    } else
+                                    {
+                                        tempRole = null;
+                                    }
+                                    tempRole.trim();
+                                    System.out.println("Roles after remove::" + tempRole);
+                                    if (tempRole != null && !tempRole.equals("null,") && !tempRole.equals(","))
+                                    {
+                                        hashMap.put(szGroup, tempRole);
+                                    } else
+                                    {
+                                        hashMap.put(szGroup, null);
+                                    }
+                                    tempRoles = null;
+                                    Temp = null;
+                                    role = null;
+                                    tempRole = null;
+                                }
+                                rs4 = null;
+                            }
+                            Temp = null;
+                        }
+                        Set st = hashMap.entrySet();
+                        Iterator itr = st.iterator();
+                        if (test)
+                        {
+                            while (itr.hasNext())
+                            {
+                                Map.Entry me = (Map.Entry) itr.next();
+                                if ((String) me.getValue() == null || (String) me.getValue() == "")
+                                {
+                                    statement4 = con.prepareStatement("delete from gagrouproles where groupname=?");
+                                    statement4.setString(1, (String) me.getKey());
+                                    statement4.executeUpdate();
+                                    opStatus = "0";
+                                    opDescription = "Operation success";
+                                } else
+                                {
+                                    statement2 = con.prepareStatement("select * from gagrouproles where groupname=?");
+                                    statement2.setString(1, (String) me.getKey());
+                                    rs = statement2.executeQuery();
+                                    if (rs.next())
+                                    {
+                                        statement4 = con.prepareStatement("update gagrouproles set role=? where groupname=?");
+                                        statement4.setString(1, (String) me.getValue());
+                                        statement4.setString(2, (String) me.getKey());
+                                        statement4.executeUpdate();
+                                    } else
+                                    {
+                                        statement4 = con.prepareStatement("insert into gagrouproles values(?,?)");
+                                        statement4.setString(1, (String) me.getKey());
+                                        statement4.setString(2, (String) me.getValue());
+                                        statement4.executeUpdate();
+                                    }
+
+                                    opStatus = "0";
+                                    opDescription = "Success";
+                                    log.info("operation success");
+                                }
+                            }
+                        } else
+                        {
+                            opStatus = "108";
+                            opDescription = "Invalid Input";
+                            log.info("Invalid input");
+                        }
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        opStatus = "101";
+                        opDescription = "Database Error";
+                        log.error("database error:",e);
+                    }
+                } else
+                {
+                    opStatus = "101";
+                    opDescription = "Unable to connect database";
+                    log.info("unable to connect database");
+                    
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                opStatus = "106";
+                opDescription = "Unable to process request action";
+                log.error("unable to process the request", e);
+            } finally
+            {
+                try
+                {
+                    if (con != null)
+                    {
+                        con.close();
+                        statement4.close();
+                        statement2.close();
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    log.error("error closing connection", e);
+                }
+            }
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid Session login again";
+            log.info("invalid session");
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</removegroup-roles>");
+            response.getWriter().write(results.toString());
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing out put");
+        }finally{
+            results=null;
+        }
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

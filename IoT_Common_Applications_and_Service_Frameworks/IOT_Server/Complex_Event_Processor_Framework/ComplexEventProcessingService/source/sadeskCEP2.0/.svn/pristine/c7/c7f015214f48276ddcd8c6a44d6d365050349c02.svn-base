@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : modules.v1.27012011.xml
+    Author     : Abraham
+    Description:
+        list of EPL modules to be deployed
+-->
+
+<config>
+    <module>
+        FilterNode.v1.27012011.epl
+    </module>
+</config>

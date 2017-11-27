@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FroniusRequests>
+    <!--Request request="GetInverterRealTimeData" scope="Device" deviceIDs="4,5,6" dataCollection="MinMaxInverterData" froEvent="MinMaxInverterEvent"-->
+    <Request request="GetInverterRealTimeData" scope="Device" deviceIDs="1" dataCollection="CommonInverterData" froEvent="InverterRealTimeEvent"/>
+    <Request request="GetInverterRealTimeData" scope="Device" deviceIDs="2" dataCollection="CommonInverterData" froEvent="InverterRealTimeEvent"/>
+    <Request request="GetInverterRealTimeData" scope="Device" deviceIDs="3" dataCollection="CommonInverterData" froEvent="InverterRealTimeEvent"/>
+    <Request request="GetInverterRealTimeData" scope="Device" deviceIDs="4" dataCollection="CommonInverterData" froEvent="InverterRealTimeEvent"/>
+    <Request request="GetInverterRealTimeData" scope="Device" deviceIDs="5" dataCollection="CommonInverterData" froEvent="InverterRealTimeEvent"/>
+    <!--Request request="GetInverterRealTimeData" scope="Device" deviceIDs="3" dataCollection="3PInverterData" froEvent="ThreePhaseInverterEvent"/>
+    <Request request="GetInverterRealTimeData" scope="Device" deviceIDs="10" dataCollection="CommonInverterData" froEvent="InverterRealTimeEvent"/>
+    <Request request="GetInverterRealTimeData" scope="Device" deviceIDs="1" dataCollection="CumulationInverterData" froEvent="InverterRealTimeEventDevice"/>
+    <Request request="GetInverterRealTimeData" scope="System" deviceIDs="" dataCollection="System" froEvent="InverterRealTimeEventSystem"/-->
+    <!--Request request="GetSensorRealTimeData" scope="Device" deviceIDs="0" dataCollection="NowSensorData" froEvent="SensorRealTimeEvent"/>
+    <Request request="GetSensorRealTimeData" scope="Device" deviceIDs="0" dataCollection="MinMaxSensorData" froEvent="SensorMinMaxEvent" />
+    <Request request="GetStringRealTimeData" scope="Device" deviceIDs="3" dataCollection="NowStringControlData" froEvent="StringControlRealTimeEvent"/>
+    <Request request="GetStringRealTimeData" scope="Device" deviceIDs="2" dataCollection="CurrentSumStringControlData" froEvent="StringControlCurrentSumEvent" timePeriod="Day"/>
+    <Request request="GetStringRealTimeData" scope="Device" deviceIDs="2" dataCollection="LastErrorStringControlData" froEvent="StringControlLastErrorEvent"/-->
+</FroniusRequests>
+

@@ -1,0 +1,325 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package businessmodel;
+
+import Model.*;
+import controller.DBConstants;
+import java.util.ArrayList;
+import java.util.*;
+import java.sql.*;
+
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jun 18, 2012, 4:12:02 PM
+ */
+public class AddAttribute
+{
+
+    public static boolean addAttributes(String customerid, java.util.ArrayList<String> tasktypes, javax.servlet.http.HttpServletRequest request)
+    {
+        Connection con = null;
+        PreparedStatement statement = null;
+        PreparedStatement statement8 = null;
+        boolean bFlag = false;
+        int iNumOfAttributes = 0;
+        //String customerid="";
+        String szAttributeName = "";
+        String szAttributeType = "";
+        String szAttributeValue = "";
+        String szPosition = "";
+        String szLinkAttribute = "";
+        String szToolTipMessage = "";
+        String szLinkTableName = "";
+        int iPosition = 0;
+        String szTaskType = "";
+        String szMandatory_Field = "";
+        String szPrevAttributeName = "";
+        String szCopyPolicy = "";
+        String szGetValueFromOtherTable = "";
+
+        String sAGroupNameArray[] = new String[1024];
+        String sASecurityLevelArray[] = new String[1024];
+        String sAActionArray[] = new String[1024];
+        int iAttributeCnt = 0;
+        boolean checksession = true;
+        boolean readparam = true;
+        boolean check = true;
+        ResultSet rs7 = null;
+        PreparedStatement st = null;
+        String taskattributes = null;
+        String attributelist[] = null;
+        try
+        {
+            if (customerid != null && !customerid.equalsIgnoreCase(""))
+            {
+                System.out.println("customerid::" + customerid);
+                con = DatabaseConnection.getDbConnection(request, customerid);
+            } else
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+            }
+            System.out.println("connection get successfully");
+            if (con != null)
+            {
+                Properties config = Configuration.initialize();
+                Iterator it = tasktypes.iterator();
+                while (it.hasNext())
+                {
+                    szTaskType = (String) it.next();
+                    System.out.println("Tasktype Name::" + szTaskType);
+                    taskattributes = config.getProperty(szTaskType);
+                    attributelist = taskattributes.split(",");
+                    int attrloc = 0;
+                    for (int i = 0; i < attributelist.length; i++)
+                    {
+                        szAttributeName = attributelist[i];
+                        System.out.println("attribute Name::" + szAttributeName);
+                        if (szAttributeName.contains(" "))
+                        {
+                            szAttributeName.replace(" ", "");
+                        //szAttributeName.rep
+                        }
+                        szAttributeType = config.getProperty(szAttributeName + "-type");
+                        //szAttributeType="ShortText";
+                        System.out.println("attribute Type for::" + szAttributeName + "-type");
+                        System.out.println("attribute Type::" + szAttributeType);
+                        iPosition = Integer.parseInt(config.getProperty(szAttributeName));
+                        System.out.println("attribute location for::" + szAttributeName);
+                        //iPosition=++attrloc;
+                        System.out.println("attribute location::" + iPosition);
+                        szAttributeValue = "";
+
+
+                        //iPosition=Integer.parseInt(config.getProperty(szAttributeName));
+                        szMandatory_Field = config.getProperty("mandatory");
+                        System.out.println("Mandatory field::" + szMandatory_Field);
+
+                        /*if ("yes".equalsIgnoreCase(szCopyPolicy))
+                        {
+
+                        System.out.println("comes inside");
+                        statement = con.prepareStatement("Select attribute from " + DBConstants.TASKTYPE_ATTRIBUTES_TABLE + " where tasktype = ? order by location desc");
+                        statement.setString(1, szTaskType);
+                        System.out.println("statement =================" + statement);
+                        ResultSet rs = statement.executeQuery();
+                        while (rs.next())
+                        {
+                        szPrevAttributeName = rs.getString(1);
+                        break;
+                        }
+                        rs.close();
+                        statement.close();
+                        System.out.println("szPrevAttributeName =====" + szPrevAttributeName);
+                        PreparedStatement statement1 = con.prepareStatement("select * from " + DBConstants.TASKTYPE_ATTRIBUTE_POLICY_TABLE + " where tasktype = ? and attributename = ?");
+                        statement1.setString(1, szTaskType);
+                        statement1.setString(2, szPrevAttributeName);
+                        ResultSet rs1 = statement1.executeQuery();
+                        while (rs1.next())
+                        {
+                        sAActionArray[iAttributeCnt] = rs1.getString("action");
+
+                        sAGroupNameArray[iAttributeCnt] = rs1.getString("groupname");
+
+                        sASecurityLevelArray[iAttributeCnt] = rs1.getString("securitylevel");
+
+                        iAttributeCnt++;
+                        }
+                        rs1.close();
+                        statement1.close();
+
+                        for (int i = 0; i < iAttributeCnt; i++)
+                        {
+                        st = con.prepareStatement("Insert into " + DBConstants.TASKTYPE_ATTRIBUTE_POLICY_TABLE + " values('" + szTaskType + "','" + szAttributeName + "','" + sAActionArray[i] + "','" + sAGroupNameArray[i] + "','" + sASecurityLevelArray[i] + "','None','None','None','1')");
+                        st.executeUpdate();
+                        }
+                        st.close();
+                        }
+
+                        } catch (Exception e)
+                        {
+                        readparam = false;
+                        opStatus = "108";
+                        opDescription = "Exception while reading input parameters";
+                        log.info(" EXCEPTION : Getting the parameter values ");
+                        }*/
+
+
+
+                        int iAttributeCount = 0;
+                        boolean bLimit_flag = false;
+                        PreparedStatement statement4 = con.prepareStatement("SELECT * from " + DBConstants.TASKTYPE_ATTRIBUTES_TABLE + " where tasktype = ?");
+                        statement4.setString(1, szTaskType);
+                        ResultSet rs4 = statement4.executeQuery();
+                        while (rs4.next())
+                        {
+                            iAttributeCount++;
+                        }
+                        rs4.close();
+                        statement4.close();
+
+                        if (iAttributeCount >= 30)
+                        {
+                            bLimit_flag = true;
+
+                        //"Its Possible to add only 30 attributes"
+
+                        }
+                        if (!bLimit_flag)
+                        {
+                            boolean bLocation_exists = false;
+                            boolean duplicatename = false;
+                            int iLocation = 0;
+                            //iPosition = Integer.parseInt(szPosition);
+                            String szAttribute = null;
+                            PreparedStatement statement5 = con.prepareStatement("Select location,attribute from " + DBConstants.TASKTYPE_ATTRIBUTES_TABLE + " where tasktype = '" + szTaskType + "'");
+                            ResultSet rs5 = statement5.executeQuery();
+                            while (rs5.next())
+                            {
+                                System.out.println("Inside location check");
+                                iLocation = rs5.getInt("location");
+                                if (iLocation == iPosition)
+                                {
+                                    System.out.println("location:" + iLocation);
+                                    bLocation_exists = true;
+                                    bFlag = false;
+
+                                    System.out.println("Record with specified location alreadey exits");
+                                //log.info("The attribute with specified location already exists");
+                                }
+                                szAttribute = rs5.getString("attribute");
+                                if (szAttributeName.equalsIgnoreCase(szAttribute))
+                                {
+                                    duplicatename = true;
+
+                                    System.out.println("Record with same name alreadey exits");
+                                //log.info("Record with same name alreadey exits");
+                                }
+                            }
+                            rs5.close();
+                            statement5.close();
+                            if (!bLocation_exists && !duplicatename)
+                            {
+                                System.out.println("location does not exists");
+                                String szLinkedAttributes = "";
+                                String szTempLinkedAttributes = "";
+                                String szLinkedPositions = "";
+                                String szTempLinkedPositions = "";
+                                if (!"None".equalsIgnoreCase(szLinkAttribute))
+                                {
+                                    PreparedStatement statement6 = con.prepareStatement("SELECT linkedattributes,linkedpositions FROM " + DBConstants.TASKTYPE_ATTRIBUTES_TABLE + " WHERE tasktype = '" + szTaskType + "' AND attribute = '" + szLinkAttribute + "'");
+                                    ResultSet rs6 = statement6.executeQuery();
+                                    while (rs6.next())
+                                    {
+                                        szTempLinkedAttributes = rs6.getString("linkedattributes");
+                                        szTempLinkedPositions = rs6.getString("linkedpositions");
+                                    }
+                                    rs6.close();
+                                    statement6.close();
+                                    if ("None".equalsIgnoreCase(szTempLinkedAttributes))
+                                    {
+                                        szLinkedAttributes = szAttributeName;
+                                    } else
+                                    {
+                                        szLinkedAttributes = szTempLinkedAttributes + "," + szAttributeName;
+                                    }
+                                    if ("None".equalsIgnoreCase(szTempLinkedPositions))
+                                    {
+                                        szLinkedPositions = (new Integer(iPosition).toString());
+                                    } else
+                                    {
+                                        szLinkedPositions = szTempLinkedPositions + "," + (new Integer(iPosition).toString());
+                                    }
+
+                                    PreparedStatement statement7 = con.prepareStatement("UPDATE " + DBConstants.TASKTYPE_ATTRIBUTES_TABLE + " set linkedattributes = '" + szLinkedAttributes + "',linkedpositions = '" + szLinkedPositions + "' WHERE tasktype='" + szTaskType + "' AND attribute = '" + szLinkAttribute + "'");
+                                    statement7.executeUpdate();
+                                    statement7.close();
+                                }
+                                iAttributeCount++;
+                                int iAttributePos = 0;
+                                iAttributePos = iAttributeCount;
+                                System.out.println("inserting into tasktype attributes table");
+                                statement = con.prepareStatement("INSERT INTO " + DBConstants.TASKTYPE_ATTRIBUTES_TABLE + " VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
+                                statement.setString(1, szTaskType);
+                                statement.setString(2, szAttributeName);
+                                statement.setString(3, szAttributeType);
+                                statement.setString(4, szAttributeValue);
+                                statement.setInt(5, iPosition);
+                                if ("Yes".equalsIgnoreCase(szMandatory_Field))
+                                {
+                                    statement.setInt(6, 1);
+                                } else
+                                {
+                                    statement.setInt(6, 0);
+                                }
+                                statement.setInt(7, iAttributePos);
+                                statement.setString(8, szLinkAttribute);
+                                statement.setString(9, szToolTipMessage);
+                                statement.setString(10, "None");
+                                statement.setString(11, "None");
+                                statement.setString(12, "None");
+                                statement.executeUpdate();
+                                statement.close();
+
+
+                                PreparedStatement statement2 = con.prepareStatement("SELECT no_of_attributes from " + DBConstants.TASKTYPE_TABLE + " where task_type = ?");
+                                statement2.setString(1, szTaskType);
+                                ResultSet rs2 = statement2.executeQuery();
+                                while (rs2.next())
+                                {
+                                    iNumOfAttributes = rs2.getInt("no_of_attributes");
+                                }
+                                rs2.close();
+                                statement2.close();
+
+                                PreparedStatement statement3 = con.prepareStatement("UPDATE " + DBConstants.TASKTYPE_TABLE + " set no_of_attributes = ? where task_type = ?");
+                                statement3.setInt(1, iNumOfAttributes + 1);
+                                statement3.setString(2, szTaskType);
+                                statement3.executeUpdate();
+                                statement3.close();
+
+                                System.out.println("created attribute" + i + " successfully");
+                            }//if bLocation_exists && !duplicatename
+                        }//if bLimit_flag
+                    }
+                    szAttributeName = null;
+                    szAttributeType = null;
+                    szPosition = null;
+                    szAttributeValue = null;
+                    iPosition = 0;
+                    szMandatory_Field = null;
+                    attributelist = null;
+                    attrloc = 0;
+                }//while
+            } else
+            {
+                System.out.println("fail to connect database");
+            }
+
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        } finally
+        {
+            try
+            {
+                //statement.close();
+                if (con != null)
+                {
+                    con.close();
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            //log.error("error closing connection: ", e);
+            }
+        }
+        return false;
+
+    }
+}

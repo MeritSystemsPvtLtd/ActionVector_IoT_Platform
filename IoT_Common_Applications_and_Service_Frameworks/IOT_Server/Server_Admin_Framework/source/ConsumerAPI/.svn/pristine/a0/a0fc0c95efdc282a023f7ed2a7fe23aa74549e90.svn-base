@@ -1,0 +1,1229 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/***************************************************************************
+ *
+ *                            Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *     #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8th Block
+ *                          Bangalore - 560 070, India
+ *               Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *          THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ ***************************************************************************/
+
+package controller;
+import java.sql.*;
+import javax.servlet.http.*;
+import javax.servlet.*;
+import java.io.*;
+import java.beans.*;
+import java.util.*;
+//import GIFTask.GA_DBConstants;
+//import GIFTask.Logwriter;
+//import GIFTask.GIFT_GACalenderOperations;
+import dbmanager.Logwriter;
+
+/**
+ *
+ * @author gopal
+ * Created on Sep 15, 2012, 3:24:48 PM
+ */
+public class SLAConditionCheck {
+
+    DBConstants DBConstants = new DBConstants();
+    Logwriter GALogwriter = null;
+    PreparedStatement statement = null;
+    ResultSet rs = null;
+    String szMinResponseTime = "";
+    String szMaxResponseTime = "";
+    boolean bShowSLAFailure = false;
+    boolean bShowSLAImage = false;
+    public String szImageTitle = "";
+    public String szSLALeft = "";
+    public String szSLARight = "";
+    public boolean bSLAFailed = false;
+    long lMinSLARemaining = 0;
+    public String szMinSLARemaining = "";
+    public String szSLARightString = "";
+    public String szSLAFailedTime = "";
+    CalenderOperations calender = null;
+
+    public Vector getSLATime(String szTaskId, String szTaskType, Connection con)
+    {
+        Vector slaTypesValue = new Vector();
+        try
+        {
+            Vector attributeList = new Vector();
+            String szSLA = "";
+            statement = con.prepareStatement("select sla from gatask where task_id ='" + szTaskId + "'");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                szSLA = rs.getString("sla");
+            }
+            rs.close();
+            statement.close();
+
+
+            statement = con.prepareStatement("select field_name from gaslatype t,gaslaattributestatus a where t.task_type='" + szTaskType + "' and t.field_name=a.attribute");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                attributeList.add(rs.getString("field_name"));
+            }
+            rs.close();
+            statement.close();
+            String keyColumn = "";
+
+            statement = con.prepareStatement("select location from gaslatype where task_type ='" + szTaskType + "' and key_column='Yes'");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                keyColumn = "attribute" + rs.getString("location");
+            }
+            rs.close();
+            statement.close();
+            //	szSLARightString="SLA : "+taskSLA+" &nbsp &nbsp ";
+            if (szSLA != null && !szSLA.equals("") && !szSLA.equals("null") && !szSLA.equals("None"))
+            {
+                slaTypesValue.add("SLA : " + szSLA);
+                for (int i = 0; i < attributeList.size(); i++)
+                {
+                    String slaAttribute = (String) attributeList.get(i);
+                    String slaColumn = "";
+                    statement = con.prepareStatement("select location from gaslatype where task_type ='" + szTaskType + "' and field_name='" + slaAttribute + "'");
+                    rs = statement.executeQuery();
+                    while (rs.next())
+                    {
+                        slaColumn = "attribute" + rs.getString("location");
+                    }
+                    rs.close();
+                    statement.close();
+                    String slaTimeForTask = "";
+                    statement = con.prepareStatement("select * from gasla where task_type='" + szTaskType + "' and " + keyColumn + "=(select sla from gatask where task_id ='" + szTaskId + "')");
+                    // System.out.println(statement);
+                    rs = statement.executeQuery();
+                    while (rs.next())
+                    {
+                        slaTimeForTask = rs.getString(slaColumn);
+                    }
+                    rs.close();
+                    statement.close();
+                    //System.out.println(slaAttribute+" : "+slaTimeForTask);
+                    boolean notexist = true;
+                    for (int j = 0; j < slaTypesValue.size(); j++)
+                    {
+                        if (((String) slaTypesValue.get(j)).indexOf(slaAttribute) != -1)
+                        {
+                            notexist = false;
+                        }
+                    }
+                    if (notexist)
+                    {
+                        slaTypesValue.add(slaAttribute + " : " + slaTimeForTask);
+                    }
+                }
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return slaTypesValue;
+    }
+
+    public boolean _getSLACondition(String szTaskId, String szTaskType, String szTaskOwner, String szSLAString, String szCreatedTime, String szStatus,StringBuffer szSLAImage, Connection con)
+    {
+        return _getSLACondition(szTaskId, szTaskType, szTaskOwner, szSLAString, szCreatedTime, szStatus, szSLAImage, con, true, null);
+    }
+
+    public boolean _getSLACondition(String szTaskId, String szTaskType, String szTaskOwner, String szSLAString, String szCreatedTime, String szStatus, StringBuffer szSLAImage, Connection con, boolean requirFullInfo, CalenderOperations calenderFrom)
+    {
+        if (calenderFrom == null)
+        {
+            calender = new CalenderOperations(con);
+        } else
+        {
+            calender = calenderFrom;
+        }
+        //System.out.println("requirFullInfo -> "+requirFullInfo);
+        bSLAFailed = false;
+        bShowSLAImage = false;
+        szSLALeft = "";
+        szImageTitle = "";
+        bShowSLAFailure = true;
+        szMinSLARemaining = "";
+        /*System.out.println("szTaskId "+szTaskId);
+        System.out.println("szTaskType "+szTaskType);*/
+        //GALogwriter = (Logwriter) HSsession.getAttribute("GALogwriter");
+        //GALogwriter.writeDebug("szTaskId " + szTaskId + ":szTaskType " + szTaskType, 4, HSsession);
+        //System.out.println("szTaskId " + szTaskId + ":szTaskType " + szTaskType);
+        try
+        {
+            String slaHistory = "";
+            String notConsiderForSLA = "";
+            String createdTime = "";
+            String keyColumn = "";
+            String taskSLA = "";
+            Boolean statusExist = false;
+
+            //System.out.println("===========SLA STARTS==============   " + szStatus);
+
+            statement = con.prepareStatement("select slahistory,notprocesstime,created_date,sla from gatask where task_id='" + szTaskId + "'");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                slaHistory = rs.getString("slahistory");
+                notConsiderForSLA = rs.getString("notprocesstime");
+                createdTime = rs.getString("created_date");
+                taskSLA = rs.getString("sla");
+            }
+            rs.close();
+            statement.close();
+         //   System.out.println("taskSLA -> " + taskSLA);
+
+            Vector attributeList = new Vector();
+            statement = con.prepareStatement("select distinct(field_name) from gaslatype t,gaslaattributestatus a where t.task_type='" + szTaskType + "' and t.field_name=a.attribute ");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                attributeList.add(rs.getString("field_name"));
+            }
+            rs.close();
+            statement.close();
+
+            if (taskSLA != null && !taskSLA.equalsIgnoreCase("") && !taskSLA.equalsIgnoreCase("None") && !taskSLA.equalsIgnoreCase("null"))
+            {
+                bShowSLAImage = true;
+            }
+
+            statement = con.prepareStatement("select location from gaslatype where task_type ='" + szTaskType + "' and key_column='Yes'");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                keyColumn = "attribute" + rs.getString("location");
+            }
+            rs.close();
+            statement.close();
+            szSLARightString = "SLA : " + taskSLA + "  ";
+
+            StringTokenizer SToken1 = new StringTokenizer(taskSLA, ",");
+            while (SToken1.hasMoreTokens())
+            {
+                String sla = (String) SToken1.nextToken();
+
+                for (int i = 0; i < attributeList.size(); i++)
+                {
+                    String slaAttribute = (String) attributeList.get(i);
+                    String slaColumn = "";
+                    statement = con.prepareStatement("select location from gaslatype where task_type ='" + szTaskType + "' and field_name='" + slaAttribute + "'");
+                    rs = statement.executeQuery();
+
+                    while (rs.next())
+                    {
+                        slaColumn = "attribute" + rs.getString("location");
+                    }
+                    rs.close();
+                    statement.close();
+
+                    String slaTimeForTask = "";
+
+                    statement = con.prepareStatement("select * from gasla where task_type='" + szTaskType + "' and " + slaColumn + "='" + sla + "'");
+                    rs = statement.executeQuery();
+                    while (rs.next())
+                    {
+                        slaTimeForTask = rs.getString(slaColumn);
+                    }
+                    rs.close();
+                    statement.close();
+
+                    szSLARight += slaAttribute + " : " + slaTimeForTask + "  ";
+
+                    String slaFailORPass = "";
+                    if (slaHistory != null && slaHistory.indexOf(slaAttribute) != -1 && !slaHistory.equalsIgnoreCase(""))
+                    {
+                      //  System.out.println("--------------- INSIDE SLA HISTORY---------------");
+                        StringTokenizer SToken = new StringTokenizer(slaHistory, ",");
+                        while (SToken.hasMoreTokens())
+                        {
+                            String temp = (String) SToken.nextToken();
+
+                            if (temp.indexOf(slaAttribute) != -1)
+                            {
+                                slaFailORPass = temp.substring(temp.indexOf(":") + 1, temp.length());
+                                if (szSLALeft.indexOf(slaAttribute) == -1)
+                                {
+                                    szSLALeft = slaAttribute + ":" + slaFailORPass + "";
+                                 //   System.out.println("SLA Status::"+szSLALeft);
+                                    break;
+                                }
+                            }
+                        }
+                        if (slaFailORPass.equalsIgnoreCase("Fail"))
+                        {
+                            bSLAFailed = true;
+                            if (!requirFullInfo)
+                            {
+                                szImageTitle = szSLALeft;
+                                return bShowSLAImage;
+                            }
+                        }
+                    } else
+                    {
+
+                        if (!"".equals(slaTimeForTask))
+                        {
+                            boolean bMins = false, bHrs = false, bDays = false, bMonths = false, bYears = false;
+                            String szIntPart = "";
+                            long lDuration_MiliSecond = 0;
+                            try
+                            {
+                                StringTokenizer SToken = new StringTokenizer(slaTimeForTask, " ");
+                                szIntPart = SToken.nextToken();
+                            } catch (Exception e)
+                            {
+                            }
+                            System.out.println("SzINTPART:" + szIntPart);
+                            if (slaTimeForTask.indexOf("mins") != -1)
+                            {
+                                //System.out.println("mins");
+                                bMins = true;
+                            } else if (slaTimeForTask.indexOf("hrs") != -1)
+                            {
+                                //System.out.println("hours");
+                                bHrs = true;
+                            } else if (slaTimeForTask.indexOf("days") != -1)
+                            {
+                                bDays = true;
+                            } else if (slaTimeForTask.indexOf("months") != -1)
+                            {
+                                bMonths = true;
+                            } else if (slaTimeForTask.indexOf("years") != -1)
+                            {
+                                bYears = true;
+                            }
+                            if (bMins)
+                            {
+                                lDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 60 * 1000;
+                            }
+                            if (bHrs)
+                            {
+                                lDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 60 * 60 * 1000;
+                            }
+                            if (bDays)
+                            {
+                                lDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 24 * 60 * 60 * 1000;
+                            }
+                            if (bMonths)
+                            {
+                                lDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 30 * 24 * 60 * 60 * 1000;
+                            }
+                            if (bYears)
+                            {
+                                lDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 365 * 24 * 60 * 60 * 1000;
+                            }
+                            long lProcessTime = getProcessTime(con, szTaskId, szTaskType, calender);
+                           // System.out.println("lProcessTime -> " + lProcessTime);
+                           // System.out.println("lDuration_MiliSecond -> " + lDuration_MiliSecond);
+                           // System.out.println("Before SLA History::"+slaHistory);
+                            if (slaHistory == null)
+                            {
+                                slaHistory = "";
+                            }
+
+                            if (lProcessTime <= lDuration_MiliSecond)
+                            {
+                             //   System.out.println("--------------- INSIDE SLA process TIME---------------");
+                                long lRemainingTime = lDuration_MiliSecond - lProcessTime;
+                                long millis = lRemainingTime;
+                                long msLong = millis % 1000;
+                                long ts = millis / 1000;
+                                long sLong = ts % 60;
+                                long tm = ts / 60;
+                                long mLong = tm % 60;
+                                long hm = tm / 60;
+                                long hLong = hm % 24;
+                                long dLong = hm / 24;
+                                String timeString = "";
+                                if (dLong != 0)
+                                {
+                                    timeString = timeString + String.valueOf(dLong) + " days ";
+                                }
+                                if (hLong != 0)
+                                {
+                                    timeString = timeString + String.valueOf(hLong) + " hours ";
+                                }
+                                if (mLong != 0)
+                                {
+                                    timeString = timeString + String.valueOf(mLong) + " minutes ";
+                                }
+                                if (sLong != 0)
+                                {
+                                    //timeString=timeString+String.valueOf(sLong)+"sec ";
+                                }
+
+                                szSLALeft = slaAttribute + ":Remaining " + timeString + " ";
+                              //  System.out.println("Time remaining::"+szSLALeft);
+                                if (lMinSLARemaining == 0 || lMinSLARemaining > lRemainingTime)
+                                {
+                                    szMinSLARemaining = slaAttribute + ":Remaining " + timeString;
+                                    lMinSLARemaining = lRemainingTime;
+                                }
+
+                            } else
+                            {
+                              //  System.out.println("inside SLA failed condition");
+                                insertintoescalatedtask(con, szTaskType, szTaskId, slaAttribute);
+                                slaHistory += ", " + slaAttribute + ":" + "Fail";
+                              //  System.out.println("updating sla history::"+slaHistory);
+                                statement = con.prepareStatement("UPDATE gatask set slahistory='" + slaHistory + "' where task_id='" + szTaskId + "'");
+                                statement.executeUpdate();
+                              //  System.out.println("Statement to update slahistory::"+statement);
+                                if (szSLALeft.indexOf(slaAttribute) == -1)
+                                {
+                                    szSLALeft = slaAttribute + ":Fail";
+                                    bSLAFailed = true;
+                                    if (!requirFullInfo)
+                                    {
+                                        szImageTitle = szSLALeft;
+                                        return bShowSLAImage;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (szMinSLARemaining.equals(""))
+            {
+                szMinSLARemaining = szSLALeft;
+            }
+            szImageTitle = szSLALeft;
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+       // System.out.println("showing sla image::"+bShowSLAImage);
+        //szSLAImage.replace(0, , szStatus)szSLALeft;
+        szSLAImage.append(szSLALeft);
+        
+        return bShowSLAImage;
+    }
+
+    public void insertintoescalatedtask(Connection con, String szTaskType, String szTaskid, String slaAttribute)
+    {
+
+        PreparedStatement statement1 = null;
+        ResultSet rs1 = null;
+        PreparedStatement statement2 = null;
+
+        String parameter1 = "";
+        String parameter2 = "";
+        Integer escalationlevel = 0;
+        String status = "";
+        String escalationgroup = "";
+        String emailaddress = "";
+        String address = "";
+        String szevent = "";
+
+        Timestamp lcurrent;
+        java.util.Date current = new java.util.Date();
+        lcurrent = new java.sql.Timestamp(current.getTime());
+        String szuserid = getTaskAssignees(con, szTaskid);
+        //System.out.println("szuserid====" + szuserid + "*******insertintoescalatedtask************szTaskType" + szTaskType + "slaAttribute" + slaAttribute);
+
+        try
+        {
+            statement1 = con.prepareStatement("select * from gaescalationrule where tasktype ='" + szTaskType + "' and event='SLA Failed' and parameter2='" + slaAttribute + "'");
+            rs1 = statement1.executeQuery();
+            while (rs1.next())
+            {
+                szevent = rs1.getString("event");
+                parameter1 = rs1.getString("parameter1");
+                parameter2 = rs1.getString("parameter2");
+
+                escalationgroup = rs1.getString("escalationgroup");
+                emailaddress = rs1.getString("emailaddress");
+                escalationlevel = rs1.getInt("escalationlevel");
+                status = rs1.getString("status");
+                //System.out.println(lcurrent + "szevent===" + szevent + "parameter1==" + parameter1 + "====" + szTaskid + "3333" + parameter2 + "333333" + escalationgroup + "44444" + emailaddress + "5555555" + escalationlevel + "uuuuu" + status);
+                try
+                {
+                    statement2 = con.prepareStatement("insert into gaescalatedtasks values('" + szTaskid + "'," + escalationlevel + ",'" + lcurrent + "','" + szevent + "','" + status + "','" + parameter1 + "','" + parameter2 + "','" + escalationgroup + "','" + szuserid + "','" + emailaddress + "')");
+                   // System.out.println("******statement==>" + statement1);
+                    statement2.executeUpdate();
+                    statement2.close();
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+            }
+            rs1.close();
+            statement1.close();
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getTaskAssignees(Connection con, String szTaskID)
+    {
+
+        PreparedStatement pstmtTask = null;
+        ResultSet rsTaskAssignees = null;
+        String szColor = "";
+        String szAddAssignee = "";
+
+//		String szQuery = "SELECT assignee from gatasktypeassignee where taskid=? And (action_assignee =1 OR primary_assignee =1)";
+        String szQuery = "SELECT * from gatasktypeassignee where taskid=?";
+
+        try
+        {
+            pstmtTask = con.prepareStatement(szQuery);
+            pstmtTask.setString(1, szTaskID);
+//			writeDebug("pstmtTask 	:"+pstmtTask);
+            System.out.println("pstmtTask 	:" + pstmtTask);
+            rsTaskAssignees = pstmtTask.executeQuery();
+            while (rsTaskAssignees.next())
+            {
+                if (rsTaskAssignees.getInt("action_assignee") == 1)
+                {
+                    szAddAssignee = rsTaskAssignees.getString("assignee").trim();
+                } else if (rsTaskAssignees.getInt("primary_assignee") == 1)
+                {
+                    szAddAssignee = rsTaskAssignees.getString("assignee").trim();
+                } else
+                {
+                    szAddAssignee = rsTaskAssignees.getString("assignee").trim();
+                }
+
+            }
+            rsTaskAssignees.close();
+            pstmtTask.close();
+        } catch (Exception e1)
+        {
+            e1.printStackTrace();
+        }
+        return szAddAssignee;
+    }
+
+    public long getProcessTime(Connection con, String szTaskId, String szTaskType, CalenderOperations calender)
+    {
+        PreparedStatement statement1 = null;
+        ResultSet rs1 = null;
+        String notConsiderForSLA = "";
+        String createdTime = "";
+        String currentStatus = "";
+        String szStatusSetTime = "";
+        long currentNotconsiderTime = 0;
+        try
+        {
+            statement1 = con.prepareStatement("select slahistory,notprocesstime,created_date,status,status_set_time from gatask where task_id='" + szTaskId + "'");
+            rs1 = statement1.executeQuery();
+            while (rs1.next())
+            {
+                notConsiderForSLA = rs1.getString("notprocesstime");
+                createdTime = rs1.getString("created_date");
+                currentStatus = rs1.getString("status");
+                szStatusSetTime = rs1.getString("status_set_time");
+            }
+            rs1.close();
+            statement1.close();
+
+            boolean bNotConsiderforSLA = false;
+            statement1 = con.prepareStatement("select considerforsla!='1' as notconsiderforsla from gastatus where task_type='" + szTaskType + "' and status='" + currentStatus + "'");
+            rs1 = statement1.executeQuery();
+            while (rs1.next())
+            {
+                bNotConsiderforSLA = rs1.getBoolean("notconsiderforsla");
+            }
+            rs1.close();
+            statement1.close();
+            System.out.println("bNotConsiderforSLA -> " + bNotConsiderforSLA);
+            if (bNotConsiderforSLA)
+            {
+                System.out.println("Inside not consider for SLA" + bNotConsiderforSLA);
+                java.util.Date current = new java.util.Date();
+                long lCurrentTime = current.getTime();
+
+                Timestamp tStatusSetTime = Timestamp.valueOf(szStatusSetTime);
+                long lStatusSetTime = tStatusSetTime.getTime();
+                long lCurrentNotWorkingTime = calender.getNonWorkingTime(new java.util.Date(tStatusSetTime.getTime()), current);
+                currentNotconsiderTime = lCurrentTime - lStatusSetTime - lCurrentNotWorkingTime;
+                System.out.println("Inside not consider for SLA" + bNotConsiderforSLA);
+            }
+
+        } catch (Exception e)
+        {
+            System.out.println("I AM IN GA_SLAConditionCheck.java");
+            e.printStackTrace();
+        }
+
+        if (notConsiderForSLA == null || notConsiderForSLA.equalsIgnoreCase(""))
+        {
+            notConsiderForSLA = "0";
+        }
+        java.util.Date current = new java.util.Date();
+        long lCurrentTime = current.getTime();
+
+        Timestamp tCreatedTime = Timestamp.valueOf(createdTime);
+        long lCreatedTime = tCreatedTime.getTime();
+        long lNotConsiderForSLA = Long.parseLong(notConsiderForSLA);
+        long lNonWorkingTime = calender.getNonWorkingTime(new java.util.Date(tCreatedTime.getTime()), current);
+        /*System.out.println("lNonWorkingTime -> " + lNonWorkingTime);
+        System.out.println("lCurrentTime -> " + lCurrentTime + "currentNotconsiderTime====" + currentNotconsiderTime);
+        System.out.println("lCreatedTime -> " + lCreatedTime);
+        System.out.println("lNotConsiderForSLA -> " + lNotConsiderForSLA);*/
+        System.out.println("Returning SLA time at 594 in SLAConditionCheck.java::"+((((lCurrentTime - lCreatedTime) - lNonWorkingTime) - lNotConsiderForSLA) - currentNotconsiderTime));
+        return ((((lCurrentTime - lCreatedTime) - lNonWorkingTime) - lNotConsiderForSLA) - currentNotconsiderTime);
+
+    }
+
+    public long getNonWorkingTime(java.util.Date dFromTime, java.util.Date dToTime)
+    {
+        java.util.Calendar cFromTime = java.util.Calendar.getInstance();
+        cFromTime.setTime(dFromTime);
+        java.util.Calendar cToTime = java.util.Calendar.getInstance();
+        cToTime.setTime(dToTime);
+
+        return -1;
+    }
+
+    public String getDayOfWeek(int week)
+    {
+        String szWeek = "";
+        switch (week)
+        {
+            case 1:
+                szWeek = "Sun";
+                break;
+            case 2:
+                szWeek = "Mon";
+                break;
+            case 3:
+                szWeek = "Tue";
+                break;
+            case 4:
+                szWeek = "Wed";
+                break;
+            case 5:
+                szWeek = "Thu";
+                break;
+            case 6:
+                szWeek = "Fri";
+                break;
+            case 7:
+                szWeek = "Sat";
+                break;
+        }
+        return szWeek;
+    }
+
+    public boolean _getSLACondition_Remove(String szTaskId, String szTaskType, String szTaskOwner, String szSLAString, String szCreatedTime, String szStatus, Connection con, HttpSession HSsession)
+    {
+        GALogwriter = (Logwriter) HSsession.getAttribute("GALogwriter");
+        String szCustomerName = "None";
+        long lCurrent_MiliSecond = 0;
+        long lCreated_MiliSecond = 0;
+        long lMinDuration_MiliSecond = 0;
+        long lMaxDuration_MiliSecond = 0;
+        bShowSLAFailure = false;
+        bShowSLAImage = false;
+        java.util.Date uDCurrentDate = null;
+        try
+        {
+            String slaFaild = "";
+            //System.out.println("szSLAString -> "+szSLAString);
+            GALogwriter.writeDebug("szSLAString -> " + szSLAString, 4, HSsession);
+            if (!"None".equalsIgnoreCase(szSLAString))
+            {
+                java.util.Vector VSLAAttributeVector = new java.util.Vector();
+                java.util.Vector VSLAPosVector = new java.util.Vector();
+                java.util.Vector VSLATaskEndVector = new java.util.Vector();
+                java.util.Vector VSLATaskBeginVector = new java.util.Vector();
+                java.util.Vector VSLATaskKeyVector = new java.util.Vector();
+                String szSLAAttribute1 = "";
+                String szSLAAttribute2 = "";
+                String szSLAAttribute3 = "";
+                String szSLAAttribute4 = "";
+                String szSLAAttribute5 = "";
+                String szSLAAttribute6 = "";
+                String szSLAAttribute7 = "";
+                String szSLAAttribute8 = "";
+                String szSLAAttribute9 = "";
+                String szSLAAttribute10 = "";
+                statement = con.prepareStatement("Select field_name,location,task_end,task_begin,key_column from " + DBConstants.SLA_TYPE_TABLE + " WHERE task_type='" + szTaskType + "' ORDER BY location");
+                rs = statement.executeQuery();
+                while (rs.next())
+                {
+                    VSLAAttributeVector.addElement(rs.getString(1));
+                    VSLAPosVector.addElement(rs.getString(2));
+                    VSLATaskEndVector.addElement(rs.getString(3));
+                    VSLATaskBeginVector.addElement(rs.getString(4));
+                    VSLATaskKeyVector.addElement(rs.getString(5));
+                }
+                rs.close();
+                statement.close();
+                statement = con.prepareStatement("SELECT customer FROM " + DBConstants.USER_TABLE + " where user_id = '" + szTaskOwner + "'");
+                rs = statement.executeQuery();
+                while (rs.next())
+                {
+                    szCustomerName = rs.getString(1);
+                }
+                rs.close();
+                statement.close();
+                if ("None".equalsIgnoreCase(szCustomerName))
+                {
+                    szCustomerName = "Internal";
+                }
+                String keyAtt = "";
+                for (int i = 0; i < VSLAAttributeVector.size(); i++)
+                {
+                    if ("Yes".equalsIgnoreCase((String) VSLATaskKeyVector.elementAt(i)))
+                    {
+                        keyAtt = "attribute" + (i + 1);
+                    }
+                }
+                statement = con.prepareStatement("SELECT * FROM " + DBConstants.SLA_TABLE + " where task_type=? and " + keyAtt + "=?");
+//				statement.setString(1,szCustomerName);
+                statement.setString(1, szTaskType);
+                statement.setString(2, szSLAString);
+                //System.out.println("statement -> "+statement);
+                GALogwriter.writeDebug("statement -> " + statement, 4, HSsession);
+                rs = statement.executeQuery();
+                while (rs.next())
+                {
+                    szSLAAttribute1 = rs.getString("attribute1");
+                    szSLAAttribute2 = rs.getString("attribute2");
+                    szSLAAttribute3 = rs.getString("attribute3");
+                    szSLAAttribute4 = rs.getString("attribute4");
+                    szSLAAttribute5 = rs.getString("attribute5");
+                    szSLAAttribute6 = rs.getString("attribute6");
+                    szSLAAttribute7 = rs.getString("attribute7");
+                    szSLAAttribute8 = rs.getString("attribute8");
+                    szSLAAttribute9 = rs.getString("attribute9");
+                    szSLAAttribute10 = rs.getString("attribute10");
+                }
+                /*System.out.println("szSLAAttribute1 -> "+szSLAAttribute1);
+                System.out.println("szSLAAttribute2 -> "+szSLAAttribute2);
+                System.out.println("szSLAAttribute3 -> "+szSLAAttribute3);
+                System.out.println("szSLAAttribute4 -> "+szSLAAttribute4);*/
+
+                rs.close();
+                statement.close();
+                for (int i = 0; i < VSLAAttributeVector.size(); i++)
+                {
+                    if ("Yes".equalsIgnoreCase((String) VSLATaskBeginVector.elementAt(i)))
+                    {
+                        switch (i)
+                        {
+                            case 0:
+                                szMinResponseTime = szSLAAttribute1;
+                                break;
+                            case 1:
+                                szMinResponseTime = szSLAAttribute2;
+                                break;
+                            case 2:
+                                szMinResponseTime = szSLAAttribute3;
+                                break;
+                            case 3:
+                                szMinResponseTime = szSLAAttribute4;
+                                break;
+                            case 4:
+                                szMinResponseTime = szSLAAttribute5;
+                                break;
+                            case 5:
+                                szMinResponseTime = szSLAAttribute6;
+                                break;
+                            case 6:
+                                szMinResponseTime = szSLAAttribute7;
+                                break;
+                            case 7:
+                                szMinResponseTime = szSLAAttribute8;
+                                break;
+                            case 8:
+                                szMinResponseTime = szSLAAttribute9;
+                                break;
+                            case 9:
+                                szMinResponseTime = szSLAAttribute10;
+                                break;
+                        }
+                    }
+                    if ("Yes".equalsIgnoreCase((String) VSLATaskEndVector.elementAt(i)))
+                    {
+                        switch (i)
+                        {
+                            case 0:
+                                szMaxResponseTime = szSLAAttribute1;
+                                break;
+                            case 1:
+                                szMaxResponseTime = szSLAAttribute2;
+                                break;
+                            case 2:
+                                szMaxResponseTime = szSLAAttribute3;
+                                break;
+                            case 3:
+                                szMaxResponseTime = szSLAAttribute4;
+                                break;
+                            case 4:
+                                szMaxResponseTime = szSLAAttribute5;
+                                break;
+                            case 5:
+                                szMaxResponseTime = szSLAAttribute6;
+                                break;
+                            case 6:
+                                szMaxResponseTime = szSLAAttribute7;
+                                break;
+                            case 7:
+                                szMaxResponseTime = szSLAAttribute8;
+                                break;
+                            case 8:
+                                szMaxResponseTime = szSLAAttribute9;
+                                break;
+                            case 9:
+                                szMaxResponseTime = szSLAAttribute10;
+                                break;
+                        }
+                    }
+                }
+                try
+                {
+                    if (!"".equals(szMinResponseTime) && !"".equals(szMaxResponseTime))
+                    {
+                        boolean bMins = false, bHrs = false, bDays = false, bMonths = false, bYears = false;
+                        Timestamp TCreatedDate = null;
+                        uDCurrentDate = new java.util.Date();
+                        lCurrent_MiliSecond = uDCurrentDate.getTime();
+                        //System.out.println("The Current Time =="+lCurrent_MiliSecond);
+                        GALogwriter.writeDebug("The Current Time ==" + lCurrent_MiliSecond, 4, HSsession);
+                        //System.out.println("The Created Date =="+szCreatedTime);
+                        GALogwriter.writeDebug("The Created Date ==" + szCreatedTime, 4, HSsession);
+                        szCreatedTime = szCreatedTime + ":00.000000000";
+                        //System.out.println("The Created Date =="+szCreatedTime);
+                        GALogwriter.writeDebug("The Created Date ==" + szCreatedTime, 4, HSsession);
+                        TCreatedDate = Timestamp.valueOf(szCreatedTime);
+                        lCreated_MiliSecond = TCreatedDate.getTime();
+                        //System.out.println("The Created Time =="+lCreated_MiliSecond);
+                        GALogwriter.writeDebug("The Created Time ==" + lCreated_MiliSecond, 4, HSsession);
+                        String szIntPart = "";
+                        try
+                        {
+                            StringTokenizer SToken = new StringTokenizer(szMinResponseTime, " ");
+                            szIntPart = SToken.nextToken();
+                        } catch (Exception e)
+                        {
+                        }
+                        if (szMinResponseTime.indexOf("mins") != -1)
+                        {
+                            bMins = true;
+                        } else if (szMinResponseTime.indexOf("hrs") != -1)
+                        {
+                            bHrs = true;
+                        } else if (szMinResponseTime.indexOf("days") != -1)
+                        {
+                            bDays = true;
+                        } else if (szMinResponseTime.indexOf("months") != -1)
+                        {
+                            bMonths = true;
+                        } else if (szMinResponseTime.indexOf("years") != -1)
+                        {
+                            bYears = true;
+                        }
+                        if (bMins)
+                        {
+                            lMinDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 60 * 1000;
+                        }
+                        if (bHrs)
+                        {
+                            lMinDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 60 * 60 * 1000;
+                        }
+                        if (bDays)
+                        {
+                            lMinDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 24 * 60 * 60 * 1000;
+                        }
+                        if (bMonths)
+                        {
+                            lMinDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 30 * 24 * 60 * 60 * 1000;
+                        }
+                        if (bYears)
+                        {
+                            lMinDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 365 * 24 * 60 * 60 * 1000;
+                        }
+                        szIntPart = "";
+                        bMins = false;
+                        bHrs = false;
+                        bDays = false;
+                        bMonths = false;
+                        bYears = false;
+                        try
+                        {
+                            StringTokenizer SToken = new StringTokenizer(szMaxResponseTime, " ");
+                            szIntPart = SToken.nextToken();
+                        } catch (Exception e)
+                        {
+                        }
+                        if (szMaxResponseTime.indexOf("mins") != -1)
+                        {
+                            bMins = true;
+                        } else if (szMaxResponseTime.indexOf("hrs") != -1)
+                        {
+                            bHrs = true;
+                        } else if (szMaxResponseTime.indexOf("days") != -1)
+                        {
+                            bDays = true;
+                        } else if (szMaxResponseTime.indexOf("months") != -1)
+                        {
+                            bMonths = true;
+                        } else if (szMaxResponseTime.indexOf("years") != -1)
+                        {
+                            bYears = true;
+                        }
+                        if (bMins)
+                        {
+                            lMaxDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 60 * 1000;
+                        }
+                        if (bHrs)
+                        {
+                            lMaxDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 60 * 60 * 1000;
+                        }
+                        if (bDays)
+                        {
+                            lMaxDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 24 * 60 * 60 * 1000;
+                        }
+                        if (bMonths)
+                        {
+                            lMaxDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 30 * 24 * 60 * 60 * 1000;
+                        }
+                        if (bYears)
+                        {
+                            lMaxDuration_MiliSecond = (Integer.parseInt(szIntPart)) * 365 * 24 * 60 * 60 * 1000;
+                        }
+                        boolean responseSLAFail = false;
+                        boolean closerSLAFail = false;
+                        //System.out.println("The Min Time =="+lMinDuration_MiliSecond);
+                        GALogwriter.writeDebug("The Min Time ==" + lMinDuration_MiliSecond, 4, HSsession);
+                        //System.out.println("The Max Time =="+lMaxDuration_MiliSecond);
+                        GALogwriter.writeDebug("The Max Time ==" + lMaxDuration_MiliSecond, 4, HSsession);
+                        //System.out.println("lCurrent_MiliSecond --> "+lCurrent_MiliSecond);
+                        GALogwriter.writeDebug("lCurrent_MiliSecond --> " + lCurrent_MiliSecond, 4, HSsession);
+                        //System.out.println("--> "+(lCreated_MiliSecond+lMinDuration_MiliSecond));
+                        GALogwriter.writeDebug("--> " + (lCreated_MiliSecond + lMinDuration_MiliSecond), 4, HSsession);
+                        statement = con.prepareStatement("select slahistory from gatask where task_id ='" + szTaskId + "'");
+                        rs = statement.executeQuery();
+                        while (rs.next())
+                        {
+                            slaFaild = rs.getString("slahistory");
+                        }
+                        rs.close();
+                        statement.close();
+                        //System.out.println("slaFaild -> "+slaFaild);
+                        if (slaFaild != null && !slaFaild.equals(""))
+                        {
+                            bShowSLAFailure = true;
+                            bSLAFailed = true;
+                            if (slaFaild.indexOf("Response") != -1)
+                            {
+                                szImageTitle = "Failed SLA : Agreement Type -" + szSLAString + " Required response within " + szMinResponseTime;
+                                szSLALeft = "Response time SLA Failed : ";
+                                szSLARight = "" + szSLAString + " : closure time " + szMaxResponseTime + " response time " + szMinResponseTime + "";
+                                responseSLAFail = true;
+                            }
+                            if (slaFaild.indexOf("closure") != -1)
+                            {
+                                szSLALeft = szSLALeft + "Closure time SLA Failed :";
+                                szSLARight = "" + szSLAString + " : closure time " + szMaxResponseTime + " response time " + szMinResponseTime + "";
+                                szImageTitle = "Failed SLA : Agreement Type: " + szSLAString + ", Required closure within " + szMaxResponseTime;
+                                closerSLAFail = true;
+                            }
+                        }
+
+                        //	long processTime=getProcessTime(szTaskId, szTaskType, szCreatedTime, con, HSsession);
+                        boolean checkingForRes = false;
+                        /*If not respond with in time +lMinDuration_MiliSecond -> response time*/
+                        if (!responseSLAFail && lCurrent_MiliSecond > (lCreated_MiliSecond + lMinDuration_MiliSecond))
+                        //if(processTime > lMinDuration_MiliSecond)
+                        {
+                            checkingForRes = true;
+                            String szLastUpdatedTime = "";
+                            //	bShowSLAFailure = true;
+                            boolean bUpdatedFlag = false;
+                            // Check if not updated in gahistory
+                            statement = con.prepareStatement("SELECT updated_date FROM " + DBConstants.HISTORY_TABLE + " WHERE user_id = '" + szTaskOwner + "' AND task_id='" + szTaskId + "' ORDER BY updated_date DESC");
+                            rs = statement.executeQuery();
+                            while (rs.next())
+                            {
+                                szLastUpdatedTime = rs.getString(1);
+                                break;
+                            }
+                            rs.close();
+                            statement.close();
+                            //System.out.println("Checking for Min Resp Failure =="+szLastUpdatedTime);
+                            GALogwriter.writeDebug("Checking for Min Resp Failure ==" + szLastUpdatedTime, 4, HSsession);
+                            if (!"".equalsIgnoreCase(szLastUpdatedTime) && szLastUpdatedTime != null)
+                            {
+                                statement = con.prepareStatement("SELECT user_id FROM " + DBConstants.HISTORY_TABLE + " WHERE user_id != '" + szTaskOwner + "' AND task_id='" + szTaskId + "' AND updated_date >= '" + szLastUpdatedTime + "'");
+                                rs = statement.executeQuery();
+                                while (rs.next())
+                                {
+                                    bUpdatedFlag = true;
+                                }
+                                rs.close();
+                                statement.close();
+                                if (!bUpdatedFlag)
+                                {
+                                    bShowSLAFailure = true;
+                                    bSLAFailed = true;
+                                    szImageTitle = "Failed SLA : Agreement Type -" + szSLAString + " Required response within " + szMinResponseTime;
+                                    szSLALeft = "Response time SLA Failed : ";
+                                    szSLARight = "" + szSLAString + " : closure time " + szMaxResponseTime + " response time " + szMinResponseTime + "";
+                                    statement = con.prepareStatement("UPDATE gatask SET  ='" + slaFaild + " :Response' where task_id ='" + szTaskId + "'");
+                                    // int lo=statement.executeUpdate();
+                                    statement.close();
+                                    responseSLAFail = true;
+                                }
+                            }
+                        /*bShowSLAFailure = true;
+                        bSLAFailed=true;
+                        szImageTitle = "Failed SLA : Agreement Type -"+szSLAString+" Required response within "+szMinResponseTime;
+                        szSLALeft="Failed SLA : Agreement Type -"+szSLAString+" Required response within "+szMinResponseTime;
+                        szSLARight=""+szSLAString+" : closure time "+szMaxResponseTime+" response time "+szMinResponseTime+"";*/
+                        }
+                        //if(lCurrent_MiliSecond > (lCreated_MiliSecond+lMaxDuration_MiliSecond))
+                        long processTime = 0;
+                        if (!closerSLAFail)
+                        {
+                            //processTime=getProcessTime(szTaskId, szTaskType, szCreatedTime, con, HSsession);
+                            //System.out.println("###########################");
+                        } else
+                        {
+                            //System.out.println("&&&&&&&&&&&&&&&&&&&&");
+                        }
+                        if (!closerSLAFail && processTime > lMaxDuration_MiliSecond)
+                        {
+                            // Check if the status is of close status
+                            bShowSLAFailure = true;
+                            bSLAFailed = true;
+                            szSLALeft = szSLALeft + "Closure time SLA Failed :";
+                            szSLARight = "" + szSLAString + " : closure time " + szMaxResponseTime + " response time " + szMinResponseTime + "";
+                            szImageTitle = "Failed SLA : Agreement Type: " + szSLAString + ", Required closure within " + szMaxResponseTime;
+
+                            statement = con.prepareStatement("UPDATE gatask SET slafailed ='" + slaFaild + " :closure' where task_id ='" + szTaskId + "'");
+                            //int lo=statement.executeUpdate();
+                            statement.close();
+                            closerSLAFail = true;
+                        } else
+                        {
+                            //long millis=(lCreated_MiliSecond+lMinDuration_MiliSecond) - lCurrent_MiliSecond;
+                            if (!responseSLAFail || !closerSLAFail)
+                            {
+                                long millis = 0;
+                                if (responseSLAFail || checkingForRes)
+                                {
+                                    millis = lMaxDuration_MiliSecond - processTime;
+                                } else
+                                {
+                                    millis = lMinDuration_MiliSecond - (lCurrent_MiliSecond - lCreated_MiliSecond);
+                                }
+                                java.util.Date crdate = new java.util.Date(lCreated_MiliSecond);
+                                java.util.Date cudate = new java.util.Date(lCurrent_MiliSecond);
+//								java.util.Date dDate=cudate-crdate;
+                                //System.out.println("dDate -> "+crdate.compareTo(cudate));
+                                long msLong = millis % 1000;
+                                long ts = millis / 1000;
+                                long sLong = ts % 60;
+                                long tm = ts / 60;
+                                long mLong = tm % 60;
+                                long hm = tm / 60;
+                                long hLong = hm % 24;
+                                long dLong = hm / 24;
+                                String timeString = "";
+                                if (dLong != 0)
+                                {
+                                    timeString = timeString + String.valueOf(dLong) + " days ";
+                                }
+                                if (hLong != 0)
+                                {
+                                    timeString = timeString + String.valueOf(hLong) + " hours ";
+                                }
+                                if (mLong != 0)
+                                {
+                                    timeString = timeString + String.valueOf(mLong) + " minutes ";
+                                }
+                                if (sLong != 0)
+                                {
+                                    //timeString=timeString+String.valueOf(sLong)+"sec ";
+                                }
+                                bShowSLAFailure = true;
+                                bShowSLAImage = true;
+                                if ((responseSLAFail || checkingForRes) && !closerSLAFail)
+                                {
+                                    szSLALeft = szSLALeft + " Remaining " + timeString + " for closer";
+                                }
+                                if (!responseSLAFail && !checkingForRes && !closerSLAFail)
+                                {
+                                    szSLALeft = szSLALeft + " Remaining " + timeString + " for response";
+                                }
+                                szSLARight = "" + szSLAString + " : closure time " + szMaxResponseTime + " response time " + szMinResponseTime + "";
+                                szImageTitle = "SLA : Agreement Type: " + szSLAString + ", Required response within " + szMinResponseTime + " and closure within " + szMaxResponseTime + "";
+                            }
+                            if (responseSLAFail || closerSLAFail)
+                            {
+                                bSLAFailed = true;
+                            }
+                        }
+                    }
+                } catch (Exception e)
+                {
+                    //e.printStackTrace();
+                    GALogwriter.writeDebug("Exception occured at GA_SLAConditionCheck " + e, 1, HSsession);
+                }
+            }
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        //System.out.println("The return SLAFlag =="+bShowSLAFailure);
+        GALogwriter.writeDebug("The return SLAFlag ==" + bShowSLAFailure, 4, HSsession);
+        return bShowSLAFailure;
+    }
+
+    /**
+     *This will caliculate the total time spent in processing. SLA states.
+     */
+    public long getProcessTime_Remove(String taskId, String szTaskType, String szCreatedTime, Connection con, HttpSession HSsession)
+    {
+        Vector statusForSLA = new Vector();
+        Vector fStatusFrom = new Vector();
+        Vector fStatusTo = new Vector();
+        Vector fTimeHapend = new Vector();
+        Vector tStatusFrom = new Vector();
+        Vector tStatusTo = new Vector();
+        Vector tTimeHapend = new Vector();
+        long processTime = 0;
+        try
+        {
+            /*statement = con.prepareStatement("select status from "+DBConstants.STATUS_TABLE+" where task_type='"+szTaskType+"' and considerforsla='1'");
+            rs=statement.executeQuery();
+            while(rs.next())
+            {
+            statusForSLA.add(rs.getString("status"));
+            }
+            rs.close();
+            statement.close();
+             */
+            statement = con.prepareStatement("select statusfrom,statusto,updated_date from gahistory where action='Status changed' and task_id='" + taskId + "' and statusfrom in (select status from gastatus where task_type='" + szTaskType + "' and considerforsla='0') ");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                fStatusFrom.add(rs.getString("statusfrom"));
+                fStatusTo.add(rs.getString("statusto"));
+                fTimeHapend.add(rs.getString("updated_date"));
+            }
+            rs.close();
+            statement.close();
+            statement = con.prepareStatement("select statusfrom,statusto,updated_date from gahistory where action='Status changed' and task_id='" + taskId + "' and statusto in (select status from gastatus where task_type='" + szTaskType + "' and considerforsla='0') ");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                tStatusFrom.add(rs.getString("statusfrom"));
+                tStatusTo.add(rs.getString("statusto"));
+                tTimeHapend.add(rs.getString("updated_date"));
+            }
+            rs.close();
+            statement.close();
+            Timestamp TCreatedDate = null;
+            long lCurrent_MiliSecond = 0;
+            long lCreated_MiliSecond = 0;
+            TCreatedDate = Timestamp.valueOf(szCreatedTime);
+            lCreated_MiliSecond = TCreatedDate.getTime();
+            java.util.Date uDCurrentDate = new java.util.Date();
+            lCurrent_MiliSecond = uDCurrentDate.getTime();
+            /*System.out.println("lCreated_MiliSecond "+lCreated_MiliSecond);
+            System.out.println("lCurrent_MiliSecond "+lCurrent_MiliSecond);*/
+            processTime = lCurrent_MiliSecond - lCreated_MiliSecond;
+            //System.out.println("processTime "+processTime);
+            for (int i = 0; i < tTimeHapend.size(); i++)
+            {
+                String timeEnd = "";
+                if (i >= fTimeHapend.size())
+                {
+                    timeEnd = "";
+                } else
+                {
+                    timeEnd = (String) fTimeHapend.get(i);
+                    timeEnd = timeEnd + ".000000000";
+                }
+                String timeBegin = (String) tTimeHapend.get(i);
+                timeBegin = timeBegin + ".000000000";
+                /*System.out.println("timeEnd "+timeEnd);
+                System.out.println("timeBegin "+timeBegin);*/
+                Timestamp TTimeBegin = Timestamp.valueOf(timeBegin);
+                long longTimeEnd = 0;
+                if (timeEnd.equalsIgnoreCase(""))
+                {
+                    longTimeEnd = lCurrent_MiliSecond;
+                } else
+                {
+                    Timestamp TTimeEnd = Timestamp.valueOf(timeEnd);
+                    longTimeEnd = TTimeEnd.getTime();
+                }
+                long longTimeBegin = TTimeBegin.getTime();
+                long totalTimeInThisStatus = longTimeEnd - longTimeBegin;
+                //System.out.println("totalTimeInThisStatus "+totalTimeInThisStatus);
+                processTime = processTime - totalTimeInThisStatus;
+            //System.out.println("processTime "+processTime);
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        long millis = processTime;
+        long msLong = millis % 1000;
+        long ts = millis / 1000;
+        long sLong = ts % 60;
+        long tm = ts / 60;
+        long mLong = tm % 60;
+        long hLong = tm / 60;
+        String timeString = String.valueOf(hLong) + "-" + String.valueOf(mLong) + "-" + String.valueOf(sLong) + "-" + String.valueOf(msLong);
+
+        System.out.println("##############TaskId-->" + taskId + " ProcessTime --> " + timeString + "################");
+        GALogwriter.writeDebug("##############TaskId-->" + taskId + " ProcessTime --> " + timeString + "################", 4, HSsession);
+
+        return processTime;
+    }
+
+    public String _getSLAImageString()
+    {
+        String szSLAImageString = "";
+        //if(!bShowSLAImage)
+        if (bSLAFailed)
+        {
+            //szSLAImageString = "<img src='../images/red.gif' border=0 title='"+szImageTitle+"' width = 10 height = 10 >";
+            szSLAImageString = "<img src='../images/red.gif' border=0 alt='" + szImageTitle + "' title='" + szImageTitle + "'>";
+        } else
+        {
+            szSLAImageString = "<img src='../images/green.gif' border=0 alt='" + szImageTitle + "' title='" + szImageTitle + "'>";
+        }
+        return szSLAImageString;
+    }
+
+
+}

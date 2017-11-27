@@ -1,0 +1,85 @@
+module com.prokosha.cep.cpudiskmemorymonitor.v1;
+//Objective::
+//compute average disk usage for 15 minute window
+//if current 5 min average is 10% greater than previous 15 min average
+//      and exceeds a threshold of 80 send alert
+
+
+//
+//TUNING PARAMETERS
+//
+create variable int PRIOR_AVERAGING_TIME=5;
+create variable int CURRENT_AVERAGING_TIME=15;
+create variable double USAGE_INCREASE=1.1;
+create variable int MEM_USAGE_THRESHOLD=70;
+create variable int DISK_USAGE_THRESHOLD=70;
+create variable int CPU_USAGE_THRESHOLD=70;
+create variable string ACRO_CPU="[CPUUTL]";
+create variable string ACRO_DISK="[DSKUTL]";
+create variable string ACRO_MEM="[MEMUTL]";
+
+@Name("com.prokosha.cep.cpudiskmemorymonitor.istream.1")
+insert into CPUDiskMemStream
+        select HostName, HostAddress,(((MemTotal-MemFree)/MemTotal)*100) as MemUsage,
+	(((DiskTotal-DiskFree)/DiskTotal)*100) as DiskUsage,
+	(CpuUser+CpuSystem) as CPUUsage,CustomerID,resourceType,resourceId
+        from ServerStateStream;
+
+@Name("com.prokosha.cep.cpudiskmemorymonitor.istream.2")
+insert into CurrentStream
+        select HostName,HostAddress,MemUsage,DiskUsage,CPUUsage,CustomerID,resourceType,resourceId,
+        'CurrentStream' as StreamName
+        from CPUDiskMemStream.win:time(CURRENT_AVERAGING_TIME minutes)
+	group by HostName;
+    
+@Name("com.prokosha.cep.cpudiskmemorymonitor.istream.3")
+insert into PriorStream
+        select first(HostName) as HostName,first(HostAddress) as HostAddress,first(MemUsage) as MemUsage,
+	first(DiskUsage) as DiskUsage,first(CPUUsage) as CPUUsage,
+	first(CustomerID) as CustomerID,
+	first(resourceType) as resourceType ,first(resourceId) as resourceId,
+        'PriorStream' as StreamName
+        from CurrentStream.win:time(PRIOR_AVERAGING_TIME minutes)
+	group by HostName;
+
+@Name("com.prokosha.cep.cpudiskmemorymonitor.istream.4")
+insert into AveragesStream
+	select avg(CW.MemUsage) as currentMemAvg,avg(PW.MemUsage) as priorMemAvg,
+	avg(CW.DiskUsage) as currentDiskAvg,avg(PW.DiskUsage) as priorDiskAvg,
+	avg(CW.CPUUsage) as currentCPUAvg,avg(PW.CPUUsage) as priorCPUAvg,
+	CW.HostName as HostName,CW.HostAddress as HostAddress,CW.CustomerID as CustomerID,
+	CW.resourceType as resourceType,CW.resourceId as resourceId
+	from CurrentStream.win:time(CURRENT_AVERAGING_TIME minutes) as CW,
+	PriorStream.win:time(PRIOR_AVERAGING_TIME minutes) as PW
+	where (CW.HostName=PW.HostName)
+	group by CW.HostName;
+
+@Name("com.prokosha.cep.cpudiskmemorymonitor.dispatch.5")
+select  "Server" as EventType,
+        ("Average Memory Usage has exceeded the threshold. ").concat(cast(CURRENT_AVERAGING_TIME,String)).concat(" min average is ").concat((currentMemAvg).toString().concat(ACRO_MEM)) as EventDesc,CustomerID,
+    ("Average Memory Usage has increased by over 10% in the past ").concat(cast(CURRENT_AVERAGING_TIME,String)).concat(" minutes and exceeded the threshold") as EventSymptoms,
+    HostName, HostAddress,currentMemAvg as CurrentAvgMemUsage, priorMemAvg as PriorAvgMemUsage,resourceType,resourceId
+    from AveragesStream
+    where ((currentMemAvg >= MEM_USAGE_THRESHOLD) and (currentMemAvg/priorMemAvg >= USAGE_INCREASE))
+    group by HostName
+    output first every 5 minutes;
+
+@Name("com.prokosha.cep.cpudiskmemorymonitor.dispatch.6")
+select  "Server" as EventType,
+        ("Average Disk Usage has exceeded the threshold. ").concat(cast(CURRENT_AVERAGING_TIME,String)).concat(" min average is ").concat((currentDiskAvg).toString().concat(ACRO_DISK)) as EventDesc,CustomerID,
+    ("Average Disk Usage has increased by over 10% in the past ").concat(cast(CURRENT_AVERAGING_TIME,String)).concat(" minutes and exceeded the threshold") as EventSymptoms,
+    HostName, HostAddress,currentDiskAvg as CurrentAvgDiskUsage, priorDiskAvg as PriorAvgDiskUsage,resourceType,resourceId
+    from AveragesStream
+    where ((currentDiskAvg >= DISK_USAGE_THRESHOLD) and (currentDiskAvg/priorDiskAvg >= USAGE_INCREASE))
+    group by HostName
+    output first every 5 minutes;
+
+@Name("com.prokosha.cep.cpudiskmemorymonitor.dispatch.7")
+select  "Server" as EventType,
+        ("Average CPU Usage has exceeded the threshold. ").concat(cast(CURRENT_AVERAGING_TIME,String)).concat(" min average is ").concat((currentCPUAvg).toString().concat(ACRO_CPU)) as EventDesc,CustomerID,
+    ("Average CPU Usage has increased by over 10% in the past ").concat(cast(CURRENT_AVERAGING_TIME,String)).concat(" minutes and exceeded the threshold") as EventSymptoms,
+    HostName, HostAddress,currentCPUAvg as CurrentAvgCPUUsage, priorCPUAvg as PriorAvgCPUUsage,resourceType,resourceId
+    from AveragesStream
+    where ((currentCPUAvg >= CPU_USAGE_THRESHOLD) and (currentCPUAvg/priorCPUAvg >= USAGE_INCREASE))
+    group by HostName
+    output first every 5 minutes;

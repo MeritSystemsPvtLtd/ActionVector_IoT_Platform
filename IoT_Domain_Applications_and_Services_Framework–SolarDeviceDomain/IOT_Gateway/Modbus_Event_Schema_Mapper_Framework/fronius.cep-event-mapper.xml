@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<FroniusEventMapper>
+
+    <EventDefinition>
+
+        <CepEvent evName="PumpInverterEvent">
+            <Parameter evField="OPFrequency" dataCollection="PumpInverterData" fName="FOP" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+
+            <Parameter evField="RefFrequency" dataCollection="PumpInverterData" fName="FREF" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+
+            <Parameter evField="DCBusVoltage" dataCollection="PumpInverterData" fName="DCBus" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+
+            <Parameter evField="OPVoltage" dataCollection="PumpInverterData" fName="DCOP" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+
+            <Parameter evField="OPCurrent" dataCollection="PumpInverterData" fName="IOP" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+
+            <Parameter evField="ROTSpeed" dataCollection="PumpInverterData" fName="ROT" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+
+            <Parameter evField="OPPower" dataCollection="PumpInverterData" fName="POP" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+
+            <Parameter evField="DeviceStatus" dataCollection="PumpInverterData" fName="DeviceStatus" fVal="StatusCode" fUnit="Unit" evType="uint"></Parameter>
+
+	</CepEvent>
+         
+                
+
+
+    </EventDefinition>
+
+</FroniusEventMapper>

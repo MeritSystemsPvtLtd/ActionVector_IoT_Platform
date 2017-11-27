@@ -1,0 +1,11 @@
+module com.prokosha.cep.filter.v1;
+
+//filter the invalid events - no hostname, no ipaddress, no timestamp
+@Name("com.prokosha.sadeskCeP.LoadMonitor.istream.1")
+insert into ServerStateStream
+        select * from ServerStateEvent((HostName != "(null)"), (HostAddress != "(null)"), (TimeStamp != -1));
+
+//@Name("com.prokosha.sadeskCeP.JVM.istream.8")
+insert into JVMStream
+        select * from JVMEvent((HostName != "(NULL)"), (hostipaddress != "(NULL)"));
+

@@ -1,0 +1,563 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/* -------------------------------------------------------------------------
+ *
+ *                           Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *              #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *         THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ * --------------------------------------------------------------------------
+ */
+package controller;
+
+import java.sql.*;
+import java.io.*;
+import java.util.*;
+
+/**
+ *
+ * @author gopal
+ * Created on Aug 3, 2012, 11:57:09 AM
+ */
+public class AV_SAMessageConfiguration
+{
+
+    private java.sql.Connection connection = null;
+    private java.sql.PreparedStatement statement = null;
+    private java.sql.ResultSet rset = null;
+    ArrayList<String> VParam1Vector = null;
+    ArrayList<String> VParam2Vector = null;
+    ArrayList<String> VParam3Vector = null;
+    private String szDatabaseName = "";
+    private String szDataSourceName = "";
+    private String szDatabaseDriver = "";
+    private String szDatabaseUser = "";
+    private String szDatabasePassword = "";
+    private String szInternationalizeFile = null;
+    private String szParam1 = null,  szParam2 = null,  szParam3 = null;
+    boolean bEOF = false;
+    boolean bMessageEntryFlag = false;
+    RandomAccessFile RAFObj = null;
+    private String szFile_Separator = System.getProperty("file.separator");
+    StringTokenizer st = null;
+    private String szReadLine = null;
+    private String szSection = null;
+    private String szServerName = "";
+    String szOrgName = "None";
+    String szDomainName = "None";
+    String szHomeDir = "None";
+    String szDomainEmail = "";
+    String szSmtpAddress = "None";
+    String szSmtpPort = "";
+    int iSmtpPort = 0;
+    String szSmtpUser = "None";
+    String szSmtpPassword = "None";
+    String szIMAPAddress = "None";
+    String simapport = "None";
+    int iIMAPPort = 0;
+    int szpasswordexpperiod = 0;
+    int sznopasslockattempt = 0;
+    String szBannerFile = "None";
+    String szHomeGIFFile = "None";
+    String szLogoFile = "None";
+    String szBackGroundGif = "None";
+    String szBackGroundColor = "None";
+    String szFaxDomain = "None";
+    String szSmsDomain = "None";
+    String szLanguage = "English";
+    String szLogLevel = "";
+    int iLogLevel = 0;
+    String szUserRegistration = "None";
+    String szRegMailBoxid = "None";
+    String szRegMailBoxPassword = "None";
+    String szPostCreateFile = "None";
+    String szPostUpdateFile = "None";
+    String szSmsPort = "";
+    String szFaxPort = "";
+    int ismsport = 0;
+    int ifaxport = 0;
+    String szName = "";
+    String szDesignation = "";
+    String szOrganization = "";
+    String szAddress = "";
+    String szCity = "";
+    String szZip = "";
+    String szCountry = "";
+    String szState = "";
+    String szPhone = "";
+    String szFax = "";
+    String szEmail = "";
+    String szBandColor = "";
+    String szHomePage = "";
+    String szLoginURL_Ref = "";
+    String szMeritCopyRight = "Yes";
+    String szStrongPwdChk = "Yes";
+    String szExternaluser = "no";
+    String szDirectoryLink = "";
+    int iCount = 0;
+    boolean fMessage=false;
+    public ArrayList<String> getParam1Vector()
+    {
+        return VParam1Vector;
+    }
+
+    public ArrayList<String> getParam2Vector()
+    {
+        return VParam2Vector;
+    }
+
+    public ArrayList<String> getParam3Vector()
+    {
+        return VParam3Vector;
+    }
+
+    public String getTxtHeading()
+    {
+        return szSection;
+    }
+
+    public String getMessageEntry()
+    {
+        if (bMessageEntryFlag)
+        {
+            return "Yes";
+
+        } else
+        {
+            return "No";
+        }
+    }
+
+    public String getLanguage()
+    {
+        return szLanguage;
+    }
+
+    public String getDatabaseName()
+    {
+        return szDatabaseName;
+    }
+
+    public String getDataSourceName()
+    {
+        return szDataSourceName;
+    }
+
+    public String getDatabaseDriver()
+    {
+        return szDatabaseDriver;
+    }
+
+    public String getDatabaseUser()
+    {
+        return szDatabaseUser;
+    }
+
+    public String getDatabasePassword()
+    {
+        if ("".equalsIgnoreCase(szDatabasePassword))
+        {
+            return "None";
+        } else
+        {
+            return szDatabasePassword;
+        }
+
+    }
+
+    public String getDomainName()
+    {
+        return szDomainName;
+    }
+    /*  Send the two keys for decoding */
+    KeyDecode KeyDecode = null;
+
+    public boolean configureMessages(Connection connection, javax.servlet.http.HttpServletRequest request, String szDatabaseName, String szDataSourceName, String szDatabaseDriver, String szDatabaseUser, String szDatabasePassword, String szKey1, String szKey2)
+    {
+        boolean bRequestProcessFlag = true;
+
+        DBConstants DBConstants = new DBConstants();
+
+
+        try
+        {
+            //szOrgName = request.getParameter("organization_name");
+              /*szDatabaseName = request.getParameter("database_name");
+            szDataSourceName = request.getParameter("datasource_name");
+            szDatabaseUser = request.getParameter("database_user");
+            szDatabasePassword = request.getParameter("database_password");
+            szDatabaseDriver = request.getParameter("database_driver");
+            szDomainName = request.getParameter("domainname");*/
+            /*szName = request.getParameter("name");
+            szDesignation = request.getParameter("designation");
+            szOrganization = request.getParameter("organization");
+            szAddress = request.getParameter("address");
+            szCity = request.getParameter("city");
+            szZip = request.getParameter("zip");
+            szCountry = request.getParameter("country");
+            szState = request.getParameter("state");
+            szPhone = request.getParameter("phone");
+            szFax = request.getParameter("fax");
+            szEmail = request.getParameter("email");*/
+
+            szServerName = request.getServerName();
+            /*// szHomeDir = request.getParameter("homedir");
+            szDomainEmail = request.getParameter("domainemail");
+            szSmtpAddress = request.getParameter("smtpaddress");
+            szSmtpPort = request.getParameter("smtpport");
+            iSmtpPort = Integer.parseInt(szSmtpPort);
+            szSmtpUser = request.getParameter("smtpuser");
+            if (szSmtpUser == "")
+            {
+            szSmtpUser = "None";
+            }
+            szSmtpPassword = request.getParameter("smtppassword");
+            if (szSmtpPassword == "")
+            {
+            szSmtpPassword = "None";
+            }*/
+            /*szIMAPAddress = request.getParameter("imapaddress");
+            simapport = request.getParameter("imapport");
+            iIMAPPort = Integer.parseInt(simapport);
+            szBannerFile = request.getParameter("bannerfile");
+            szHomeGIFFile = request.getParameter("homegif");
+            szLanguage = request.getParameter("language");
+            szLogoFile = request.getParameter("logofile");
+            szBackGroundGif = request.getParameter("backgroundgif");
+            szBackGroundColor = request.getParameter("backgroundcolor");
+            szBandColor = request.getParameter("band_color");
+            szHomePage = request.getParameter("home_page");
+            szLoginURL_Ref = request.getParameter("loginurl_ref");
+            szMeritCopyRight = request.getParameter("MeritCopyRight");
+            szStrongPwdChk = request.getParameter("StrongPasswordChk");
+            szExternaluser = request.getParameter("externaluser");
+            //System.out.println("szExternaluser-->"+szExternaluser);
+            szDirectoryLink = request.getParameter("directorylink");*/
+            /*System.out.println("szDirectoryLink-->" + szDirectoryLink);
+            if (szExternaluser == null)
+            {
+            szExternaluser = "no";
+            }
+            
+            if (szLoginURL_Ref == "")
+            {
+            szLoginURL_Ref = "NONE";
+            }
+            if (szMeritCopyRight == "")
+            {
+            szMeritCopyRight = "Yes";
+            }
+            
+            if (szDirectoryLink == null)
+            {
+            szDirectoryLink = "off";
+            }*/
+
+            /*szFaxDomain = request.getParameter("faxdomain");
+            if (szFaxDomain == "")
+            {
+            szFaxDomain = "None";
+            }
+            //szFaxPort = request.getParameter("faxport");
+            ifaxport = Integer.parseInt(szFaxPort);
+            String spasswordexpperiod = request.getParameter("pass_period");
+            if (spasswordexpperiod == "" || spasswordexpperiod == null)
+            {
+            szpasswordexpperiod = 0;
+            } else
+            {
+            szpasswordexpperiod = Integer.parseInt(request.getParameter("pass_period"));
+            }
+            
+            String snopasslockattempt = request.getParameter("pass_lock");
+            if (snopasslockattempt == "" || snopasslockattempt == null)
+            {
+            sznopasslockattempt = 0;
+            } else
+            {
+            sznopasslockattempt = Integer.parseInt(request.getParameter("pass_lock"));
+            }
+            szSmsDomain = request.getParameter("smsdomain");
+            if (szSmsDomain == "")
+            {
+            szSmsDomain = "None";
+            }
+            szSmsPort = request.getParameter("smsport");
+            ismsport = Integer.parseInt(szSmsPort);
+            szLogLevel = request.getParameter("loglevel");
+            System.out.println(" slog level is..." + szLogLevel);
+            iLogLevel = Integer.parseInt(szLogLevel);
+            szUserRegistration = request.getParameter("userregistration");
+            szRegMailBoxid = request.getParameter("regmailboxid");
+            if (szRegMailBoxid == "")
+            {
+            szRegMailBoxid = "None";
+            }
+            szRegMailBoxPassword = request.getParameter("regmailboxpassword");
+            if (szRegMailBoxPassword == "")
+            {
+            szRegMailBoxPassword = "None";
+            }
+            szPostCreateFile = request.getParameter("postcreatefile");
+            if (szPostCreateFile == "")
+            {
+            szPostCreateFile = "None";
+            }
+            szPostUpdateFile = request.getParameter("postupdatefile");
+            if (szPostUpdateFile == "")
+            {
+            szPostUpdateFile = "None";
+            }
+            } catch (Exception e)
+            {
+            e.printStackTrace();
+            
+            }*/
+            if (szDatabasePassword == null)
+            {
+                szDatabasePassword = "";
+            }
+            try
+            {
+                //Class.forName(szDatabaseDriver);
+            /*String szDBServerName=request.getServerName();
+                ServletContext oSC=request.getSession().getServletContext();
+                connection = DatabaseConnectionManager.getConnection("GIFT_GAConfiguration",szDBServerName,oSC);*/
+            } catch (Exception e)
+            {
+            }
+
+            if (szDirectoryLink.equalsIgnoreCase("off"))
+            {
+                try
+                {
+                    statement = connection.prepareStatement("Delete FROM gadirectorylink");
+                    statement.executeUpdate();
+                    statement.close();
+                    System.out.println("LDAP details deleted...");
+                } catch (Exception ex)
+                {
+                    ex.printStackTrace();
+                }
+            }
+
+
+
+            /*try
+            {
+            statement = connection.prepareStatement("UPDATE " + DBConstants.DOMAIN_INFO_TABLE + " set homedir=?,smtpaddress=?,smtpport=?,smtpuser=?,smtppassword=?,imapaddress=?,imapport=?,bannerfile=?,backgroundgif=?,backgroundcolor=?,faxdomain=?,faxport=?,smsdomain=?,smsport=?,loglevel=?,userregistration=?,regmailboxid=?,regmailboxpassword=?,postcreatefile=?,postupdatefile=?,domainemail = ?,logofile=?,language=?,organizationname=?,bandcolor=?,homepage=?,LoginURL_Ref=?,MeritCopyRight_Reqd=?,strongpasswordchk=?,externaluserflag=?,homegif=?,passwordexpperiod=?,nopasslockattempt=? where domainname = ?");
+            statement.setString(1, szHomeDir);
+            statement.setString(2, szSmtpAddress);
+            statement.setInt(3, iSmtpPort);
+            statement.setString(4, szSmtpUser);
+            statement.setString(5, szSmtpPassword);
+            statement.setString(6, szIMAPAddress);
+            statement.setInt(7, iIMAPPort);
+            statement.setString(8, szBannerFile);
+            statement.setString(9, szBackGroundGif);
+            statement.setString(10, szBackGroundColor);
+            statement.setString(11, szFaxDomain);
+            statement.setInt(12, ifaxport);
+            statement.setString(13, szSmsDomain);
+            statement.setInt(14, ismsport);
+            statement.setInt(15, iLogLevel);
+            statement.setString(16, szUserRegistration);
+            statement.setString(17, szRegMailBoxid);
+            statement.setString(18, szRegMailBoxPassword);
+            statement.setString(19, szPostCreateFile);
+            statement.setString(20, szPostUpdateFile);
+            statement.setString(21, szDomainEmail);
+            statement.setString(22, szLogoFile);
+            statement.setString(23, szLanguage);
+            statement.setString(24, szOrgName);
+            statement.setString(25, szBandColor);
+            statement.setString(26, szHomePage);
+            statement.setString(27, szLoginURL_Ref);
+            statement.setString(28, szMeritCopyRight);
+            statement.setString(29, szStrongPwdChk);
+            statement.setString(30, szExternaluser);
+            statement.setString(34, szDomainName);
+            statement.setString(31, szHomeGIFFile);
+            statement.setInt(32, szpasswordexpperiod);
+            statement.setInt(33, sznopasslockattempt);
+            System.out.println("Query in Configuration --->" + statement);
+            //statement.executeUpdate();
+            statement.close();
+            } catch (Exception e)
+            {
+            try
+            {
+            request.setAttribute("NextScreen", "/jsp/GA_AdminError.htm");
+            } catch (Exception e1)
+            {
+            //e1.printStackTrace();
+            }
+            }*/
+            try
+            {
+                statement = connection.prepareStatement("SELECT orgmessage FROM " + DBConstants.LANGUAGE_TABLE + " ");
+                rset = statement.executeQuery();
+                while (rset.next())
+                {
+                    bMessageEntryFlag = true;
+                }
+                rset.close();
+                statement.close();
+            } catch (Exception e)
+            {
+                bMessageEntryFlag = false;
+            }
+            VParam1Vector = new ArrayList<String>();
+            VParam2Vector = new ArrayList<String>();
+            VParam3Vector = new ArrayList<String>();
+
+            try
+            {
+
+                if (bMessageEntryFlag == false)
+                {
+
+                    String realpath = request.getRealPath(szFile_Separator);
+                    System.out.println("<------------------------>");
+                    System.out.println("realpath-------->" + realpath);
+                    System.out.println("<----------------------->");
+                    szInternationalizeFile = realpath + szFile_Separator + "GA_defaultstring.txt";
+                    System.out.println("szHomeDir is --->" + szHomeDir);
+                    System.out.println("GA_defaultstring.txt file path is --->" + szInternationalizeFile);
+                    RAFObj = new RandomAccessFile(szInternationalizeFile, "rw");
+                    bEOF = false;
+                    while (!bEOF)
+                    {
+                        szReadLine = RAFObj.readLine();
+                        if (szReadLine == null)
+                        {
+                            bEOF = true;
+                            RAFObj.close();
+                            break;
+                        } else if (szReadLine.startsWith("["))
+                        {
+                            szSection = szReadLine.substring(szReadLine.indexOf("[") + 1, szReadLine.indexOf("]"));
+                        } else
+                        {
+                            st = new StringTokenizer(szReadLine, "=");
+                            szParam1 = st.nextToken();
+                            szParam2 = st.nextToken();
+                            szParam3 = st.nextToken();
+                            VParam1Vector.add(szParam1);
+                            VParam2Vector.add(szParam2);
+                            VParam3Vector.add(szParam3);
+                        }
+                    }
+
+                    RAFObj.close();
+                } else
+                {
+                    statement = connection.prepareStatement("SELECT * FROM " + DBConstants.LANGUAGE_TABLE + "");
+                    rset = statement.executeQuery();
+                    while (rset.next())
+                    {
+                        String szParam = rset.getString(1);
+                        String szDesc = rset.getString(2);
+                        String szValue = rset.getString(3);
+                        VParam1Vector.add(szParam);
+                        VParam2Vector.add(szDesc);
+                        VParam3Vector.add(szValue);
+
+                    }
+                    rset.close();
+                    statement.close();
+                }
+            } catch (Exception e)
+            {
+            }
+
+            //Storing the Messageset Details
+                    String szParam="";
+                    String szDesc="";
+                    String szValue="";
+                    
+            if ((VParam1Vector.size() == VParam2Vector.size()) && (VParam2Vector.size() == VParam3Vector.size()))
+            {
+                iCount = VParam3Vector.size();
+            }
+            try
+            {
+                if (!bMessageEntryFlag)
+                {
+                    try
+                    {
+                        System.out.println("The Connection ===" + connection);
+                        statement = connection.prepareStatement("INSERT INTO " + DBConstants.LANGUAGE_TABLE + " VALUES(?,?,?)");
+                        for (int i = 1; i < iCount; i++)
+                        {
+                            szParam = (String)VParam1Vector.get(i);
+                            //System.out.println("The param ===" + szParam);
+                            szDesc = (String)VParam2Vector.get(i);
+                            szValue = (String)VParam3Vector.get(i);
+                            statement.setString(1, szParam);
+                            statement.setString(2, szDesc);
+                            statement.setString(3, szValue);
+                            statement.executeUpdate();
+                        }
+                        fMessage=true;
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+                if (bMessageEntryFlag)
+                {
+                    try
+                    {
+                        statement = connection.prepareStatement("UPDATE " + DBConstants.LANGUAGE_TABLE + " SET transmessage=? WHERE orgmessage=?");
+                        for (int i = 1; i < iCount; i++)
+                        {
+                           szParam = (String)VParam1Vector.get(i);
+                            //System.out.println("The param ===" + szParam);
+                            szDesc = (String)VParam2Vector.get(i);
+                            szValue = (String)VParam3Vector.get(i);
+                            statement.setString(1, szValue);
+                            statement.setString(2, szParam);
+                            statement.executeUpdate();
+                        }
+                        fMessage=true;
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+
+                    }
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+
+        }
+
+        return fMessage;
+    }
+}

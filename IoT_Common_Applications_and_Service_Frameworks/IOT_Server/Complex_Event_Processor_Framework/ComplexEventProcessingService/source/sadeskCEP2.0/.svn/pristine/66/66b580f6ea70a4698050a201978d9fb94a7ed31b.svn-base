@@ -1,0 +1,21 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.FilterNode.v1;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.1")
+select * from MemoryStatsEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.2")
+select * from LoadAverageEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.3")
+select * from MemcacheReadLatencyEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.4")
+select * from HTTPResponseTimeEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.5")
+select * from ConcurrentProcessesEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.6")
+select * from SwapStatsEvent;
+

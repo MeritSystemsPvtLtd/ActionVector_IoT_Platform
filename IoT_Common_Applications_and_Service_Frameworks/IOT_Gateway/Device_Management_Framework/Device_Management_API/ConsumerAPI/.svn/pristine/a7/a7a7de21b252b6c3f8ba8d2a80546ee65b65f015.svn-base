@@ -1,0 +1,3009 @@
+/* -------------------------------------------------------------------------
+Software Developed by
+Merit Systems Pvt. Ltd.,
+No. 71/5, Elephant Rock Road
+Jayanagar 3rd Block
+Bangalore _ 560 011, India
+Work Created for Merit Systems Pvt. Ltd., 
+All rights reserved
+
+THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT LAWS AND TREATIES
+NO PART OF THIS WORK MAY BE 
+USED, PRACTICED, PERFORMED, COPIED, DISTRIBUTED, REVISED, MODIFIED, 
+TRANSLATED, ABRIDGED,CONDENSED, EXPANDED, COLLECTED, 
+COMPILED, LINKED, 
+RECAST, TRANSFORMED OR ADAPTED
+WITHOUT THE PRIOR WRITTEN CONSENT
+ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+COULD SUBJECT THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+------------------------------------------------------------------------- */
+/***************************************************************************
+
+PROGRAM			:       Login.java
+PURPOSE			:       Used to store the default user values for his session context
+ ***************************************************************************/
+/**************************** Revision History *****************************
+
+Date			Revision No.	Author		Description
+07/08/2002		0000		Srikanth	Added comments and copy right message for
+original code
+11/08/2002		0001		Prasad P	Changed the Logic used in previous Login Bean. This is to make the Login time more faster.
+30/06/2003		0002		Prasad P	Adding Login facility with LDAP Directory.
+ ***************************************************************************/
+package businessmodel;
+import controller.*;
+import java.sql.*;
+import java.text.*;
+import javax.servlet.http.*;
+import javax.servlet.*;
+import java.io.*;
+import java.beans.*;
+import java.util.*;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import javax.naming.*;
+import javax.naming.directory.*;
+/*import GIFTask.valuestore;
+import GIFTask.GA_DBConstants;
+import GIFTask.Logwriter;*/
+import org.apache.log4j.Logger;
+//import GIFTask.Login;
+import controller.valuestore;
+import dbmanager.DatabaseConnectionManager;
+import dbmanager.Logwriter;
+//import GIFTask.GA_ActionConstants;
+
+public class Login implements Serializable, HttpSessionBindingListener
+{
+
+    private String is_Allowpublicchat;
+    private String is_Allowoperatorchat;
+    private String is_Allowdiscussionforum;
+    private String username = "";
+    private String password = "";
+    private String user_email = "";
+    private int iLevel = 0;
+    private boolean flag = false;
+    private boolean bUseridIncorrect = false;
+    private boolean bPasswdIncorrect = false;
+    private boolean bUserEnterFlag = false;
+    private String databaseDriver = null;
+    private String url = null;
+    private Connection fieldDBConnection = null;
+    private String szSessionId = null;
+    private Connection externalconnection = null;
+    private boolean fieldDBFlag = false;
+    protected String level;
+    private int security_level;
+    private int security_id = 0;
+    private String database_name = "";
+    private String database_pass = "";
+    private boolean custflag = false;
+    private String database_user = "";
+    private String database_passwd = "";
+    protected static int database_security;
+    protected String sdatabase_security = "";
+    protected String database_user_name = "";
+    static String user = null;
+    private String rpassword = null;
+    private String user_name = null;
+    private String database_useremail = null;
+    private String allowchat = "";
+    private String allowdiscussion = "";
+    private String user_flag = "";
+    private String user_group = "";
+    private String szExternalTable = "";
+    private String szDirectoryTable = "";
+    private String szGroupname = "";
+    public String szTaskHistoryOrder = "";
+    public String szShowPeerTasks = "";//20-06-2005
+    String database_usersecurity = "";
+    String database_usercustomer = "";
+    private int iUserLevel = 0;
+    //Added by krishna...July13..ADSLogin
+    private String szADSServer = "";
+    private String szSearchBase = "";
+    private String szUsrPrefix = "";
+    private String szADSPort = "";
+    private String szAuthen = "";
+    String szSecurityName = "";
+    Logwriter GALogwriter = null;
+    Logger esclog = Logger.getLogger(Logwriter.class.getName());
+    Vector vcustomer = new Vector();
+    Vector vcustperson = new Vector();
+    Vector vcustphone = new Vector();
+    Vector vcustemail = new Vector();
+    //03-07-2004
+    private java.util.Vector VTaskTypeDisplayColor = new java.util.Vector();
+    private java.util.Vector VTaskTypePriorityId = new java.util.Vector();
+    private java.util.Vector VTaskTypeDefClosedStatusId = new java.util.Vector();
+    private java.util.Vector fieldCustName = new java.util.Vector();
+    private java.util.Vector fieldCustPerson = new java.util.Vector();
+    private java.util.Vector fieldCustPhone = new java.util.Vector();
+    private java.util.Vector fieldCustEmail = new java.util.Vector();
+    private java.util.Vector fieldCalendarDays = new java.util.Vector();
+    private java.util.Vector fieldCalendarStTime1 = new java.util.Vector();
+    private java.util.Vector fieldCalendarEndTime1 = new java.util.Vector();
+    private java.util.Vector fieldCalendarStTime2 = new java.util.Vector();
+    private java.util.Vector fieldCalendarEndTime2 = new java.util.Vector();
+    private java.util.Vector fieldCalendarStTime3 = new java.util.Vector();
+    private java.util.Vector fieldCalendarEndTime3 = new java.util.Vector();
+    private java.util.Vector fieldRoutingMBName = new java.util.Vector();
+    private java.util.Vector fieldRoutingFreq = new java.util.Vector();
+    private java.util.Vector fieldHolidayDates = new java.util.Vector();
+    private java.util.Vector fieldHolidayDesc = new java.util.Vector();
+    private java.util.Vector fieldEscEvent = new java.util.Vector();
+    private java.util.Vector fieldEscStatus = new java.util.Vector();
+    private java.util.Vector fieldEscPriority = new java.util.Vector();
+    private java.util.Vector fieldEscOwnerGroup = new java.util.Vector();
+    private java.util.Vector fieldEscOwnerSecLevel = new java.util.Vector();
+    private java.util.Vector fieldEscGroup = new java.util.Vector();
+    private java.util.Vector fieldRuleName = new java.util.Vector();
+    private java.util.Vector fieldRulesMBName = new java.util.Vector();
+    private java.util.Vector fieldRulesDesc = new java.util.Vector();
+    private java.util.Vector fieldRulesPrecedence = new java.util.Vector();
+    private java.util.Vector VBusinessProcessVector = new java.util.Vector();
+    private java.util.Vector VBusinessUnitVector = new java.util.Vector();
+    private java.util.Vector VGroupVector = new java.util.Vector();
+    private java.util.Vector vAllowedTaskTypes = new java.util.Vector();
+    private java.util.Vector vTaskTypeActions = new java.util.Vector();
+    private java.util.Vector vTaskTypeActionAllowpeers = new java.util.Vector();
+    private String szTaskTypeClosedStatusArr[] = new String[600];
+
+    /*	private String sAAllowedTaskTypes[] = new String[1024];
+    private int iATaskTypeActions[] = new int [1024];
+    private String sATaskTypeActionAllowPeers[] = new String[1024];
+
+     */
+    private String szHomeView = "";
+    DBConstants DBConstants = new DBConstants();
+//	GA_ActionConstants ActionConstants = new GA_ActionConstants();
+    String szProAttr = null;
+    String szSerAttr = null;
+    String szAdhAttr = null;
+    String szExtUserFlag = "";
+    String szApplicationRealPath = "";
+    String emailId = "";
+    String usergroup = "";
+    String ADSDomainname = "";
+    boolean tempFlag = false;
+    public static int count = 1;
+    public static String userexpiry = "None";
+    public static String passwordlock = "off";
+    protected long passwordDays;
+    protected long diffDays = 5;
+    //private boolean passFlag = false;
+
+    public long getPasswordDays()
+    {
+        System.out.println(" &&&&&&&&&&&& REMAINING DAYS FOR PASSWORD EXPIRY &&&&&&&&&&&&&  " + passwordDays);
+        return passwordDays;
+    }
+
+    public void setPasswordDays(long passwordDays)
+    {
+        this.passwordDays = passwordDays;
+    }
+
+    public Login()
+    {
+        try
+        {
+            GALogwriter = new Logwriter();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public Login(String szApplicationRealPath)
+    {
+        try
+        {
+            this.szApplicationRealPath = szApplicationRealPath;
+            GALogwriter = new Logwriter();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void set_isAllowpublicchat(String aAllowpublicchat)
+    {
+        this.is_Allowpublicchat = aAllowpublicchat;
+    }
+
+    public String get_isAllowpublicchat()
+    {
+        return is_Allowpublicchat;
+    }
+
+    public void set_isAllowoperatorchat(String aAllowoperatorchat)
+    {
+        this.is_Allowoperatorchat = aAllowoperatorchat;
+    }
+
+    public String get_isAllowoperatorchat()
+    {
+        return is_Allowoperatorchat;
+    }
+
+    public void set_isAllowdiscussionforum(String aAllowdiscussionforum)
+    {
+        this.is_Allowdiscussionforum = aAllowdiscussionforum;
+    }
+
+    public String get_isAllowdiscussionforum()
+    {
+        return is_Allowdiscussionforum;
+    }
+
+    public void setUsername(String auser)
+    {
+        this.username = auser;
+    }
+
+    public void setDriver(String aDriver)
+    {
+        this.databaseDriver = aDriver;
+    }
+
+    public void setDatasourcename(String adatasource)
+    {
+        this.url = adatasource;
+    }
+
+    public void setPassword(String apassword)
+    {
+        this.password = apassword;
+    }
+
+    public void setUserEmail(String auseremail)
+    {
+        this.user_email = auseremail;
+    }
+
+    public String getUser_Email()
+    {
+        return user_email;
+    }
+
+    public String getUsername()
+    {
+        return username;
+    }
+
+    public String getPassword()
+    {
+        return password;
+    }
+
+    public void setDatabaseuser(String aUser)
+    {
+        database_user = aUser;
+    }
+
+    public void setDatabasepasswd(String aPasswd)
+    {
+        database_passwd = aPasswd;
+    }
+
+    public String getDatabaseuser()
+    {
+        return database_user;
+    }
+
+    public String getDatabasepaswd()
+    {
+        return database_passwd;
+    }
+
+    public void setSessionId(String szSessionIdString)
+    {
+        szSessionId = szSessionIdString;
+    }
+
+    public String getSessionId()
+    {
+        return szSessionId;
+    }
+
+    public boolean getUserIncoorect()
+    {
+        return bUseridIncorrect;
+    }
+
+    public boolean getPasswdIncoorect()
+    {
+        return bPasswdIncorrect;
+    }
+
+    public boolean getUserEnterFlag()
+    {
+        return bUserEnterFlag;
+    }
+
+    public String getUsernameIncoorect()
+    {
+        return user_name;
+    }
+
+    public int getUserLevel()
+    {
+        return iUserLevel;
+    }
+
+    public String getADSDomain()
+    {
+        return ADSDomainname;
+    }
+
+    public String getRealPassword()
+    {
+        return rpassword;
+    }
+
+    public void setRealPassword(String password1)
+    {
+        rpassword = password1;
+
+    }
+    //NEW AUTHENTICATE METHOD...
+
+    public boolean checkPasswordExpiry(int PasswordPeriod, HttpServletRequest request, HttpServletResponse response)
+    {
+
+        PreparedStatement statement = null;
+        ResultSet rs1 = null;
+        String password1 = null;
+        String password = null;
+        user = request.getParameter("USER");
+        user = user.trim();
+        String time = null;
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date passworddate = new Date();
+        Date passworddate11 = new Date();
+        Calendar c1 = Calendar.getInstance();
+        Calendar c2 = Calendar.getInstance();
+        try
+        {
+            statement = fieldDBConnection.prepareStatement("Select passwordtime from " + DBConstants.OPERATOR_TABLE + " where user_id ~* '" + user + "' and user_id!='Admin'");
+            System.out.println("Query for OPERATOR ::: " + statement);
+            rs1 = statement.executeQuery();
+            if (rs1.next())
+            {
+                passworddate = rs1.getTimestamp(1);
+            }
+        } catch (SQLException ex)
+        {
+        } finally
+        {
+            try
+            {
+                rs1.close();
+                statement.close();
+            } catch (SQLException ex)
+            {
+            }
+        }
+
+        if (passworddate == null || passworddate.equals("") || passworddate.equals("null"))
+        {
+            passworddate = null;
+        }
+
+        if (passworddate != null && PasswordPeriod!= 0)
+        {
+            c1.setTime(passworddate);
+            c1.add(Calendar.DATE, PasswordPeriod);
+            password1 = dateFormat.format(c1.getTime());
+            System.out.println("Date " + PasswordPeriod + " days is : " + password1);
+            System.out.println(" Password Created Date is :: " + passworddate);
+            try
+            {
+                passworddate11 = dateFormat.parse(password1);
+                password = dateFormat.format(c2.getTime());
+                passworddate = dateFormat.parse(password);
+            } catch (ParseException ex)
+            {
+            }
+            System.out.println(" Today' Date is :: " + passworddate + " After period date is :: " + passworddate11);
+
+            if (passworddate.after(passworddate11))
+            {
+                setPasswordDays(0);
+                return true;
+            } else
+            {
+                diffDays = 0;
+                long milliseconds1 = c1.getTimeInMillis();
+                long milliseconds2 = c2.getTimeInMillis();
+                long diff = milliseconds1 - milliseconds2;
+                diffDays = diff / (24 * 60 * 60 * 1000);
+                System.out.println(" REMAINING DAYS=================>>>>" + diffDays);
+                setPasswordDays(diffDays);
+            }
+        }
+        System.out.println(" REMAINING DAYS FOR PASSWORD EXPIRY =================>>>>" + diffDays);
+        setPasswordDays(diffDays);
+        return false;
+    }
+
+    public User authenticatenew(HttpServletRequest request, HttpServletResponse response, HttpSession session, valuestore directory)
+    {
+        //GALogwriter.writeDebug("Inside The Login Bean to Authenticate The User",2,session);
+        // valuestore directory = null;
+        bUseridIncorrect = false;
+        bPasswdIncorrect = false;
+        boolean bLDAPFails = false;
+        //szExtUserFlag = "off";
+        user = request.getParameter("USER");
+        user = user.trim();
+        rpassword = request.getParameter("PASSWORD");
+        rpassword = rpassword.trim();
+        setRealPassword(rpassword);
+        ADSDomainname = request.getParameter("adsname");
+        String szComingFromForgot = "";
+        String szServerName = request.getServerName();
+        try
+        {
+            szComingFromForgot = (request.getParameter("ForgotPassword")).trim();
+        } catch (Exception e)
+        {
+            szComingFromForgot = "false";
+        }
+
+        System.out.println("user:::::::" + user);
+        StringBuffer szPasswordDecr = new StringBuffer();
+        try
+        {
+            boolean operflag = false;
+            boolean bOperatorEnterFlag = false;
+
+
+            PreparedStatement stmt = fieldDBConnection.prepareStatement("Select * from " + DBConstants.EXTERNAL_TABLE_LINK_TABLE + " where externaltablevalue = 'usertable' ");
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            String externaltableflag = rs.getString(2);
+            String driver = rs.getString(3);
+            String datasource = rs.getString(4);
+            String databaseuser = rs.getString(5);
+            String databasepassword = rs.getString(6);
+            String tablename = rs.getString(7);
+            String userid = rs.getString("user_id");
+            String password = rs.getString("password");
+            String useremail = rs.getString("user_email");
+            String usercustomer = rs.getString("user_customer");
+            String usersecurity = rs.getString("user_security");
+            rs.close();
+            stmt.close();
+
+            // Below code added by Prasad P on 30 June 2003 .This code is to check the user if present in LDAP Directory service.
+            //	GALogwriter.writeDebug("Checking for Directory Connectivity",4,session);
+            String szDirectoryServer = "";
+            String szDirectoryPort = "";
+            String szDirectoryBaseContext = "";
+            String szDirectoryBaseUser = "";
+            String szDirectoryBasePassword = "";
+            String szDirectoryAuthenticationMethod = "";
+            boolean bDirectoryFlag = false;
+            stmt = fieldDBConnection.prepareStatement("SELECT * FROM " + DBConstants.DIRECTORY_LINK_TABLE + " WHERE directoryflag='Yes'");
+            rs = stmt.executeQuery();
+            while (rs.next())
+            {
+                bDirectoryFlag = true;
+                szDirectoryServer = rs.getString("directoryserver");
+                szDirectoryPort = rs.getString("directoryport");
+                szDirectoryBaseContext = rs.getString("basecontext");
+                szDirectoryBaseUser = rs.getString("baseuser");
+                szDirectoryBasePassword = rs.getString("basepassword");
+                szDirectoryAuthenticationMethod = rs.getString("authentication");
+                if (user.equalsIgnoreCase("Admin"))
+                {
+                    bDirectoryFlag = false;
+                    bLDAPFails = true;
+                } else
+                {
+                    bDirectoryFlag = true;
+                }
+            }
+            rs.close();
+            stmt.close();
+            esclog.info("ADSDomainname---->" + ADSDomainname);
+            if (ADSDomainname == null || ADSDomainname.equalsIgnoreCase("None") || ADSDomainname.equalsIgnoreCase(""))
+            {
+                bDirectoryFlag = false;
+                bLDAPFails = true;
+            }
+            esclog.info("bDirectoryFlag---->" + bDirectoryFlag);
+            //bDirectoryFlag = false;
+            if (bDirectoryFlag)
+            {
+                try
+                {
+                    PreparedStatement statement = fieldDBConnection.prepareStatement("Select usergroup,externaluserflag from " + DBConstants.DOMAIN_INFO_TABLE + " where domainname='" + szServerName + "'");
+                    ResultSet rsment = statement.executeQuery();
+                    while (rsment.next())
+                    {
+                        usergroup = rsment.getString("usergroup");
+                        szExtUserFlag = rsment.getString("externaluserflag");
+                        esclog.info("usergroup is --->" + usergroup);
+                    }
+                    rsment.close();
+                    statement.close();
+                //	GALogwriter.writeDebug("The User Group ===="+usergroup,3,session);
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                try
+                {
+                    //Krishna
+                    String emailID = "";
+
+                    String securityLevel = "";
+                    String user_name = "";
+                    String passwordlock = "off";
+
+                    //String szDirectoryBaseContext = "dc=meritsystems,dc=com";
+
+                    ADSLogin(fieldDBConnection, ADSDomainname, szServerName);
+
+
+                    TestADS ldapCall = new TestADS();
+
+                    emailId = //ldapCall.loginLDAP(user,rpassword,szDirectoryServer,szDirectoryPort,szDirectoryBaseContext,szDirectoryAuthenticationMethod);
+                            ldapCall.loginLDAP(user, rpassword, szADSServer, szADSPort, szSearchBase, szAuthen, szUsrPrefix, ADSDomainname);
+
+                    boolean userFlag = false;
+                    esclog.info("Email address is-->" + emailId);
+
+                    if (emailId != null)
+                    {
+                        emailId = emailId.trim();
+                        PreparedStatement statement = fieldDBConnection.prepareStatement("Select user_id,security_level,user_name,user_email from " + DBConstants.OPERATOR_TABLE + " where user_id ~* '" + user + "' and user_email='" + emailId.trim() + "' ");
+                        ResultSet rs1 = statement.executeQuery();
+                        esclog.info("Query is --->" + statement);
+                        if (rs1.next())
+                        {
+                            esclog.info("Entered");
+                            emailID = rs1.getString("user_email");
+                            securityLevel = rs1.getString("security_level");
+                            database_user_name = rs1.getString("user_name");
+                            username = rs1.getString("user_id");
+                            username = username.trim();
+                            database_user_name = database_user_name.trim();
+                            esclog.info("email id from DB is--->" + emailID);
+
+                            if (emailID.equalsIgnoreCase(emailId.trim()))
+                            {
+                                userFlag = true;
+                                esclog.info("userFlag is true");
+                            } else
+                            {
+                                bDirectoryFlag = false;
+                                externaltableflag = "No";
+                                //bLDAPFails = true;
+                                operflag = false;
+                                //userFlag=false;
+                                bUserEnterFlag = false;
+                            }
+
+
+                        } else
+                        { //Checking in gauser table...
+                            bDirectoryFlag = false;
+                            externaltableflag = "No";
+                            //bLDAPFails = true;
+                            operflag = false;
+                            //userFlag=false;
+                            bUserEnterFlag = true;
+                            esclog.info("Checking gaUser table....");
+                        }
+                        rs1.close();
+                        statement.close();
+
+
+                    } else
+                    {
+                        bLDAPFails = true;
+                        bDirectoryFlag = false;
+                        //operflag == false
+                        bUserEnterFlag = false;
+
+                    }
+
+
+                    if (userFlag == true && bDirectoryFlag != false)
+                    {
+                        esclog.info("Bang bang userFlag " + userFlag);
+                        //setPassword(password);
+                        esclog.info("user_name from DB is--->" + user_name);
+                        setUserEmail(emailID.trim());
+                        set_isAllowoperatorchat("Yes");
+                        set_isAllowdiscussionforum("Yes");
+                        database_user_name = database_user_name.trim();
+                        database_name = username.trim();
+                        flag = true;
+                        bPasswdIncorrect = true;
+                        bUseridIncorrect = true;
+                        operflag = true;
+                        setusergroup(usergroup);
+                        sdatabase_security = securityLevel;
+                        settableflag("GAoperator");
+                        bUserEnterFlag = false;
+                    }/*else{
+                //Show errror page
+                database_name = user;
+                username = database_name;
+                password = rpassword;
+                setPassword(password);
+                setUserEmail(emailId.trim());
+                set_isAllowoperatorchat("Yes");
+                set_isAllowdiscussionforum("Yes");
+                database_user_name = user;
+                flag =true;
+                bPasswdIncorrect=true;
+                bUseridIncorrect=true;
+                operflag = true;
+                settableflag("GAexternal");
+                setusergroup(usergroup);
+                sdatabase_security = "User";
+
+                }*/
+
+                } catch (Exception ex)
+                {
+                    ex.printStackTrace();
+
+                }
+            }
+            if (bLDAPFails || !bDirectoryFlag)
+            {
+                int iRowCount = 0;
+                // stmt = fieldDBConnection.prepareStatement("Select user_id,password,security_level,user_name,user_email from " + DBConstants.OPERATOR_TABLE + " where user_id ~* '" + user + "'");
+                stmt = fieldDBConnection.prepareStatement("Select user_id,password,security_level,user_name,user_email,passwordlock from " + DBConstants.OPERATOR_TABLE + " where user_id = '" + user + "'");
+                esclog.info("Checking AV Database..." + stmt);
+                //Check whether the User is in GAOperator table.
+                rs = stmt.executeQuery();
+                while (rs.next())
+                {
+                    iRowCount++;
+                    bOperatorEnterFlag = true;
+                    database_name = rs.getString("user_id");
+                    database_name = database_name.trim();
+                    database_pass = rs.getString("password");
+                    database_pass = database_pass.trim();
+                    StringBuffer get_pass_encrypt1 = new StringBuffer(database_pass);
+                    StringBuffer get_pass_decrypt1 = Decrypt_no(get_pass_encrypt1);
+                    int ilen = get_pass_decrypt1.length();
+                    int a = 0;
+                    for (int i = 0, j = 0; i < get_pass_decrypt1.length(); i++)
+                    {
+                        a = (int) get_pass_decrypt1.charAt(i);
+                        if (a >= 33 && a <= 126)
+                        {
+                            szPasswordDecr.insert(j, get_pass_decrypt1.charAt(i));
+                            j++;
+                        }
+
+                    }
+                    database_pass = szPasswordDecr.toString();
+                    sdatabase_security = rs.getString("security_level");
+                    database_user_name = rs.getString("user_name");
+                    passwordlock = rs.getString("passwordlock");
+                    database_user_name = database_user_name.trim();
+                    database_useremail = rs.getString("user_email");
+                    database_useremail = database_useremail.trim();
+
+                    if (passwordlock == null || "".equals(passwordlock) || passwordlock.equalsIgnoreCase("null"))
+                    {
+                        passwordlock = "off";
+                    }
+
+                    System.out.println("=========PASSWORD LLOOCCCKKKK::::::::::" + passwordlock);
+                    if (!passwordlock.equalsIgnoreCase("on"))
+                    {
+                        if (database_pass.equals(rpassword))
+                        {
+                            username = database_name;
+                            password = database_pass;
+                            setPassword(password);
+                            setUserEmail(database_useremail);
+                            set_isAllowoperatorchat("Yes");
+                            set_isAllowdiscussionforum("Yes");
+                            database_user_name = database_user_name.trim();
+                            flag = true;
+                            bPasswdIncorrect = true;
+                            bUseridIncorrect = true;
+                            operflag = true;
+                            settableflag("GAoperator");
+                            //GALogwriter.writeDebug("The User and Password matched in GAOperator : Breaking here",4,session);
+                            break;
+                        } else
+                        {
+                            flag = false;
+                            operflag = false;
+                            bLDAPFails = false;
+                            tempFlag = true;
+                            bDirectoryFlag = false; //Added by krishna
+                            bUseridIncorrect = true;
+                            user_name = user;
+                            bPasswdIncorrect = false;
+                            setUserEmail(database_useremail);
+                            bUserEnterFlag = false;
+                            if (szComingFromForgot.equalsIgnoreCase("true"))
+                            {
+                                setPassword(database_pass);
+                            }
+                        }
+                    }
+                }//end of while.
+                rs.close();
+                stmt.close();
+                if (iRowCount == 0)
+                {
+                    bLDAPFails = false;
+
+                }
+            }
+
+            //GALogwriter.writeDebug("Did this enter While loop of GAOperator?  :"+bOperatorEnterFlag,4,session);
+// Now check in GAUSER, or GAExternaltable...or GADirectoryLink if operflag = false..
+            System.out.println("operflag----->" + operflag + "    bLDAPFails-->" + bLDAPFails);
+            if (!passwordlock.equalsIgnoreCase("on"))
+            {
+                if (operflag == false && !bLDAPFails)
+                {
+                    //GALogwriter.writeDebug("Getting values from User Tables",4,session);
+                    System.out.println("externaltableflag----->" + externaltableflag);
+                    System.out.println("bDirectoryFlag----->" + bDirectoryFlag);
+                    if (externaltableflag.equalsIgnoreCase("YES") && !bDirectoryFlag)
+                    {
+                        try
+                        {
+                            PreparedStatement statement = fieldDBConnection.prepareStatement("Select usergroup from " + DBConstants.DOMAIN_INFO_TABLE + "");
+                            ResultSet rsment = statement.executeQuery();
+                            while (rsment.next())
+                            {
+                                usergroup = rsment.getString("usergroup");
+                            }
+                        //GALogwriter.writeDebug("The User Group ===="+usergroup,3,session);
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+
+                        //Class.forName(driver);
+
+                        // try{
+                        String szDBServerName=request.getServerName();
+                            ServletContext oSC=request.getSession().getServletContext();
+                        //fieldDBConnection = DatabaseConnectionManager.getConnection(this.getClass().getName(),szDBServerName,oSC);
+                        //setExternalDBConnection(connection);
+                        String szQuery = "Select " + userid + "," + password + "," + useremail + "," + usercustomer + "," + usersecurity + " from " + tablename + " ";
+                        PreparedStatement stmts = fieldDBConnection.prepareStatement(szQuery);
+                        ResultSet rss = stmts.executeQuery(szQuery);
+                        while (rss.next())
+                        {
+                            database_name = rss.getString(1);
+                            database_name = database_name.trim();
+                            database_pass = rss.getString(2);
+                            database_pass = database_pass.trim();
+                            database_useremail = rss.getString(3);
+                            database_useremail = database_useremail.trim();
+                            database_usercustomer = rss.getString(4);
+                            database_usercustomer = database_usercustomer.trim();
+                            database_usersecurity = rss.getString(5);
+                            database_usersecurity = database_usersecurity.trim();
+                            if (database_usersecurity.equalsIgnoreCase("None"))
+                            {
+                                database_usersecurity = "User";
+                            }
+
+                            if (database_name.equalsIgnoreCase(user) && database_pass.equals(rpassword))
+                            {
+                                username = database_name;
+                                password = database_pass;
+                                setPassword(password);
+                                setUserEmail(database_useremail);
+                                set_isAllowoperatorchat("Yes");
+                                set_isAllowdiscussionforum("Yes");
+                                database_user_name = database_user_name.trim();
+                                flag = true;
+                                bPasswdIncorrect = true;
+                                bUseridIncorrect = true;
+                                operflag = true;
+                                settableflag("GAexternal");
+                                setusergroup(usergroup);
+                                break;
+                            } else
+                            {
+                                flag = false;
+                                bUserEnterFlag = true;
+                            }
+                            if (!database_name.equalsIgnoreCase(user) && !database_pass.equals(rpassword))
+                            {
+                                if (bUseridIncorrect == false)
+                                {
+                                    user_name = user;
+                                    bUseridIncorrect = false;
+                                }
+                                if (bPasswdIncorrect == false && database_name.equals(user))
+                                {
+                                    bPasswdIncorrect = false;
+                                }
+                            }
+                            if (!database_name.equalsIgnoreCase(user) && database_pass.equals(rpassword))
+                            {
+                                if (bUseridIncorrect == false && database_pass.equals(rpassword))
+                                {
+                                    user_name = user;
+                                    bUseridIncorrect = false;
+                                }
+                                if (bPasswdIncorrect == false && database_name.equals(user))
+                                {
+                                    bPasswdIncorrect = true;
+                                }
+                            }
+                            if (database_name.equalsIgnoreCase(user) && !database_pass.equals(rpassword))
+                            {
+                                bUseridIncorrect = true;
+                                user_name = user;
+                                if (bPasswdIncorrect == false && database_name.equals(user))
+                                {
+                                    bPasswdIncorrect = false;
+                                }
+                            }
+                            if (database_name.equalsIgnoreCase(user) && database_pass.equals(rpassword))
+                            {
+                                bUseridIncorrect = true;
+                                bPasswdIncorrect = true;
+                            }
+
+                        }//end of while.
+                        sdatabase_security = database_usersecurity;
+                        rss.close();
+                        stmts.close();
+                    }//end of if
+
+                    if (!"Yes".equalsIgnoreCase(externaltableflag) && !bDirectoryFlag)
+                    {
+                        //bUserEnterFlag = false;
+
+                        //Search in normal GAuser table
+                        stmt = fieldDBConnection.prepareStatement("Select user_id,password,security_level,user_name,user_email,allowchat,allowdiscussion from " + DBConstants.USER_TABLE + " where user_id ~* '" + user + "'");
+                        esclog.info("Query in gauser table is " + stmt);
+                        rs = stmt.executeQuery();
+                        while (rs.next())
+                        {
+                            bUserEnterFlag = true;
+                            database_name = rs.getString(1);
+                            database_name = database_name.trim();
+                            database_pass = rs.getString(2);
+                            database_pass = database_pass.trim();
+                            sdatabase_security = rs.getString("security_level");
+                            database_user_name = rs.getString("user_name");
+                            database_user_name = database_user_name.trim();
+                            database_useremail = rs.getString("user_email");
+                            database_useremail = database_useremail.trim();
+                            allowchat = rs.getString("allowchat");
+                            set_isAllowoperatorchat(allowchat);
+                            allowdiscussion = rs.getString("allowdiscussion");
+                            set_isAllowdiscussionforum(allowdiscussion);
+                            if (database_pass.equals(rpassword))
+                            {
+                                username = database_name;
+                                password = database_pass;
+                                setPassword(password);
+                                database_user_name = database_user_name.trim();
+                                flag = true;
+                                bPasswdIncorrect = true;
+                                bUseridIncorrect = true;
+                                operflag = true;
+                                bUserEnterFlag = false;
+                                settableflag("GAuser");
+                                GALogwriter.writeDebug("UserId and Password matched in GAUSer : Breaking from loop", 4, session);
+                                break;
+                            } else
+                            {
+                                GALogwriter.writeDebug("UserId and Password not matched in GAUSer : Breaking from loop", 4, session);
+                                flag = false;
+                                bUseridIncorrect = true;
+                                user_name = user;
+                                bPasswdIncorrect = false;
+                                bUserEnterFlag = true;
+                                if (szComingFromForgot.equalsIgnoreCase("true"))
+                                {
+                                    setPassword(database_pass);
+                                }
+
+                            }
+                        }//end of while
+                        //GALogwriter.writeDebug("Does the User belong to GAUser :"+bUserEnterFlag,4,session);
+                        //bUserEnterFlag = true;
+                        if (!bUserEnterFlag)
+                        {
+                            /*if(szExtUserFlag.equalsIgnoreCase("on")){
+                            try{
+                            PreparedStatement statement = fieldDBConnection.prepareStatement("INSERT INTO "+DBConstants.USER_TABLE+" VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"); //added for designation
+                            statement.setString(1,user);
+                            statement.setString(2,rpassword);
+                            statement.setString(3,user);
+                            statement.setString(4,emailId);
+                            statement.setString(5,"GMR");
+                            statement.setString(6,"None");
+                            statement.setString(7,"None");
+                            statement.setString(8,"None");
+                            statement.setString(9,"None");
+                            statement.setString(10,"None");
+                            statement.setString(11,"None");
+                            statement.setString(12,"None");
+                            statement.setString(13,"None");
+                            statement.setString(14,"None");
+                            statement.setString(15,"None");
+                            statement.setString(16,"None");
+                            statement.setString(17,"None");
+                            statement.setString(18,"None");
+                            statement.setString(19,"None");
+                            statement.setString(20,"None");
+                            statement.setString(21,"None");
+                            statement.setString(22,"None");
+                            statement.setString(23,"None");
+                            statement.setString(24,"None");
+                            statement.setString(25,"None");
+                            statement.setString(26,"None");
+                            statement.setString(27,"None");
+                            statement.setString(28,"None");
+                            statement.setString(29,"None");
+                            statement.setString(30,"None");
+                            statement.setString(31,"None");
+                            statement.setString(32,"None");
+                            statement.setString(33,"None");
+                            statement.setString(34,"None");
+                            statement.setString(35,"None");
+                            statement.setString(36,"None");
+                            statement.setString(37,"None");
+                            statement.setString(38,"None");
+                            statement.setString(39,"None");
+                            statement.setString(40,"None");
+                            statement.setString(41,"User");
+                            statement.setString(42,"None");
+                            statement.setString(43,"None");
+                            statement.executeUpdate();
+                            statement.close();
+
+
+                            //Adding user group..
+                            PreparedStatement statement2 = fieldDBConnection.prepareStatement("INSERT INTO "+DBConstants.USER_GROUP_TABLE+" values(?,?)");
+                            statement2.setString(1,user);
+                            statement2.setString(2,usergroup);
+                            statement2.executeUpdate();
+                            statement2.close();
+
+                            }catch(Exception exp){
+                            exp.printStackTrace();
+                            }
+
+                            setPassword(rpassword);
+                            database_user_name = user.trim();
+                            flag =true;
+                            bPasswdIncorrect=true;
+                            bUseridIncorrect=true;
+                            username = user.trim();
+                            operflag = true;
+                            settableflag("GAuser");
+
+                            }*/
+                        } else
+                        {
+                            String userADS = "";
+                            if (tempFlag)
+                            {
+                                userADS = user.trim();
+                            } else
+                            {
+                                userADS = user.trim() + "/" + ADSDomainname;
+                            }
+                            esclog.info("userADS--->" + userADS);
+                            setPassword(rpassword);
+                            setUserEmail(emailId.trim());
+                            set_isAllowoperatorchat("Yes");
+                            set_isAllowdiscussionforum("Yes");
+                            //database_user_name = user.trim();
+                            database_user_name = userADS.trim();
+                            //database_name=user.trim();
+                            database_name = userADS.trim();
+                            //username = user.trim();
+                            username = userADS.trim();
+                            database_useremail = emailId.trim();
+                            flag = true;
+                            bPasswdIncorrect = true;
+                            bUseridIncorrect = true;
+                            operflag = true;
+                            settableflag("GAexternal");
+                            setusergroup(usergroup);
+                            sdatabase_security = "User";
+                        }
+                    }//end of else
+                }//end of operflag..
+                System.out.println("PASSWORD INCORRECT==============" + bPasswdIncorrect + ":::::::::::" + sdatabase_security);
+                if (bPasswdIncorrect == false && bUseridIncorrect == true && !sdatabase_security.equalsIgnoreCase("Admin"))
+                {
+                    System.out.println("USER EXPIRY::::" + userexpiry + "::::::database_user_name:::" + user);
+                    if (userexpiry.equalsIgnoreCase(user))
+                    {
+                        int passlock = directory.getSznopasslockattempt();
+
+                        count++;
+                        System.out.println("CCCCCCCCOOOOOOOOUUUUUUUUUNNNNNNNNNTTTTTTTTTTTTT" + count + " :::::Integer.parseInt(passlock)::::: " + passlock);
+                        if (count == passlock)
+                        {
+                            passwordlock = "on";
+                            String szQuery = "update gaoperator set passwordlock = '" + passwordlock + "' where user_id='" + user + "'";
+                            PreparedStatement stmts = fieldDBConnection.prepareStatement(szQuery);
+                            System.out.println(" GAOPERATOR Query:::::" + szQuery);
+                            stmts.executeUpdate(szQuery);
+                            stmts.close();
+                            count = 1;
+                        }
+                    } else
+                    {
+                        count = 1;
+                    }
+                }
+                userexpiry = request.getParameter("USER");
+            }
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+//		return new User(database_name);
+        return new User(database_name, database_user_name);
+    }
+
+    //END OF NEW AUTHENTICATE METHOD...
+
+    //OLD AUTHENTICATE METHOD...
+    public User authenticate(HttpServletRequest request, HttpServletResponse response)
+    {
+        bUseridIncorrect = false;
+        bPasswdIncorrect = false;
+        user = request.getParameter("USER");
+        user = user.trim();
+        rpassword = request.getParameter("PASSWORD");
+        rpassword = rpassword.trim();
+        try
+        {
+            //Class.forName(databaseDriver);
+            PreparedStatement stmt = fieldDBConnection.prepareStatement("Select user_id,password,security_level,user_name from " + DBConstants.USER_TABLE + "");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next())
+            {
+                database_name = rs.getString(1);
+                database_name = database_name.trim();
+                database_pass = rs.getString(2);
+                database_pass = database_pass.trim();
+                database_security = rs.getInt("security_level");
+                database_user_name = rs.getString("user_name");
+                database_user_name = database_user_name.trim();
+
+                System.out.println("database_name:::::::" + database_name + ";;;" + "user:::::::" + user);
+
+                if (database_name.equals(user) && database_pass.equals(rpassword))
+                {
+                    username = database_name;
+                    password = database_pass;
+                    database_user_name = database_user_name.trim();
+                    flag = true;
+                    bPasswdIncorrect = true;
+                    bUseridIncorrect = true;
+                    break;
+                } else
+                {
+                    flag = false;
+                }
+                if (!database_name.equals(user) && !database_pass.equals(rpassword))
+                {
+                    if (bUseridIncorrect == false)
+                    {
+                        user_name = user;
+                        bUseridIncorrect = false;
+                    }
+                    if (bPasswdIncorrect == false && database_name.equals(user))
+                    {
+                        bPasswdIncorrect = false;
+                    }
+                }
+                if (!database_name.equals(user) && database_pass.equals(rpassword))
+                {
+                    if (bUseridIncorrect == false && database_pass.equals(rpassword))
+                    {
+                        user_name = user;
+                        bUseridIncorrect = false;
+                    }
+                    if (bPasswdIncorrect == false && database_name.equals(user))
+                    {
+                        bPasswdIncorrect = true;
+                    }
+                }
+                if (database_name.equals(user) && !database_pass.equals(rpassword))
+                {
+                    bUseridIncorrect = true;
+                    user_name = user;
+                    if (bPasswdIncorrect == false && database_name.equals(user))
+                    {
+                        bPasswdIncorrect = false;
+                    }
+                }
+                if (database_name.equals(user) && database_pass.equals(rpassword))
+                {
+                    bUseridIncorrect = true;
+                    bPasswdIncorrect = true;
+                }
+            }
+            rs.close();
+            stmt.close();
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+        return new User(database_name);
+    }
+
+    public boolean getFlag()
+    {
+        return flag;
+    }
+
+    public synchronized void check_security()
+    {
+        esclog.info(" the security level is ...." + sdatabase_security);
+        try
+        {
+            Class.forName(databaseDriver);
+//			PreparedStatement stmt = fieldDBConnection.prepareStatement("Select security_id,level,name from "+DBConstants.SECURITYLEVELS_TABLE+"  where name='"+sdatabase_security+"'");
+            PreparedStatement stmt = fieldDBConnection.prepareStatement("Select security_id,\"level\",name from " + DBConstants.SECURITYLEVELS_TABLE + "  where name='" + sdatabase_security + "'");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next())
+            {
+                security_id = rs.getInt("security_id");
+                security_level = rs.getInt("level");
+                level = rs.getString("name");
+            }
+            rs.close();
+            stmt.close();
+// The below statement is added by Prasad P on 7-05-2003 to set the securitylevel value for the user level .This is made cos of securitylevel changes in GIFTask and user can have any level.
+
+            try
+            {
+//				PreparedStatement statement3 = fieldDBConnection.prepareStatement("SELECT level from "+DBConstants.SECURITYLEVELS_TABLE+"  WHERE name = 'User'");
+                PreparedStatement statement3 = fieldDBConnection.prepareStatement("SELECT \"level\" from " + DBConstants.SECURITYLEVELS_TABLE + "  WHERE name = 'User'");
+                ResultSet rs3 = statement3.executeQuery();
+                while (rs3.next())
+                {
+                    iUserLevel = rs3.getInt("level");
+
+                }
+                rs3.close();
+                statement3.close();
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized String getuseremail()
+    {
+        return database_useremail;
+    }
+    //Added by krishna May 10 2010
+
+    public synchronized void setSecurity(String szlevel)
+    {
+        this.level = szlevel;
+    }
+
+    public synchronized void setSecurityNumber(int securitylevel)
+    {
+        this.security_level = securitylevel;
+    }
+
+    public synchronized void setSecurityId(int securityId)
+    {
+        this.security_id = securityId;
+    }
+    //end
+
+    public synchronized String getSecurity()
+    {
+        return level;
+    }
+
+    public synchronized int getSecurityNumber()
+    {
+        return security_level;
+    }
+
+    public synchronized int getSecurityId()
+    {
+        return security_id;
+    }
+
+    public synchronized boolean isConnected()
+    {
+        return (fieldDBConnection != null);
+    }
+
+    public synchronized Connection getConnection()
+    {
+        return (fieldDBConnection);
+    }
+
+    public void setConnection(Connection consd)
+    {
+        fieldDBConnection = consd;
+    }
+
+    /***
+     * Gets the boolean property value.
+     * @return The boolean property value.
+     */
+    public boolean getDBFlag()
+    {
+        return fieldDBFlag;
+    }
+
+    public void setConnectionclose()
+    {
+        Connection con = null;
+        con = fieldDBConnection;
+        esclog.info(" CLOSING THE CONNECTION...." + con);
+        System.out.println("closing connection object " + con);
+        boolean dbflag = fieldDBFlag;
+        if (con != null)
+        {
+            try
+            {
+                if (con != null)
+                {
+                    con.close();
+                }
+                dbflag = false;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public String getDriver()
+    {
+        return databaseDriver;
+    }
+
+    public String getUrl()
+    {
+        return url;
+    }
+
+    public String getNameofUser()
+    {
+        return database_user_name;
+    }
+
+    public static void main(String args[])
+    {
+    }
+
+    public boolean getCustFlag()
+    {
+        return custflag;
+    }
+
+    public void setCustFlag(boolean acustflag)
+    {
+        custflag = acustflag;
+    }
+
+    public void setDeleteVector()
+    {
+        //Cleanup all the vectors.
+        vcustomer.removeAllElements();
+        vcustperson.removeAllElements();
+        vcustphone.removeAllElements();
+        vcustemail.removeAllElements();
+    }
+
+    public void setCustomerVector()
+    {
+        if (custflag == false)
+        {
+            try
+            {
+                Class.forName(databaseDriver);
+                PreparedStatement stmt1 = fieldDBConnection.prepareStatement("Select customer_name,contact_person,cust_phone,cust_email from " + DBConstants.CUSTOMER_TABLE + " ORDER BY customer_name");
+                ResultSet rs1 = stmt1.executeQuery();
+                while (rs1.next())
+                {
+                    vcustomer.addElement(rs1.getString("customer_name").trim());
+                    vcustperson.addElement(rs1.getString("contact_person").trim());
+                    vcustphone.addElement(rs1.getString("cust_phone").trim());
+                    vcustemail.addElement(rs1.getString("cust_email").trim());
+                    custflag = true;
+                }
+                rs1.close();
+                stmt1.close();
+                custflag = true;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public Vector getCustomerVector()
+    {
+        return (vcustomer);
+    }
+
+    public Vector getCustpersonVector()
+    {
+        return (vcustperson);
+    }
+
+    public Vector getCustphoneVector()
+    {
+        return (vcustphone);
+    }
+
+    public Vector getCustemailVector()
+    {
+        return (vcustemail);
+    }
+
+    public void LetterSort(String alpha)
+    {
+        String change = alpha.toLowerCase().trim();
+        java.util.Vector vcname = vcustomer;
+        java.util.Vector vcperson = vcustperson;
+        java.util.Vector vcphone = vcustphone;
+        java.util.Vector vcemail = vcustemail;
+
+        java.util.Vector vtcname = new java.util.Vector();
+        java.util.Vector vtcperson = new java.util.Vector();
+        java.util.Vector vtcphone = new java.util.Vector();
+        java.util.Vector vtcemail = new java.util.Vector();
+
+        int cmax = vcname.size();
+        String cname = "", cperson = "", cphone = "", cemail = "";
+        if ("*".equalsIgnoreCase(alpha))
+        {
+            for (int i = 0; i < cmax; i++)
+            {
+                cname = (String) vcname.elementAt(i);
+                vtcname.addElement(cname);
+                cperson = (String) vcperson.elementAt(i);
+                vtcperson.addElement(cperson);
+                cphone = (String) vcphone.elementAt(i);
+                vtcphone.addElement(cphone);
+                cemail = (String) vcemail.elementAt(i);
+                vtcemail.addElement(cemail);
+            }
+        } else
+        {
+            for (int i = 0; i < cmax; i++)
+            {
+                cname = (String) vcname.elementAt(i);
+                if (cname.startsWith(alpha) || cname.startsWith(change))
+                {
+                    cname = (String) vcname.elementAt(i);
+                    vtcname.addElement(cname);
+                    cperson = (String) vcperson.elementAt(i);
+                    vtcperson.addElement(cperson);
+                    cphone = (String) vcphone.elementAt(i);
+                    vtcphone.addElement(cphone);
+                    cemail = (String) vcemail.elementAt(i);
+                    vtcemail.addElement(cemail);
+                }
+            }
+        }
+        fieldCustName = vtcname;
+        fieldCustPerson = vtcperson;
+        fieldCustPhone = vtcphone;
+        fieldCustEmail = vtcemail;
+    }
+
+    public java.util.Vector getCustName()
+    {
+        return fieldCustName;
+    }
+
+    public java.util.Vector getCustPerson()
+    {
+        return fieldCustPerson;
+    }
+
+    public java.util.Vector getCustPhone()
+    {
+        return fieldCustPhone;
+    }
+
+    public java.util.Vector getCustEmail()
+    {
+        return fieldCustEmail;
+    }
+
+    public void settableflag(String tablestring)
+    {
+        user_flag = tablestring;
+        // Find code below which sets the BusinessProcessVector, BusinessUnitVector and GroupVector. It is set in this place because the abovemethod is called after valid authentication and this gets called for all possible logins.
+        esclog.info("TableString in settableflag." + tablestring);
+        try
+        {
+            setGroupVector();
+            setBusinessProcessVector();
+            setBusinessUnitVector();
+            setTaskHistoryOrder();
+            //15-06-2004 Added to bean for performance in case of external user.
+            setExternalTableFlag();
+            setDirectoryTableFlag();
+
+//			String szUsername = getUserName();
+            setLoggedInUserGroups(tablestring, database_name);
+            setLoggedInUserRole(tablestring, database_name);
+            setShowPeerTasks(szShowPeerTasks);
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public String gettableflag()
+    {
+        return user_flag;
+    }
+
+    public void setusergroup(String tablestring)
+    {
+        System.out.println("USER GROUP FOR GAexternal = " + tablestring);
+        user_group = tablestring;
+    }
+
+    public String getusergroup()
+    {
+
+        System.out.println("USER GROUP FOR GAexternal = " + user_group);
+        return user_group;
+    }
+
+    public void setExternalDBConnection(Connection tablestring)
+    {
+        externalconnection = tablestring;
+    }
+
+    public Connection getExternalDBConnection()
+    {
+
+        return externalconnection;
+    }
+
+    public void setEscEvent(Vector aParamVector)
+    {
+        fieldEscEvent = aParamVector;
+    }
+
+    public java.util.Vector getEscEvent()
+    {
+        return fieldEscEvent;
+    }
+
+    public void setEscPriority(Vector aParamVector)
+    {
+        fieldEscPriority = aParamVector;
+    }
+
+    public java.util.Vector getEscPriority()
+    {
+        return fieldEscPriority;
+    }
+
+    public void setEscStatus(Vector aParamVector)
+    {
+        fieldEscStatus = aParamVector;
+    }
+
+    public java.util.Vector getEscStatus()
+    {
+        return fieldEscStatus;
+    }
+
+    public void setEscOwnerGroup(Vector aParamVector)
+    {
+        fieldEscOwnerGroup = aParamVector;
+    }
+
+    public java.util.Vector getEscOwnerGroup()
+    {
+        return fieldEscOwnerGroup;
+    }
+
+    public void setEscOwnerSecLevel(Vector aParamVector)
+    {
+        fieldEscOwnerSecLevel = aParamVector;
+    }
+
+    public java.util.Vector getEscOwnerSecLevel()
+    {
+        return fieldEscOwnerSecLevel;
+    }
+
+    public void setEscGroup(Vector aParamVector)
+    {
+        fieldEscGroup = aParamVector;
+    }
+
+    public java.util.Vector getEscGroup()
+    {
+        return fieldEscGroup;
+    }
+
+    public void setRoutingFrequency(Vector aParamVector)
+    {
+        fieldRoutingFreq = aParamVector;
+    }
+
+    public java.util.Vector getRoutingFrequency()
+    {
+        return fieldRoutingFreq;
+    }
+
+    public void setRoutingMailboxName(Vector aParamVector)
+    {
+        fieldRoutingMBName = aParamVector;
+    }
+
+    public java.util.Vector getRoutingMailboxName()
+    {
+        return fieldRoutingMBName;
+    }
+
+    public void setRuleName(Vector aParamVector)
+    {
+        fieldRuleName = aParamVector;
+    }
+
+    public java.util.Vector getRuleName()
+    {
+        return fieldRuleName;
+    }
+
+    public void setRulesMailboxName(Vector aParamVector)
+    {
+        fieldRulesMBName = aParamVector;
+    }
+
+    public java.util.Vector getRulesMailboxName()
+    {
+        return fieldRulesMBName;
+    }
+
+    public void setRulesDesc(Vector aParamVector)
+    {
+        fieldRulesDesc = aParamVector;
+    }
+
+    public java.util.Vector getRulesDesc()
+    {
+        return fieldRulesDesc;
+    }
+
+    public void setRulesPrecedence(Vector aParamVector)
+    {
+        fieldRulesPrecedence = aParamVector;
+    }
+
+    public java.util.Vector getRulesPrecedence()
+    {
+        return fieldRulesPrecedence;
+    }
+
+    public void setHolidayDates(Vector aParamVector)
+    {
+        fieldHolidayDates = aParamVector;
+    }
+
+    public java.util.Vector getHolidayDates()
+    {
+        return fieldHolidayDates;
+    }
+
+    public void setHolidayDesc(Vector aParamVector)
+    {
+        fieldHolidayDesc = aParamVector;
+    }
+
+    public java.util.Vector getHolidayDesc()
+    {
+        return fieldHolidayDesc;
+    }
+
+    public void setCalendarDays(Vector aParamVector)
+    {
+        fieldCalendarDays = aParamVector;
+    }
+
+    public java.util.Vector getCalendarDays()
+    {
+        return fieldCalendarDays;
+    }
+
+    public void setStartTime1(Vector aParamVector)
+    {
+        fieldCalendarStTime1 = aParamVector;
+    }
+
+    public void setStartTime2(Vector aParamVector)
+    {
+        fieldCalendarStTime2 = aParamVector;
+    }
+
+    public void setStartTime3(Vector aParamVector)
+    {
+        fieldCalendarStTime3 = aParamVector;
+    }
+
+    public java.util.Vector getStartTime1()
+    {
+        return fieldCalendarStTime1;
+    }
+
+    public java.util.Vector getStartTime2()
+    {
+        return fieldCalendarStTime2;
+    }
+
+    public java.util.Vector getStartTime3()
+    {
+        return fieldCalendarStTime3;
+    }
+
+    public void setEndTime1(Vector aParamVector)
+    {
+        fieldCalendarEndTime1 = aParamVector;
+    }
+
+    public void setEndTime2(Vector aParamVector)
+    {
+        fieldCalendarEndTime2 = aParamVector;
+    }
+
+    public void setEndTime3(Vector aParamVector)
+    {
+        fieldCalendarEndTime3 = aParamVector;
+    }
+
+    public java.util.Vector getEndTime1()
+    {
+        return fieldCalendarEndTime1;
+    }
+
+    public java.util.Vector getEndTime2()
+    {
+        return fieldCalendarEndTime2;
+    }
+
+    public java.util.Vector getEndTime3()
+    {
+        return fieldCalendarEndTime3;
+    }
+
+    public java.util.Vector getGroupVector()
+    {
+        return VGroupVector;
+    }
+
+    public Vector getGroupList()
+    {
+        Vector vGroupList = new Vector();
+        try
+        {
+
+            java.sql.PreparedStatement statement = fieldDBConnection.prepareStatement("SELECT * FROM gagroupname");
+            ResultSet rs = statement.executeQuery();
+            while (rs.next())
+            {
+                vGroupList.addElement((String) rs.getString("groupname"));
+            }
+            rs.close();
+            statement.close();
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+        return vGroupList;
+
+    }
+
+    public Vector getRoleList(String szGroupName)
+    {
+        Vector vRoleList = new Vector();
+        try
+        {
+            java.sql.PreparedStatement statement = fieldDBConnection.prepareStatement("select * from gagrouproles where groupname ='" + szGroupName + "'");
+            ResultSet rs = statement.executeQuery();
+            while (rs.next())
+            {
+                vRoleList.addElement((String) rs.getString("role"));
+            }
+            rs.close();
+            statement.close();
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
+        return vRoleList;
+    }
+
+    public void setGroupVector()
+    {
+        java.sql.PreparedStatement statement = null;
+        java.sql.PreparedStatement statement1 = null;
+        java.sql.ResultSet rs = null;
+        java.sql.ResultSet rs1 = null;
+        int iUserlevel = 0;
+        String szUsers = username;
+        String szTableName = user_flag;
+        try
+        {
+            if ("GAUser".equalsIgnoreCase(szTableName))
+            {
+                statement = fieldDBConnection.prepareStatement("SELECT groupname FROM " + DBConstants.USER_GROUP_TABLE + " WHERE userid='" + szUsers + "'");
+            }
+            if ("GAOperator".equalsIgnoreCase(szTableName))
+            {
+                statement = fieldDBConnection.prepareStatement("SELECT groupname FROM " + DBConstants.AGENT_GROUP_TABLE + " WHERE userid='" + szUsers + "'");
+
+            }
+            if ("GAExternal".equalsIgnoreCase(szTableName))
+            {
+                statement = fieldDBConnection.prepareStatement("SELECT usergroup from " + DBConstants.DOMAIN_INFO_TABLE + "");
+            }
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                VGroupVector.addElement((String) rs.getString(1));
+            }
+            rs.close();
+            statement.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public java.util.Vector getBusinessUnitVector()
+    {
+        return VBusinessUnitVector;
+    }
+
+    public void setBusinessUnitVector()
+    {
+        java.sql.PreparedStatement statement = null;
+        java.sql.ResultSet rs = null;
+        String szUsers = username;
+        String szTableName = user_flag;
+        try
+        {
+            /*
+            Comments Added By :Prasad P on 03-12-2003 Wednesday & BirthDay
+            Purpose of the Code : Getting the Business Units allowed for the logged in users
+            PsuedoCode :
+            ------>User Login ------>(Check the group he belongs to)---------------------------
+            |				|			|
+            gaagentgroup			gausergroup		(externaluser)gadomaininfo
+            |				|			|
+            ---------------------------------------------------------
+            |
+            (get the groups)
+            |
+            (get task types for each of these groups)
+            |
+            (get bBusiness Unit for each tasktype )
+
+             */
+            if ("GAUser".equalsIgnoreCase(szTableName))
+            {
+                statement = fieldDBConnection.prepareStatement("SELECT distinct TBUT.bu_name FROM " + DBConstants.TASKTYPE_BUSINESSUNIT_TABLE + " TBUT INNER JOIN " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT ON TBUT.tasktype=TGT.tasktype INNER JOIN " + DBConstants.USER_GROUP_TABLE + " UGT ON TGT.groupname=UGT.groupname AND UGT.userid='" + szUsers + "'");
+            }
+            if ("GAOperator".equalsIgnoreCase(szTableName))
+            {
+
+                statement = fieldDBConnection.prepareStatement("SELECT distinct TBUT.bu_name FROM " + DBConstants.TASKTYPE_BUSINESSUNIT_TABLE + " TBUT INNER JOIN " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT ON TBUT.tasktype=TGT.tasktype INNER JOIN " + DBConstants.AGENT_GROUP_TABLE + " AGT ON TGT.groupname=AGT.groupname AND AGT.userid='" + szUsers + "'");
+            }
+            if ("GAExternal".equalsIgnoreCase(szTableName))
+            {
+                statement = fieldDBConnection.prepareStatement("SELECT distinct BU.bu_name FROM " + DBConstants.BUSINESS_UNIT_TABLE + " BU INNER JOIN " + DBConstants.TASKTYPE_BUSINESSUNIT_TABLE + " TBUT ON BU.bu_name=TBUT.bu_name INNER JOIN " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT ON TBUT.tasktype=TGT.tasktype INNER JOIN " + DBConstants.DOMAIN_INFO_TABLE + " DIT ON TGT.groupname=DIT.usergroup");
+            }
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                VBusinessUnitVector.addElement((String) rs.getString(1));
+            }
+            rs.close();
+            statement.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public java.util.Vector getBusinessProcessVector()
+    {
+        return VBusinessProcessVector;
+    }
+
+    public void setBusinessProcessVector()
+    {
+
+        System.out.println("start setBusinessProcessVector :" + VBusinessProcessVector);
+        try
+        {
+            java.sql.PreparedStatement statement = null;
+            java.sql.PreparedStatement statement1 = null;
+            java.sql.ResultSet rs = null;
+            java.sql.ResultSet rs1 = null;
+            int iUserlevel = 0;
+            String szUsers = username;
+
+            if ("GAUser".equalsIgnoreCase(user_flag))
+            {
+                statement = fieldDBConnection.prepareStatement("SELECT distinct TGT.tasktype FROM " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT INNER JOIN " + DBConstants.USER_GROUP_TABLE + " UGT ON TGT.groupname=UGT.groupname AND UGT.userid='" + szUsers + "'");
+            }
+            if ("GAOperator".equalsIgnoreCase(user_flag))
+            {
+                //changed on 05-03-2006 for oracle level is a keyword --sreevani LEVEL pseudo-column
+                statement1 = fieldDBConnection.prepareStatement("SELECT \"level\" from " + DBConstants.SECURITYLEVELS_TABLE + " where name = '" + szUsers + "'");
+                rs1 = statement1.executeQuery();
+                while (rs1.next())
+                {
+                    iUserlevel = rs1.getInt("level");
+                }
+                rs1.close();
+                statement1.close();
+                if (iUserlevel == 1)
+                {
+                    statement = fieldDBConnection.prepareStatement("SELECT distinct TGT.tasktype FROM " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT INNER JOIN " + DBConstants.AGENT_GROUP_TABLE + " AGT ON TGT.groupname=AGT.groupname");
+                } else
+                {
+                    statement = fieldDBConnection.prepareStatement("SELECT distinct TGT.tasktype FROM " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT INNER JOIN " + DBConstants.AGENT_GROUP_TABLE + " AGT ON TGT.groupname=AGT.groupname AND AGT.userid='" + szUsers + "'");
+                }
+            }
+            if ("GAExternal".equalsIgnoreCase(user_flag))
+            {
+                statement = fieldDBConnection.prepareStatement("SELECT distinct TGT.tasktype FROM " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT INNER JOIN " + DBConstants.DOMAIN_INFO_TABLE + " DIT ON TGT.groupname=DIT.usergroup");
+            }
+            System.out.println("user_flag query is --->" + statement);
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                VBusinessProcessVector.addElement((String) rs.getString(1));
+            }
+            rs.close();
+            statement.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        System.out.println("end setBusinessProcessVector :" + VBusinessProcessVector);
+    }
+
+    public void setBusinessProcessVectorForMultipleRole(int iLevel)
+    {
+        VBusinessProcessVector.clear();
+        System.out.println("start setBusinessProcessVector :" + VBusinessProcessVector);
+        try
+        {
+            java.sql.PreparedStatement statement = null;
+            java.sql.PreparedStatement statement1 = null;
+            java.sql.ResultSet rs = null;
+            java.sql.ResultSet rs1 = null;
+            int iUserlevel = iLevel;
+            String szUsers = username;
+
+            if ("GAUser".equalsIgnoreCase(user_flag))
+            {
+                statement = fieldDBConnection.prepareStatement("SELECT distinct TGT.tasktype FROM " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT INNER JOIN " + DBConstants.USER_GROUP_TABLE + " UGT ON TGT.groupname=UGT.groupname AND UGT.userid='" + szUsers + "'");
+            }
+            if ("GAOperator".equalsIgnoreCase(user_flag))
+            {
+                //changed on 05-03-2006 for oracle level is a keyword --sreevani LEVEL pseudo-column
+				/*statement1 = fieldDBConnection.prepareStatement("SELECT \"level\" from "+DBConstants.SECURITYLEVELS_TABLE+" where name = '"+szUsers+"'");
+                rs1 = statement1.executeQuery();
+                while(rs1.next())
+                {
+                iUserlevel = rs1.getInt("level");
+                }
+                rs1.close();
+                statement1.close();*/
+                if (iUserlevel == 1)
+                {
+                    statement = fieldDBConnection.prepareStatement("SELECT distinct TGT.tasktype FROM " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT INNER JOIN " + DBConstants.AGENT_GROUP_TABLE + " AGT ON TGT.groupname=AGT.groupname");
+                } else
+                {
+                    statement = fieldDBConnection.prepareStatement("SELECT distinct TGT.tasktype FROM " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT INNER JOIN " + DBConstants.AGENT_GROUP_TABLE + " AGT ON TGT.groupname=AGT.groupname AND AGT.userid='" + szUsers + "'");
+                }
+            }
+            if ("GAExternal".equalsIgnoreCase(user_flag))
+            {
+                statement = fieldDBConnection.prepareStatement("SELECT distinct TGT.tasktype FROM " + DBConstants.TASKTYPE_GROUP_TABLE + " TGT INNER JOIN " + DBConstants.DOMAIN_INFO_TABLE + " DIT ON TGT.groupname=DIT.usergroup");
+            }
+            System.out.println("user_flag query is --->" + statement);
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                VBusinessProcessVector.addElement((String) rs.getString(1));
+            }
+            rs.close();
+            statement.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        System.out.println("end setBusinessProcessVector :" + VBusinessProcessVector);
+    }
+
+    public void setTaskHistoryOrder()
+    {
+        java.sql.PreparedStatement statement = null;
+        java.sql.ResultSet rs = null;
+        String szUsers = username;
+        try
+        {
+            /*
+            Comments Added By :Prasad P on 06-02-2004 Friday
+            Purpose of the Code : Getting the chronological order for the task history for the logged in users
+             */
+            statement = fieldDBConnection.prepareStatement("SELECT distinct taskhistory_order,showpeertasks FROM " + DBConstants.TASK_VIEW_TABLE + " WHERE userid='" + szUsers + "'");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                szTaskHistoryOrder = rs.getString(1);
+                szShowPeerTasks = rs.getString(2);
+
+            }
+            rs.close();
+            statement.close();
+        } catch (Exception e)
+        {
+            szTaskHistoryOrder = "ASC";
+            szShowPeerTasks = "No";
+            e.printStackTrace();
+        }
+    }
+
+    public void setTaskHistoryOrder(String szTaskHistoryOrd)
+    {
+        java.sql.PreparedStatement statement = null;
+        java.sql.ResultSet rs = null;
+        String szUsers = username;
+        try
+        {
+            /*
+            Comments Added By :Vandana U Bhat on 06-02-2004 Friday
+            Purpose of the Code : Getting the chronological order for the task history for the logged in users
+             */
+            statement = fieldDBConnection.prepareStatement("UPDATE " + DBConstants.TASK_VIEW_TABLE + " SET taskhistory_order = ? WHERE userid='" + szUsers + "'");
+            statement.setString(1, szTaskHistoryOrd);
+            statement.executeUpdate();
+            szTaskHistoryOrder = szTaskHistoryOrd;
+            statement.close();
+        } catch (Exception e)
+        {
+            szTaskHistoryOrder = "ASC";
+            e.printStackTrace();
+        }
+    }
+
+    public void setHomeView(String szView)
+    {
+        szHomeView = szView;
+    }
+
+    public String getHomeView()
+    {
+        return szHomeView;
+    }
+
+    public void setShowPeerTasks(String szPeerTasks)
+    {
+        szShowPeerTasks = szPeerTasks;
+    }
+
+    public String getShowPeerTasks()
+    {
+        return szShowPeerTasks;
+    }
+
+    public String getTaskHistoryOrder()
+    {
+        return szTaskHistoryOrder;
+    }
+
+    public void setExternalTableFlag()
+    {
+        PreparedStatement st = null;
+        ResultSet rst = null;
+        String szCheck = "";
+        try
+        {
+            st = fieldDBConnection.prepareStatement("SELECT externaltableflag from " + DBConstants.EXTERNAL_TABLE_LINK_TABLE + " where externaltablevalue = 'usertable'");
+            rst = st.executeQuery();
+            while (rst.next())
+            {
+                szCheck = rst.getString("externaltableflag");
+                if (szCheck.equalsIgnoreCase("Yes"))
+                {
+                    szExternalTable = "GAexternal";
+                }
+            }
+            rst.close();
+            st.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public String getExternalTableFlag()
+    {
+        return szExternalTable;
+    }
+
+    public void setDirectoryTableFlag()
+    {
+        PreparedStatement st = null;
+        ResultSet rst = null;
+        String szCheck = "";
+        try
+        {
+            st = fieldDBConnection.prepareStatement("SELECT directoryflag from " + DBConstants.DIRECTORY_LINK_TABLE + " ");
+            rst = st.executeQuery();
+            while (rst.next())
+            {
+                szCheck = rst.getString(1);
+                if (szCheck.equalsIgnoreCase("Yes"))
+                {
+                    szDirectoryTable = "GAexternal";
+                }
+            }
+            rst.close();
+            st.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public String getDirectoryTableFlag()
+    {
+        return szDirectoryTable;
+    }
+
+    public void setLoggedInUserGroups(String tablestring, String szUserName)
+    {
+        String szTableName = "";
+        if ("GAOperator".equalsIgnoreCase(tablestring))
+        {
+            szTableName = DBConstants.AGENT_GROUP_TABLE;
+        } else if ("GAUser".equalsIgnoreCase(tablestring))
+        {
+            szTableName = DBConstants.USER_GROUP_TABLE;
+        } else
+        {
+            szTableName = DBConstants.USER_GROUP_TABLE;
+        }
+        try
+        {
+
+            PreparedStatement statement = fieldDBConnection.prepareStatement("Select groupname from " + szTableName + " where userid = '" + szUserName + "' order by groupname");
+            ResultSet rs = statement.executeQuery();
+            //System.out.println("setLoggedInUserGroups QUERY==============" + statement);
+            while (rs.next())
+            {
+                if ("".equalsIgnoreCase(szGroupname))
+                {
+                    szGroupname += "'" + rs.getString(1) + "'";
+                } else
+                {
+                    szGroupname += ",'" + rs.getString(1) + "'";
+                }
+            }
+            rs.close();
+            statement.close();
+
+            if (szGroupname == null || szGroupname.equalsIgnoreCase(""))
+            {
+                szGroupname = "'" + usergroup + "'";
+            }
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+    }
+
+    public String getLoggedInUserGroups()
+    {
+        return szGroupname;
+    }
+
+    public void setLoggedInUserRole(String tablestring, String szUserName)
+    {
+        String szTableName = "";
+        if ("GAOperator".equalsIgnoreCase(tablestring))
+        {
+            szTableName = DBConstants.AGENT_GROUP_TABLE;
+        } else if ("GAUser".equalsIgnoreCase(tablestring))
+        {
+            szTableName = DBConstants.USER_GROUP_TABLE;
+        } else
+        {
+            szTableName = DBConstants.USER_GROUP_TABLE;
+        }
+        try
+        {
+
+            PreparedStatement statement = fieldDBConnection.prepareStatement("Select distinct role from " + szTableName + " where userid = '" + szUserName + "' order by role");
+            ResultSet rs = statement.executeQuery();
+            //System.out.println("setLoggedInUserGroups QUERY==============" + statement);
+            while (rs.next())
+            {
+                szSecurityName += "'" + rs.getString(1) + "',";
+            }
+            rs.close();
+            statement.close();
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+    }
+
+    public String getLoggedInUserrole()
+    {
+        return szSecurityName;
+    }
+
+    public void setTaskTypePolicyVector(String szUserId, String szDatabasename)
+    {
+        String szUserGroup = "";
+        String szQuery = "";
+        String szTaskTypeList = "";
+        PreparedStatement statement1 = null;
+        ResultSet rs1 = null;
+        String szSecurityName1 = getLoggedInUserrole();
+        //String szSecurityName = sdatabase_security;
+        String szTableFlag = gettableflag();
+
+        //System.out.println("THE ROLES ARE1111\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" + szSecurityName1);
+        szSecurityName = szSecurityName1 + "'" + sdatabase_security + "'";
+        java.util.Vector vTaskTypeVector = getBusinessProcessVector();
+        String szLoggedInUserGroups = getLoggedInUserGroups();
+
+        //System.out.println("THE ROLES ARE\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" + szSecurityName);
+        try
+        {
+            PreparedStatement st1 = fieldDBConnection.prepareStatement("SELECT usergroup from " + DBConstants.DOMAIN_INFO_TABLE + "");
+            writeStatement(st1);
+            ResultSet rst1 = st1.executeQuery();
+            while (rst1.next())
+            {
+                szUserGroup = rst1.getString("usergroup");
+            }
+            rst1.close();
+            st1.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < vTaskTypeVector.size(); i++)
+        {
+            if ("".equalsIgnoreCase(szTaskTypeList))
+            {
+                szTaskTypeList = "'" + (String) vTaskTypeVector.elementAt(i) + "'";
+            } else
+            {
+                szTaskTypeList += ",'" + (String) vTaskTypeVector.elementAt(i) + "'";
+            }
+        }
+
+//			String szTaskType = (String)vTaskTypeVector.elementAt(i);
+        if (!szTableFlag.equalsIgnoreCase("GAoperator"))
+        {
+            if (!szTableFlag.equalsIgnoreCase("GAexternal"))
+            {
+                szQuery = "SELECT PT.tasktype,PT.action,PT.allowpeers from " + DBConstants.POLICIES_TABLE + " PT INNER JOIN " + DBConstants.USER_GROUP_TABLE + " UGT ON PT.groupname = UGT.groupname WHERE PT.securitylevel in(" + szSecurityName + ") AND PT.tasktype in(" + szTaskTypeList + ") AND UGT.userid = '" + szUserId + "'";
+            } else
+            {
+                szQuery = "SELECT tasktype,action,allowpeers from " + DBConstants.POLICIES_TABLE + " where securitylevel in (" + szSecurityName + ") AND tasktype in(" + szTaskTypeList + ") AND groupname = '" + szUserGroup + "' ";
+            }
+        } else
+        {
+            if ("Mysql".equalsIgnoreCase(szDatabasename))
+            {
+                szQuery = "SELECT PT.tasktype,PT.action,PT.allowpeers from " + DBConstants.POLICIES_TABLE + " PT INNER JOIN " + DBConstants.AGENT_GROUP_TABLE + " AGT ON PT.groupname = AGT.groupname WHERE PT.securitylevel in(" + szSecurityName + ") AND PT.tasktype in(" + szTaskTypeList + ") AND AGT.userid = '" + szUserId + "'";
+            } else
+            {
+                szQuery = "SELECT tasktype,action,allowpeers from " + DBConstants.POLICIES_TABLE + " where securitylevel in (" + szSecurityName + ") AND tasktype in(" + szTaskTypeList + ") and groupname in (" + szLoggedInUserGroups + " )";
+            }
+        }
+        try
+        {
+            statement1 = fieldDBConnection.prepareStatement(szQuery);
+            /* System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+            System.out.println("Stmt to get Action policyvector... -->" + statement1);
+            System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");*/
+            writeStatement(statement1);
+            rs1 = statement1.executeQuery();
+            int iActionCount = 0;
+            while (rs1.next())
+            {
+                vAllowedTaskTypes.addElement(rs1.getString(1));
+                vTaskTypeActions.addElement(rs1.getString(2));
+                vTaskTypeActionAllowpeers.addElement(rs1.getString(3));
+                /*
+                sAAllowedTaskTypes[iActionCount] = rs1.getString(1);
+                iATaskTypeActions[iActionCount] = ActionConstants.CheckAction(rs1.getString(2));
+                sATaskTypeActionAllowPeers[iActionCount] = rs1.getString(3);
+                 */ iActionCount++;
+            }
+            rs1.close();
+            statement1.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+
+    //This method added in order to perform multiple roles..date June 19
+    public void setTaskTypePolicyVector(String szUserId, String szDatabasename, String szSecurityName)
+    {
+        String szUserGroup = "";
+        String szQuery = "";
+        String szTaskTypeList = "";
+        PreparedStatement statement1 = null;
+        ResultSet rs1 = null;
+        //String szSecurityName = sdatabase_security;
+        String szTableFlag = gettableflag();
+
+        java.util.Vector vTaskTypeVector = getBusinessProcessVector();
+        String szLoggedInUserGroups = getLoggedInUserGroups();
+
+
+        vAllowedTaskTypes.clear();
+        vTaskTypeActions.clear();
+        vTaskTypeActionAllowpeers.clear();
+        try
+        {
+            PreparedStatement st1 = fieldDBConnection.prepareStatement("SELECT usergroup from " + DBConstants.DOMAIN_INFO_TABLE + "");
+            writeStatement(st1);
+            ResultSet rst1 = st1.executeQuery();
+            while (rst1.next())
+            {
+                szUserGroup = rst1.getString("usergroup");
+            }
+            rst1.close();
+            st1.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < vTaskTypeVector.size(); i++)
+        {
+            if ("".equalsIgnoreCase(szTaskTypeList))
+            {
+                szTaskTypeList = "'" + (String) vTaskTypeVector.elementAt(i) + "'";
+            } else
+            {
+                szTaskTypeList += ",'" + (String) vTaskTypeVector.elementAt(i) + "'";
+            }
+        }
+
+//			String szTaskType = (String)vTaskTypeVector.elementAt(i);
+        if (!szTableFlag.equalsIgnoreCase("GAoperator"))
+        {
+            if (!szTableFlag.equalsIgnoreCase("GAexternal"))
+            {
+                szQuery = "SELECT PT.tasktype,PT.action,PT.allowpeers from " + DBConstants.POLICIES_TABLE + " PT INNER JOIN " + DBConstants.USER_GROUP_TABLE + " UGT ON PT.groupname = UGT.groupname WHERE PT.securitylevel = '" + szSecurityName + "' AND PT.tasktype in(" + szTaskTypeList + ") AND UGT.userid = '" + szUserId + "'";
+            } else
+            {
+                szQuery = "SELECT tasktype,action,allowpeers from " + DBConstants.POLICIES_TABLE + " where securitylevel = '" + szSecurityName + "' AND tasktype in(" + szTaskTypeList + ") AND groupname = '" + szUserGroup + "' ";
+            }
+        } else
+        {
+            if ("Mysql".equalsIgnoreCase(szDatabasename))
+            {
+                szQuery = "SELECT PT.tasktype,PT.action,PT.allowpeers from " + DBConstants.POLICIES_TABLE + " PT INNER JOIN " + DBConstants.AGENT_GROUP_TABLE + " AGT ON PT.groupname = AGT.groupname WHERE PT.securitylevel = '" + szSecurityName + "' AND PT.tasktype in(" + szTaskTypeList + ") AND AGT.userid = '" + szUserId + "'";
+            } else
+            {
+                szQuery = "SELECT tasktype,action,allowpeers from " + DBConstants.POLICIES_TABLE + " where securitylevel = '" + szSecurityName + "' AND tasktype in(" + szTaskTypeList + ") and groupname in (" + szLoggedInUserGroups + " )";
+            }
+        }
+        try
+        {
+            statement1 = fieldDBConnection.prepareStatement(szQuery);
+            /*System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+            System.out.println("Stmt to get Action policyvector... -->"+statement1);
+            System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");*/
+            writeStatement(statement1);
+            rs1 = statement1.executeQuery();
+            int iActionCount = 0;
+            while (rs1.next())
+            {
+                vAllowedTaskTypes.addElement(rs1.getString(1));
+                vTaskTypeActions.addElement(rs1.getString(2));
+                vTaskTypeActionAllowpeers.addElement(rs1.getString(3));
+                /*
+                sAAllowedTaskTypes[iActionCount] = rs1.getString(1);
+                iATaskTypeActions[iActionCount] = ActionConstants.CheckAction(rs1.getString(2));
+                sATaskTypeActionAllowPeers[iActionCount] = rs1.getString(3);
+                 */ iActionCount++;
+            }
+            rs1.close();
+            statement1.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public Vector getAllowedTaskTypeVector()
+    {
+        return vAllowedTaskTypes;
+    }
+
+    public Vector getTaskTypeActionsVector()
+    {
+        return vTaskTypeActions;
+    }
+
+    public Vector getTaskTypeActionAllowpeersVector()
+    {
+        return vTaskTypeActionAllowpeers;
+    }
+
+    /*	public String[] getAllowedTaskTypeArray()
+    {
+    return sAAllowedTaskTypes;
+    }
+    public int[] getTaskTypeActionsArray()
+    {
+    return iATaskTypeActions;
+    }
+    public String[] getTaskTypeActionAllowpeersArray()
+    {
+    return sATaskTypeActionAllowPeers;
+    }
+     */
+
+    //03-07-2004 added for performance sreevani this can be in valuestore rather than here
+    public void setPrioritydispColor()
+    {
+        try
+        {
+            PreparedStatement stmtdispcolor = fieldDBConnection.prepareStatement("SELECT displaycolor,priorityid from " + DBConstants.PRIORITY_TABLE + "");
+            ResultSet rsdisplaycolor = stmtdispcolor.executeQuery();
+            while (rsdisplaycolor.next())
+            {
+                VTaskTypeDisplayColor.addElement(rsdisplaycolor.getString("displaycolor"));
+                VTaskTypePriorityId.addElement(rsdisplaycolor.getString("priorityid"));
+            }
+            /* System.out.println("size of VTaskTypeDisplayColor =============:"+VTaskTypeDisplayColor.size());
+            System.out.println("size of VTaskTypePriorityId =============:"+VTaskTypePriorityId.size());*/
+            rsdisplaycolor.close();
+            stmtdispcolor.close();
+        } catch (Exception edispcolor)
+        {
+            edispcolor.printStackTrace();
+        }
+
+    }
+
+    public Vector getPriorityIDVector()
+    {
+        return VTaskTypePriorityId;
+
+    }
+
+//added on 27-06-2005 to display next action by as none in case of closed tasks as said by pdk
+    public void setDefClosedStatusVector()
+    {
+        try
+        {
+            PreparedStatement stmtClosedStatus = fieldDBConnection.prepareStatement("SELECT statusid,status from " + DBConstants.STATUS_TABLE + " WHERE default_on_close = 1");
+            ResultSet rsClosedStatus = stmtClosedStatus.executeQuery();
+            while (rsClosedStatus.next())
+            {
+                VTaskTypeDefClosedStatusId.addElement(rsClosedStatus.getString("statusid"));
+            }
+            // System.out.println("size of VTaskTypeDefClosedStatusId =============:"+VTaskTypeDefClosedStatusId.size());
+
+            rsClosedStatus.close();
+            stmtClosedStatus.close();
+        } catch (Exception edispcolor)
+        {
+            edispcolor.printStackTrace();
+        }
+
+    }
+
+    public Vector getDefClosedStatusIDVector()
+    {
+        return VTaskTypeDefClosedStatusId;
+
+    }
+
+    public Vector getPriorityDispColorVector()
+    {
+        return VTaskTypeDisplayColor;
+    }
+
+    public void setTasktypeClosedStatusArray()
+    {
+        try
+        {
+            PreparedStatement statement6 = fieldDBConnection.prepareStatement("Select task_type,status from " + DBConstants.STATUS_TABLE + " where default_on_close=1");
+            ResultSet rs6 = null;
+            rs6 = statement6.executeQuery();
+            int iTaskTypeClosedStatusCount = 0;
+            while (rs6.next())
+            {
+                szTaskTypeClosedStatusArr[iTaskTypeClosedStatusCount] = (rs6.getString("task_type")).trim() + "," + (rs6.getString("status")).trim();
+                iTaskTypeClosedStatusCount++;
+            }
+            rs6.close();
+            statement6.close();
+        // System.out.println("size of iTaskTypeClosedStatusCount =============:"+iTaskTypeClosedStatusCount);
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            GALogwriter.writeDebug("Exception occurred in setTasktypeClosedStatusArray..Login.java" + e);
+        }
+    }
+
+    public String[] getTasktypeClosedStatusArray()
+    {
+        return szTaskTypeClosedStatusArr;
+    }
+
+    public void valueBound(HttpSessionBindingEvent event)
+    {
+        // System.out.println("Inside the valueBound Method ");
+        GALogwriter.writeDebug("Inside the valueBound Method ");
+    }
+
+    public void valueUnbound(HttpSessionBindingEvent event)
+    {
+        Logger esclog1 = Logger.getLogger("admin");
+        // System.out.println("Inside the valueUnBound Method of Login");
+        GALogwriter.writeDebug("Inside the valueUnBound Method ");
+        try
+        {
+            if (!fieldDBConnection.isClosed())
+            {
+                String sASessionIdArray[] = new String[1024];
+                String sAUserIdArray[] = new String[1024];
+                String sATimeArray[] = new String[1024];
+                String sAActionArray[] = new String[1024];
+                int iRowCount = 0;
+                /* System.out.println("The userid here ===="+username);
+                System.out.println("The SessionId =="+szSessionId);*/
+                if (!"".equalsIgnoreCase(username) && !"".equalsIgnoreCase(szSessionId))
+                {
+                    try
+                    {
+                        iRowCount = 0;
+                        PreparedStatement statement1 = fieldDBConnection.prepareStatement("SELECT * FROM " + DBConstants.USER_STATISTICS_TABLE + " where user_id = '" + username + "' AND session_id = '" + szSessionId + "'");
+                        ResultSet rs1 = statement1.executeQuery();
+                        while (rs1.next())
+                        {
+                            sASessionIdArray[iRowCount] = rs1.getString(1);
+                            sAUserIdArray[iRowCount] = rs1.getString(2);
+                            sATimeArray[iRowCount] = rs1.getString(3);
+                            sAActionArray[iRowCount] = rs1.getString(4);
+                            iRowCount++;
+                        }
+                        rs1.close();
+                        statement1.close();
+                    } catch (Exception e)
+                    {
+                        System.out.println("The Exception occuring here");
+                        e.printStackTrace();
+                        GALogwriter.writeDebug("The Exception occuring here" + e);
+                    }
+                    try
+                    {
+                        for (int k = 0; k < iRowCount; k++)
+                        {
+                            PreparedStatement psmt = fieldDBConnection.prepareStatement("Insert into " + DBConstants.ARCHIVE_USER_STATISTICS_TABLE + " values (?,?,?,?,?)");
+                            psmt.setString(1, sASessionIdArray[k]);
+                            psmt.setString(2, sAUserIdArray[k]);
+                            psmt.setString(3, sATimeArray[k]);
+                            psmt.setString(4, sAActionArray[k]);
+                            psmt.setString(5, "");
+                            int res2 = psmt.executeUpdate();
+                            esclog1.info(sAUserIdArray[k] + " ===> " + sAActionArray[k] + " at " + sATimeArray[k]);
+                            psmt.close();
+                        }
+
+                        String szaction1 = "Logging out from the session.";
+                        try
+                        {
+                            SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy'-'MM'-'dd HH:mm:ss");
+                            java.util.Date currentdate_2 = new java.util.Date();
+                            String szcurrenttime = formatter1.format(currentdate_2);
+
+                            PreparedStatement psmt = fieldDBConnection.prepareStatement("INSERT INTO " + DBConstants.ARCHIVE_USER_STATISTICS_TABLE + " values (?,?,?,?,?)");
+                            psmt.setString(1, szSessionId);
+                            psmt.setString(2, username);
+                            psmt.setString(3, szcurrenttime);
+                            psmt.setString(4, szaction1);
+                            psmt.setString(5, "");
+                            int res2 = psmt.executeUpdate();
+                            esclog1.info(username + " ===> " + szaction1 + " at " + szcurrenttime);
+                            psmt.close();
+                        } catch (Exception e)
+                        {
+                            System.out.println("The Exception occuring here");
+                        //e.printStackTrace();
+                        }
+                        System.out.println("I m going to remove the session userstatistics table..." + szSessionId);
+                        PreparedStatement statement2 = fieldDBConnection.prepareStatement("DELETE From " + DBConstants.USER_STATISTICS_TABLE + " where session_id = '" + szSessionId + "'");
+                        statement2.executeUpdate();
+                        statement2.close();
+                    //this is commented to work with web services.
+		/*
+                    System.out.println("Calling the setConnectionclose() method");
+                    setConnectionclose();
+                    username = "";
+                    szSessionId = "";
+                     */
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e1)
+        {
+            // e1.printStackTrace();
+        }
+    }
+
+    /**
+     * Process incoming requests for information
+     * 
+     * @param szEncrptd to be Encrypted
+     */
+    public int enc(StringBuffer sznumber, String szEnctptd1)
+    {
+        int ai, aik, ilen, itemp, isum = 0, ikl = 0;
+        int icounter = 0;
+        int iCheck = 0;
+        
+        char szEncoded1[] =
+
+        {
+            '9', '7', '8', '5', '6', '1', '0', '4', '2', '3', 'o', 'n', 'k', 'g', 'z', 'p', 'm', 'e', 'l', 's', 't', 'x', 'q', 'r', 'y', 'b', 'h', 'f', 'a', 'j', 'c', 'i', 'd', 'u', 'w', 'v'
+        };
+        char szb[] =
+        {
+            '0', '9', 'a', 'b', 'c'
+        };
+        if (icounter % 2 == 0)
+        {
+            sznumber.setLength(13);
+            sznumber.reverse();
+        }
+        ilen = sznumber.length();
+        for (ai = 0; ai <= ilen - 1; ai++)
+        {
+            char t = sznumber.charAt(ai);
+            aik = (int) t;
+
+            if (Character.isDigit(t))
+            {
+                ikl = ((aik - 48) + icounter) % 10;
+                sznumber.setCharAt(ai, szEncoded1[ikl]);
+                char d = szEncoded1[ikl];
+                itemp = (int) d;
+                isum += itemp - 48;
+            }
+            if (Character.isLetter(t) && Character.isLowerCase(t))
+            {
+                ikl = ((aik - 87) + icounter) % 36;
+                if (ikl <= 4)
+                {
+                    ikl += 10;
+                }
+                sznumber.setCharAt(ai, szEncoded1[ikl]);
+                char d = szEncoded1[ikl];
+                itemp = (int) d;
+                isum += itemp - 96;
+            }
+
+            if (Character.isLetter(t) && Character.isUpperCase(t))
+            {
+                ikl = ((aik - 55) + icounter) % 36;
+                if (ikl <= 4)
+                {
+                    ikl += 10;
+                }
+                sznumber.setCharAt(ai, (Character.toUpperCase(szEncoded1[ikl])));
+                char d = szEncoded1[ikl];
+                itemp = (int) d;
+                isum += itemp - 64;
+            }
+        }
+        iCheck = isum;
+        char h = szb[icounter];
+        sznumber.insert(0, h);
+        String abc = sznumber.toString();
+        int aln = abc.length();
+       
+        /*
+        char ac;
+        for(int ch=0;ch<aln;ch++)
+        {
+        ac=abc.charAt(ch);
+        szEnctptd1.setCharAt(ch,ac);
+        }
+         */
+        icounter = (icounter + 1) % 5;
+        return (0);
+    }
+
+    public StringBuffer Decrypt_no(StringBuffer szEncrptd)
+    {
+        StringBuffer szDecrptd = new StringBuffer();
+        szEncrptd.setLength(14);
+        szDecrptd.setLength(14);
+        int ai, aik, ilen, ic = 0, ai1, iflag;
+        char ckl;
+        char szEncoded1[] =
+        {
+            '9', '7', '8', '5', '6', '1', '0', '4', '2', '3', 'o', 'n', 'k', 'g', 'z', 'p', 'm', 'e', 'l', 's', 't', 'x', 'q', 'r', 'y', 'b', 'h', 'f', 'a', 'j', 'c', 'i', 'd', 'u', 'w', 'v'
+        };
+        char szDecoded1[] =
+        {
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+        };
+
+        // 	get the length of the string to be encrypted
+        ilen = szEncrptd.length();
+
+        // 	separate the fist character from the string
+        ckl = szEncrptd.charAt(0);
+
+        // 	obtain the type of encryption
+
+        if (ckl >= '0' && ckl <= '8')
+        {
+            ic = 0;
+        }
+        if (ckl == '9')
+        {
+            ic = 1;
+        }
+        if (ckl == 'a')
+        {
+            ic = 2;
+        }
+        if (ckl == 'b')
+        {
+            ic = 3;
+        }
+        if (ckl == 'c')
+        {
+            ic = 4;
+        }
+
+        // 	read the string characterwise till the length of the string
+
+        for (ai = 1; ai <= ilen - 1; ai++)
+        {
+            ai1 = 0;
+            iflag = 0;
+            char t = szEncrptd.charAt(ai);
+            aik = (int) t;
+            if (Character.isLetter(t) && Character.isUpperCase(t))
+            {
+                szEncrptd.setCharAt(ai, Character.toLowerCase(t));
+            }
+            if ((aik <= 47) || (aik >= 91 && aik <= 96) || (aik >= 58 && aik <= 64) || (aik >= 123))
+            {
+                szEncrptd.setCharAt(ai - 1, szEncrptd.charAt(ai));
+                continue;
+            }
+            while (szEncoded1[ai1] != szEncrptd.charAt(ai))
+            {
+                ai1++;
+            }
+            if (szEncoded1[ai1] == szEncrptd.charAt(ai))
+            {
+                iflag = 1;
+            }
+            if (iflag == 0)
+            {
+                continue;
+            }
+            // 		check to see whether it is a digit
+            if (ai1 < 10)
+            {
+                ai1 -= ic;
+                // 		move to the end if necessary
+                if (ai1 < 0)
+                {
+                    ai1 += 10;
+                }
+            } else
+            // 		check to see whether it is an alphabet
+            {
+                ai1 -= ic;
+                // 		move to the end if necessary
+                if ((ai1 < 10) && (ai1 >= 6))
+                {
+                    ai1 += 26;
+                }
+
+            }
+            szEncrptd.setCharAt(ai - 1, szDecoded1[ai1]);
+            if (aik >= 65 && aik <= 90)
+            {
+                t = szEncrptd.charAt(ai - 1);
+                szEncrptd.setCharAt(ai - 1, Character.toUpperCase(t));
+            }
+        }
+
+        //		initialise end of string to null
+
+        String abc = szEncrptd.toString();
+        int aln = abc.length();
+        char ac;
+        for (int ab = 0; ab < aln; ab++)
+        {
+            ac = abc.charAt(ab);
+            szDecrptd.setCharAt(ab, ac);
+        }
+        // 	if the type of encryption is an even no reverse the string.
+        szDecrptd.deleteCharAt(13);
+
+        if (ic % 2 == 0)
+        {
+            szDecrptd.reverse();
+        }
+        szEncrptd.setLength(255);
+        return (szDecrptd);
+    }
+
+    public void writeStatement(java.sql.PreparedStatement szString)
+    {
+        System.out.println(new java.util.Date() + "  :  " + szString + "\n");
+    }
+
+    public String[] getGroupMembers(String szGroupname)
+    {
+        String[] szGroupMembers = new String[255];
+        int iCount = 0;
+        try
+        {
+            PreparedStatement stmt1 = fieldDBConnection.prepareStatement("Select userid from " + DBConstants.AGENT_GROUP_TABLE + " where groupname = '" + szGroupname + "' ");
+            ResultSet rs1 = stmt1.executeQuery();
+            while (rs1.next())
+            {
+                szGroupMembers[iCount] = rs1.getString(1);
+                iCount++;
+            }
+            rs1.close();
+            stmt1.close();
+        } catch (Exception e)
+        {
+        }
+        return szGroupMembers;
+    }
+
+    public void deleteTaskTables(String taskid)
+    {
+        esclog.info("Deleting Task Tables");
+        try
+        {
+            PreparedStatement statement2 = fieldDBConnection.prepareStatement("DELETE From " + DBConstants.TASK_TABLE_TABLE + " where taskid = '" + taskid + "'");
+            statement2.executeUpdate();
+            statement2.close();
+        } catch (Exception e)
+        {
+            esclog.info("### Error ### -->> Database Prob..");
+        }
+
+    }
+    /////////////////////////////////////////////////////
+
+    public void setProductAttrExists(String szNoAttr)
+    {
+        szProAttr = szNoAttr;
+        esclog.info("\n From Login Prodcut Attr====>" + szProAttr);
+    }
+
+    public void setServiceAttrExists(String szNoAttr)
+    {
+        szSerAttr = szNoAttr;
+        esclog.info("\n From Login Prodcut Attr====>" + szSerAttr);
+    }
+
+    public void setAdhocAttrExists(String szNoAttr)
+    {
+        szAdhAttr = szNoAttr;
+        esclog.info("\n From Login Prodcut Attr====>" + szAdhAttr);
+    }
+
+    public String getProductAttrExists()
+    {
+        return szProAttr;
+    }
+
+    public String getServiceAttrExists()
+    {
+        return szSerAttr;
+    }
+
+    public String getAdhocAttrExists()
+    {
+        return szAdhAttr;
+    }
+
+    public String getApplicationRealPath()
+    {
+        return szApplicationRealPath;
+    }
+
+    //Added by Krishna....July13..ADS Login
+    public void ADSLogin(Connection connection, String szADSDomainName, String szDomainname)
+    {
+        String szQuery = "";
+        try
+        {
+            szQuery = "select * from gadirectorylinkdetails where adsdomain=? and domainname=?";
+            PreparedStatement pstmt = connection.prepareStatement(szQuery);
+            pstmt.setString(1, szADSDomainName);
+            pstmt.setString(2, szDomainname);
+            ResultSet rss = pstmt.executeQuery();
+            esclog.info("Query in ADS  -->" + pstmt);
+            while (rss.next())
+            {
+                szADSServer = rss.getString("directoryserver");
+                //adsdomain.add(rss.getString("adsdomain"));
+                szSearchBase = rss.getString("basecontext");
+                esclog.info("ADS domain-->" + szSearchBase);
+                szUsrPrefix = rss.getString("userprefixcontext");
+                szADSPort = rss.getString("directoryport");
+                szAuthen = rss.getString("authentication");
+            }
+            rss.close();
+            pstmt.close();
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
+    }
+
+    public List getCustomerNames()
+    {
+        try
+        {
+            try
+            {
+
+                //Connection conn = login1.getConnection();
+
+                //Class.forName("org.postgresql.Driver");
+                //Connection conn = DriverManager.getConnection("jdbc:postgresql://192.168.1.37/adwitmod", "postgres", "password");
+
+                String szQUERYRet = "select * from gacustomer where lower(customer_name) like '%'";
+
+                String[] ArrQUERY = new String[3];
+                System.out.println("Query Developed===" + szQUERYRet);
+
+                // Statement stmt = conn.createStatement();
+
+                PreparedStatement pstmt = fieldDBConnection.prepareStatement(szQUERYRet);
+                ResultSet rs;
+                LinkedList<String> QUERYOUTPUT_arrayList = new LinkedList<String>();
+                //rs = stmt.executeQuery(szQUERYRet);
+                rs = pstmt.executeQuery();
+
+                while (rs.next())
+                {
+                    QUERYOUTPUT_arrayList.add(rs.getString("customer_name"));
+                }
+
+                rs.close();
+                pstmt.close();
+
+                Iterator iterator = QUERYOUTPUT_arrayList.iterator();
+
+                while (iterator.hasNext())
+                {
+                    System.out.print(iterator.next() + " ");
+                }
+                return QUERYOUTPUT_arrayList;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                throw e;
+            }
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public boolean checkMultipleRoles()
+    {
+        String szPrimaryRole = "";
+        String szRole = "";
+        boolean bMultiRole = false;
+        try
+        {
+            PreparedStatement pstmt = fieldDBConnection.prepareStatement("select security_level from gaoperator where user_id ~* '" + user + "'");
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next())
+            {
+                szPrimaryRole = (String) rs.getString(1);
+            }
+            rs.close();
+            pstmt.close();
+            pstmt = fieldDBConnection.prepareStatement("select role from gaagentgroup where userid ~* '" + user + "'");
+            rs = pstmt.executeQuery();
+            while (rs.next())
+            {
+                szRole = (String) rs.getString(1);
+                System.out.println("Role is -->" + szRole);
+                if (szRole != null)
+                {
+                    if (!szPrimaryRole.equalsIgnoreCase(szRole) || !szRole.equalsIgnoreCase(""))
+                    {
+                        System.out.println("Multiple role enabled...");
+                        bMultiRole = true;
+                        break;
+                    }
+                }
+            }
+            rs.close();
+            pstmt.close();
+        } catch (Exception ed)
+        {
+            ed.printStackTrace();
+        }
+        System.out.println("Returning Multiple role flag..." + bMultiRole);
+        return bMultiRole;
+    }
+}

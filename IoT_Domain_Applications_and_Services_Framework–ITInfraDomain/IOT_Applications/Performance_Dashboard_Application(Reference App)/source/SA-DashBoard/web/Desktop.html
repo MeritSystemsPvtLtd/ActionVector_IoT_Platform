@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head><meta content="text/html;charset=utf-8" http-equiv="Content-Type"></head>
+<body>
+<div id="example" class="k-content">
+	<div id="dsklistView"></div>
+	<table id="diagram0" width="100%"><tr>
+			<td valign="top" width="50%">
+				<div id="dskcharthead">
+					<table width="100%"><tr>
+							<td valign="top" width="34%">
+								<ul id="dskinput" />
+							</td>
+							<td>
+								<input id="dskchartname" type="text" class="k-textbox"readonly="readonly" />
+								<button class="k-button" id="dskRTButton" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="dskchart" style="border: 0"></div>
+			</td>
+			<td valign="top" width="50%">
+				<div id="dskcharthead2">
+					<table width="100%"><tr>
+							<td valign="top" width="34%">
+								<ul id="dskinput2" />
+							</td>
+							<td>
+								<input id="dskchartname2" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="dskRTButton2" onclick="generateLiveLineChart(this.id)">
+										<font size=2>Live</font>
+								</button>
+							</td>
+						</tr></table>
+				</div>
+				<div id="dskchart2" style="border: 0"></div></td>
+		</tr>
+		<tr>
+			<td>
+				<div id="dskcharthead3">
+					<table width="100%"><tr>
+							<td valign="top" width="34%"><ul id="dskinput3" /></td>
+							<td>
+								<input id="dskchartname3" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="dskRTButton3" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="dskchart3" style="border: 0"></div>
+			</td>
+			<td valign="top" style="border: 1px solid #EEEEEE">
+				<div id="dskcharthead4">
+					<table width="100%"><tr>
+							<td valign="top" width="34%">
+								<ul id="dskinput4" />
+							</td>
+							<td>
+								<input id="dskchartname4" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="dskRTButton4" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+						</tr></table>
+				</div>
+				<div id="dskchart4" style="border: 0"></div>
+			</td>
+		</tr></table>
+</div>
+
+<script type="text/javascript">
+
+var chartheaddiv=["dskchartname","dskchartname2","dskchartname3","dskchartname4"]
+var menudiv=["dskinput","dskinput2","dskinput3","dskinput4"]
+var combodiv = [ "#dskinput", "#dskinput2", "#dskinput3", "#dskinput4",
+		"#dskcharthead", "#dskcharthead2", "#dskcharthead3", "#dskcharthead4",
+		"#example", "#diagram0", "#dskchart", "#dskchart2", "#dskchart3",
+		"#dskchart4", "#dsklistView", "dsktypeColumn", "dsktypeColumn2",
+		"dsktypeColumn3", "dsktypeColumn4", "dskseriesType", "dskseriesType2",
+		"dskseriesType3", "dskseriesType4", "dsktypeBar", "dsktypeBar2",
+		"dsktypeBar3", "dsktypeBar4", "dsktypeLine", "dsktypeLine2", "dsktypeLine3",
+		"dsktypeLine4" ];
+var headdiv = [ [ "dsktypeColumn", "dsktypeBar", "dsktypeLine" ],
+		[ "dsktypeColumn2", "dsktypeBar2", "dsktypeLine2" ],
+		[ "dsktypeColumn3", "dsktypeBar3", "dsktypeLine3" ],
+		[ "dsktypeColumn4", "dsktypeBar4", "dsktypeLine4" ] ];
+
+var gridurl;
+var combourl;
+var gridtitle = "<font color=737C7D ><b>DESKTOP</b></font>";
+
+$(document).ready(function() {
+	gridurl = customer + "/Desktop/DesktopLeftGrid.json";
+
+	combourl = "jsonconfigurations/DesktopComboSource.json";
+
+	displayAdjust()
+
+	loadgrid(combodiv[14], gridurl, gridtitle);
+	$(window).resize(function() {
+		$(combodiv[14]).data("kendoGrid").refresh();
+		$(combodiv[10]).data("kendoChart").refresh();
+		$(combodiv[11]).data("kendoChart").refresh();
+		$(combodiv[12]).data("kendoChart").refresh();
+		$(combodiv[13]).data("kendoChart").refresh();
+		$(combodiv[0]).data("kendoComboBox").refresh();
+		$(combodiv[1]).data("kendoComboBox").refresh();
+		$(combodiv[2]).data("kendoComboBox").refresh();
+		$(combodiv[3]).data("kendoComboBox").refresh();
+	});
+});
+</script>
+
+</body>
+</html>

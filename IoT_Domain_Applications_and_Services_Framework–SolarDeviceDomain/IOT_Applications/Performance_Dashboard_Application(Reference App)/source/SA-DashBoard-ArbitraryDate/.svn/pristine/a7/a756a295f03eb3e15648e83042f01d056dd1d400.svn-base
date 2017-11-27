@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head><meta content="text/html;charset=utf-8" http-equiv="Content-Type"></head>
+   <body>
+        <div id = "slaexample" class = "k-content" style = "font-size : 8pt;">
+            <div id = "TimeLineSlider" style = "border : 1px solid lightgrey;">
+                <table width = "100%"><tr>
+                        <td width = "10%" align = "right" style = "border:0;">SLA Adjust:&nbsp;</td>
+                        <td width = "15%" style = "border : 0;"><input id = "slider" type = "number"></td>
+                        <td width = "20%" align = "left" style = "border : 0;"><input type = "submit" value = "Update" class = "k-button" onClick = "update()"></td>
+                        <td width = "20%" align = "right" style = "border : 0;">Last:</td>
+                        <td width = "20%" style = "border : 0;"><input id = "timemaincombo" width = "60%" /></td>
+                    </tr></table>
+            </div>
+            <div id = "TimeLineGrid"></div>
+            <div id = "loader" style = "position : absolute; left : 65%; top : 50%; z-index : 100"></div>
+            <div id = "TimeLineChart" class = "blink" style = "border : 1px solid lightgrey;">
+            </div>
+        </div>
+
+<script>
+	var grid1;
+	var numerictextbox;
+	var xaxisvalues = [];
+	var slavalues = [];
+	var yaxisvalues = [];
+	var servicefirst = "";
+    var MetricNameinfinal = "";
+    var newsla = [];
+    var metricChartTypeRelation=[];
+    var pivotValue="";
+	var repeatedValue="";
+	var lastvalue="";
+
+	function TimeLinegrid() {
+
+		$("#TimeLineGrid").empty();
+		var timelinegriddata = srReadFiles1(customerID + "/" + $('#timemaincombo').val() + "/" + "Defaultservice.json");
+		var timebaseddata = new kendo.data.DataSource({
+              data : timelinegriddata
+		});
+
+		$("#TimeLineGrid").kendoGrid({
+				dataSource : timebaseddata,
+				filterable : true,
+				scrollable : true,
+				resizable : true,
+				reorderable : true,
+				sortable : true,
+				selectable : "single",
+				detailInit : detailMetrictype,
+				dataBound: function() {
+					this.select(this.tbody.find(">tr:first"));
+					this.expandRow(this.tbody.find(">tr:first"));
+				},
+				change : function() {
+					var grid = this;
+					grid.collapseRow(grid.tbody.find("tr.k-master-row"));
+				},
+				detailCollapse : function() {
+				},
+				columns : [
+							{
+		                        field : "ServiceName",
+		                        title : "<font color=737C7D ><b>SERVICENAME</b></font>",
+		                        filterable : true
+                 		 	},
+						]
+			});
+	}
+	function detailMetrictype(e) {
+
+		$("#TimeLineSlider").show();
+		servicefirst = e.data.ServiceName;
+		var secondGrid = new kendo.data.DataSource({
+			transport : {
+				read : {
+					url : customerID + "/" + $('#timemaincombo').val() + "/" + "DefaultResourcetype.json",
+					dataType : "json"
+					}
+			},
+			filter : {
+				field : "ServiceName",
+				operator : "eq",
+				value : servicefirst
+			}
+		});
+		$("<div/>").appendTo(e.detailCell).kendoGrid({
+				dataSource : secondGrid,
+				resizable : true,
+				reorderable : true,
+				scrollable : true,
+				selectable : "single",
+				sortable : true,
+				detailInit : ServerList,
+				dataBound : function() {
+					this.select(this.tbody.find(">tr:first"));
+					this.expandRow(this.tbody.find(">tr:first"));
+				},
+				detailCollapse : function() {
+                        //this.refresh();
+				},
+				change : function() {
+					var grid = this;
+					grid.collapseRow(grid.tbody.find("tr.k-master-row"));
+				},
+				columns : [
+							{
+								field : "ResourceType",
+								title : "<font color=737C7D ><b>Resource Type</b></font>"
+							}
+						]
+			});
+              //  if (JSON.stringify(dataSource) == "[]") {}
+	}
+
+	function ServerList(e) {
+
+			$("#TimeLineSlider").show();
+			servicefirst = e.data.ServiceName;
+			resourceTypeName = e.data.ResourceType;
+			var secondGrid = new kendo.data.DataSource({
+				transport : {
+					read : {
+						url : customerID + "/"+$('#timemaincombo').val() + "/" + resourceTypeName+"/" + resourceTypeName + "LeftGridForBusinessSLA.json",
+						dataType : "json"
+					}
+				},
+				filter : [{
+                            field : "ServiceName",
+                            operator : "eq",
+                            value : servicefirst
+                        },{
+                            field : "ResourceType",
+                            operator : "eq",
+                            value : resourceTypeName
+                        }]
+
+				});
+				$("<div/>").appendTo(e.detailCell).kendoGrid({
+					dataSource : secondGrid,
+					resizable : true,
+                    reorderable : true,
+                    scrollable : true,
+                    selectable : "single",
+                    sortable : true,
+                    height : "250px",
+                    detailInit : detailMetric,
+                    dataBound : function() {
+                        this.select(this.tbody.find(">tr:first"));
+						this.expandRow(this.tbody.find(">tr:first"));
+					},
+					detailCollapse : function() {
+                       // this.refresh();
+					},
+                    change : function() {
+                        var grid = this;
+						grid.collapseRow(grid.tbody.find("tr.k-master-row"));
+						resourceTypeName = this.dataSource.view()[this.select().index()].ResourceType;
+						serverName = this.dataSource.view()[this.select().index()/2].ServerName;
+						resourceUnique = this.dataSource.view()[this.select().index()/2].ResourceID;
+						JsonData= srReadFiles1("jsonconfigurations/"+resourceTypeName+"ComboSource.json");
+						metricChartTypeRelation=JsonData[0].items[0].items;
+
+                    },
+
+					columns : [
+								{
+		                            field : "ServerName",
+		                            template : "#=generateLeftGrid(ResourceType,ServerName,ResourceID)#",
+		                            title : "<font color=737C7D ><b>Server Name</b></font>"
+								}
+							]
+					});
+					//  if (JSON.stringify(dataSource) == "[]") {}
+		}
+
+		function detailMetric(e) {
+			var selected_rowrecord=[];
+			var typeIndex=0;
+			serverName = e.data.ServerName;
+			resourceUnique = e.data.ResourceID;
+			var MetricResource = srReadFiles1(customerID + "/Hour/MetricResourceMappingJson.json");
+			for(var m=0;m<MetricResource.length;m++){
+				if(MetricResource[m].ResourceType==resourceTypeName){
+					typeIndex=m;
+					break;
+				}
+			}
+			var selected_temp = MetricResource[typeIndex].ResourceNames;
+			var removedMetricType = ['null','Availability','default'];
+			for(var i = 0; i < selected_temp.length; i++) {
+				if(removedMetricType.toString().match(selected_temp[i])) {}
+				else
+					selected_rowrecord.push({MetricName : selected_temp[i]})
+			}
+			$("<div/>").appendTo(e.detailCell).kendoGrid({
+				dataSource : selected_rowrecord,
+				resizable : true,
+				reorderable : true,
+				scrollable : true,
+				selectable : "single",
+				sortable : true,
+				height : "150px",
+				dataBound : function() {
+					this.select(this.tbody.find(">tr:first"));
+				},
+				detailCollapse : function() {
+	                      this.refresh();
+				},
+				change : function() {
+					$('#loader').html('<img src="images/loading.gif">');
+			        $('#loader').show();
+					MetricNameinfinal = this.dataSource.view()[this.select().index()].MetricName;
+					var Timemenuselelected="";
+					for(var p=0;p<metricChartTypeRelation.length;p++){
+						if(metricChartTypeRelation[p].text.indexOf("Time Line")!=-1 && metricChartTypeRelation[p].metricType.indexOf(MetricNameinfinal)!=-1){
+							Timemenuselelected=(metricChartTypeRelation[p].text).replace(/ /g,'');
+							break;
+						}
+					}
+					var dataparam = srReadFiles1(customerID + "/" + $("#timemaincombo").val() + "/" + resourceTypeName +"/"+Timemenuselelected+"/"+ resourceTypeName + "LineChartByTime.json");
+					yaxisvalues=[];
+					for ( var i = 0; i < dataparam.length; i++) {
+
+						if (dataparam[i].ServerName == serverName && dataparam[i].ResourceID == resourceUnique) {
+							var index = dataparam[i].ResourceNames.indexOf(MetricNameinfinal)
+							if(index!=-1){
+								xaxisvalues = dataparam[i].TimeStamps[index];
+								slavalues = dataparam[i].SlaValues[index];
+								yaxisvalues = dataparam[i].ResourceValues[index];
+								break;
+							}
+						}
+					}
+	                if(yaxisvalues==undefined) yaxisvalues=[];
+					createTimeLineChart(MetricNameinfinal, xaxisvalues, slavalues, yaxisvalues);
+					//yaxisvalues=[];
+				},
+				columns : [
+							{
+								field : "MetricName",
+								title : "<font color=737C7D ><b>Metric Name</b></font>"
+							}
+						]
+				});
+              //alert(JSON.stringify(dataSource));
+             //if (JSON.stringify(dataSource) == "[]") {}
+		}
+
+	function displayArrange() {
+			$("#slaexample").width($(window).width() - 25);
+       		$("#slaexample").height($(window).height() - 75);
+       		$("#TimeLineGrid").width(3 * $("#slaexample").width() / 10 - 10);
+       		$("#TimeLineGrid").height($("#slaexample").height());
+       		$("#TimeLineCombo").width(3 * $("#slaexample").width() / 10 - 15);
+       		$("#TimeLineSlider").width($("#slaexample").width() - $("#TimeLineGrid").width() - 10);
+			$("#TimeLineChart").width($("#slaexample").width() - $("#TimeLineGrid").width() - 10);
+       		$("#TimeLineChart").height($("#slaexample").height() - 40);
+	}
+
+	function createTimeLineChart(MetricType, xaxis, sla, yaxis) {
+			var graphunits = $("#timemaincombo").val();
+            var element = new Array();
+            var timestamps2=[];
+            var yaxisvalues=[];
+			numerictextbox.value(parseFloat(sla[sla.length-1]));
+			var stepLength=parseInt(xaxis.length/11);
+			pivotValue="";
+			if(stepLength==0)
+				stepLength=1;
+			else if(stepLength==1)
+				stepLength=2;
+			if(JSON.stringify(yaxis)=="[]"){
+				$('#loader').hide();
+				DisplayNoDataImage("#TimeLineChart");
+			}
+			else
+				element = $("#TimeLineChart").kendoChart({
+				theme : $(document).data("kendoSkin") || "default",
+				title : {
+		                     // text :MetricType.charAt(0).toUpperCase() + MetricType.slice(1),
+		                      color : "green"
+		              },
+				chartArea : {
+					border : {
+						color : "",
+						dashType : "solid",
+						width : 2
+					}
+				},
+				legend : {
+		                 visible : false
+				},
+				seriesDefaults : {
+					type : "line",
+					markers : {
+						size : 0
+					}
+				},
+				series : [
+							{
+								name : "Threshold Value",
+								data : sla,
+						 		width:1
+							},
+							{
+								name : MetricNameinfinal,
+						 		data : yaxis,
+						 		width:1
+							}
+
+						],
+				seriesColors : [ "red", "blue" ],
+				valueAxis : {labels :{template: "#= YLabelShortening1(value)#"}},
+				categoryAxis :{
+						categories :  xaxis,
+						labels :{
+							template: "#= shortLabels1(value)#",rotation : 320,
+							step : stepLength
+						}
+				},
+				tooltip : {
+						visible : true,
+						template : "#= series.name #= ${value}"
+				}
+		});
+			 	$('#loader').hide();
+	}
+
+	function YLabelShortening1(value){
+
+		if(resourceTypeName=='Network' && value>(100000/4)){
+			return (value/(1000000)).toFixed(1)+" M";
+		}
+		else if(resourceTypeName=='JVM' && value>(104857/3)){
+			return (value/(1024*1024)).toFixed(1)+" Mb";
+		}
+		else
+			return value;
+	}
+
+
+	function shortLabels1(value) {
+
+	Date.prototype.monthNames = [
+	    "January", "February", "March",
+	    "April", "May", "June",
+	    "July", "August", "September",
+	    "October", "November", "December"
+	];
+
+	Date.prototype.getMonthName = function() {
+	    return this.monthNames[this.getMonth()];
+	};
+	Date.prototype.getShortMonthName = function () {
+	    return this.getMonthName().substr(0, 3);
+	};
+
+		var graphunits = $("#timemaincombo").val();
+		var valuesplit=value;
+		var changeFormate=value;
+		var split_Date=valuesplit.split(" ");
+		if(graphunits=="Hour"){
+			 var value1 = split_Date[1].split(":");
+			value=value1[0]+":"+value1[1];
+
+		}
+		else if(graphunits=="Day"){
+			 var value1 = split_Date[1].split(":");
+			value=value1[0]+":"+value1[1];
+			repeatedValue=value;
+			 if(pivotValue==value){
+					value="";
+				}
+				pivotValue=repeatedValue;
+
+		}
+
+		else if(graphunits=="Week"){
+			 var value1 = split_Date[0].split("/");
+				var date=new Date(changeFormate);
+			 value=value1[2]+" "+date.getShortMonthName();
+			 repeatedValue=value;
+			 if(pivotValue==value){
+					value="";
+				}
+				pivotValue=repeatedValue;
+		}
+		else if(graphunits=="Month"){
+			 var value1 = split_Date[0].split("/");
+			 var date=new Date(changeFormate);
+			 value=value1[2]+" "+date.getShortMonthName();
+			 repeatedValue=value;
+			 if(pivotValue==value){
+					value="";
+				}
+				pivotValue=repeatedValue;
+
+		}
+		else if(graphunits=="Year"){
+	 		var value1 = split_Date[0].split("/");
+			var date=new Date(changeFormate);
+			value=date.getShortMonthName()+", "+value1[0];
+			repeatedValue=value;
+			if(pivotValue==value){
+				value="";
+			}
+			pivotValue=repeatedValue;
+
+		}
+	return value;
+		}
+
+
+	function onNumericChange() {
+		for ( var i = 0; i < slavalues.length; i++) {
+                  newsla[i] = this.value();
+		}
+		createTimeLineChart(MetricNameinfinal, xaxisvalues, newsla, yaxisvalues);
+	}
+	function onSpin() {
+              var newsla = [];
+              for ( var i = 0; i < slavalues.length; i++) {
+                  newsla[i] = this.value();
+		}
+		createTimeLineChart(MetricNameinfinal, xaxisvalues, newsla, yaxisvalues);
+	}
+	function minutesBox() {
+              $("#minutesbox").kendoNumericTextBox({
+                  min : 1,
+                  format : "#0"
+              });
+	}
+
+
+	function createComboBox() {
+		var combodata = [ {
+                     "value" : "Hour"
+                 }, {
+                     "value" : "Day"
+                 }, {
+                     "value" : "Week"
+                 }, {
+                     "value" : "Month"
+                 }, {
+                     "value" : "Year"
+                 } ];
+		$("#timemaincombo").kendoDropDownList({
+                 dataTextField : "value",
+                 dataValueField : "value",
+                 dataSource : combodata,
+                 suggest : true,
+                 change : onChangeCombo,
+                 index : 0
+
+		});
+		dataItem = "hour";
+         }
+
+	function onChangeCombo() {
+		$('#loader').html('<img src="images/loading.gif">');
+        $('#loader').show();
+		dataItem = $("#timemaincombo").val();
+		customer = customerID + "/" + $("#maincombo").val();
+		refreshbutton();
+	}
+	function generateSlider() {
+		numerictextbox = $("#slider").kendoNumericTextBox({
+			change : onNumericChange,
+			spin : onSpin,
+			min : 0
+		});
+	}
+	function update() {
+		if(newsla[0]==undefined)
+			newsla[0]=numerictextbox.value();
+		$.ajax({
+			url : "UpdateMetricThreshold",
+			data : {
+				CustomerName : customerID.replace(/ /g, ''),
+				ServiceName : servicefirst.replace(/ /g, ''),
+				MetricName : MetricNameinfinal.replace(/ /g, ''),
+				host : serverName.replace(/ /g, ''),
+				SLAValue : newsla[0],
+				resourceTypeName:resourceTypeName.replace(/ /g, ''),
+				resourceId:resourceUnique.replace(/ /g, '')
+			},
+			success : function(data) {
+				alert(data);
+			}
+		});
+	}
+	$(document).ready(function() {
+		createComboBox();
+		$('.k-combobox').css({'width':'90%','float':'left'});
+		$('#refreshmain').hide();
+		$('#timemaincombo').data("kendoDropDownList").value($("#maincombo").val());
+		generateSlider();
+		numerictextbox = $("#slider").data("kendoNumericTextBox");
+		refreshbutton();
+	});
+      </script>
+	</body>
+</html>

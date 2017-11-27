@@ -1,0 +1,72 @@
+module com.prokosha.sadeskCeP.MemcachePerfMonitor.v3;
+
+//
+// Event to be sent to SADesk has following fields:
+//  EventType - "Correlated Event"
+//  EventDesc - "Memcached Performance Degradation"
+//  EventSymptoms - "Latency too high, Latency spikes observed, Load too high, Load spikes, Swap usage too high, Swap spikes"
+//  MemcServer - Memcache Server  IP
+//  MemcPort - Memcache Server Instance Port
+//  MemcLatency - Read latency
+//  MemcClient - Client from which read latency measured
+//  ServerSwapMax - maximum swap available on memcached server
+//  ServerSwapUsed - swap usage on memcached server
+//  ServerLoad1 - load1 on memcached server
+//  ServerLoad5 - load5 on memcached server
+//  ServerLoad15 - load15 on memcached server
+//  MonitorWindow - no of minutes for which monitor calculates averages
+//  ServerLoad1Average - load1 average for on memcached server for the time window
+//  ServerLatencyAverage - read latency average for time window
+//
+
+// 
+//  Conditions detected by monitor
+//		Latency spike -- latency greater than 0.5
+//	1. If no of latency spikes observed greater than 2 in the past 5 minutes
+// 	2. If latency greater than 7
+//
+insert into MRLE1
+	select MemcLatency as LatencySpike
+	from MRLE
+	having (MemcLatency>0.5);
+insert into MC1
+	select count(LatencySpike) as LatencySpikes
+	from MRLE1.win:time(5 minutes)
+	having (count(LatencySpike) > 2);
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+select distinct "Correlated Event" as EventType,
+		"Memcached Performance Degradation" as EventDesc,
+		"Latency spikes observed [more than 2 instances of latency>0.5]" as EventSymptoms,
+		MemcServer, MemcPort, MemcLatency, MemcClient, ServerSwapMax, ServerSwapUsed,
+		ServerLoad1, ServerLoad5, ServerLoad15, "5 minutes" as MonitorWindow
+    from LAE.win:length(1), SSE.win:length(1), MRLE.win:length(1), MC1.win:time(1 second)
+    where (LatencySpikes>2);
+
+// 
+//  Conditions detected by monitor
+// 	1. If latency greater than 0.8
+//
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.2")
+select distinct "Correlated Event" as EventType,
+		"Memcached Performance Degradation" as EventDesc,
+		"Latency beyond CRITICAL threshold [>0.8]" as EventSymptoms,
+		MemcServer, MemcPort, MemcLatency, MemcClient, ServerSwapMax, ServerSwapUsed,
+		ServerLoad1, ServerLoad5, ServerLoad15
+    from LAE.win:length(1), SSE.win:length(1), MRLE.win:length(1)
+    where (MemcLatency>0.8);
+
+	
+// 
+//  Conditions detected by monitor
+// 	1. If latency greater than 0.6 and Load1 greater than 2
+//
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.3")
+select "Correlated Event" as EventType,
+		"Memcached Performance Degradation" as EventDesc,
+		"Latency in WARNING range [avg>0.6] and server load in WARNING range [avg>8]" as EventSymptoms,
+		MemcServer, MemcPort, MemcLatency, MemcClient, ServerSwapMax, ServerSwapUsed,
+		ServerLoad1, ServerLoad5, ServerLoad15
+    from LAE.win:time(5 minutes), SSE.win:length(1), MRLE.win:time(5 minutes)
+    having ((avg(MemcLatency)>0.6) and (avg(ServerLoad1)>8));
+
+	

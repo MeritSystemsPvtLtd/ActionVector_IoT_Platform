@@ -1,0 +1,1037 @@
+                  
+/***************************************************************************
+
+PROGRAM			:       valuestore.java
+PURPOSE			:       USed to store the browser session context specific values
+***************************************************************************/
+
+package controller;
+import Model.*;
+import java.io.*;
+import java.sql.*;
+import java.util.*;
+import java.util.Date;
+import java.text.*;
+import javax.servlet.http.*;
+import javax.servlet.*;
+//import Model.DBConstants;
+//import GIFTask.GA_KeyDecode;
+/* * 
+ * Creation date: 7/8/02
+ * @author: srikanth
+*/
+
+public class valuestore implements Serializable 
+{
+	protected boolean flag = false;
+	protected String Driver;
+	protected String szSMTPServerAddr;
+  	protected int iSMTPPort;
+	protected String szSMTPUser;
+	protected String szSMTPPassword;
+	protected String szDatabaseName;
+   	protected String szDataSourceUrl;
+ 	protected String szDriverName;
+	protected String szDatabaseUser;
+ 	protected String szDatabasePasswd;
+  	protected String szHomeDirectory;
+   	protected String szBannerFile;
+        protected String szHomeGIFFile;
+   	protected String szLogoFile;
+	protected String szBackgroundFile;
+	protected String szBackgroundColor;
+	protected String szBandColor;
+	protected String szHomePage;
+	protected String szDomainemail;
+	protected String szLoginURLReference; //to be used when logging out of Actionvector
+	protected String szMeritCopyRightRequired; //to be used for displaying the Merit copyright information
+	protected String szStrongPwdChk; //to be used for displaying the szStrongPwdChk information
+	protected String szFAXDomain;
+	protected String szSMSDomain;
+
+    public int getSzSMSPort()
+    {
+        return szSMSPort;
+    }
+
+    public void setSzSMSPort(int szSMSPort)
+    {
+        this.szSMSPort = szSMSPort;
+    }
+        protected int szSMSPort;
+	protected String szRegMailboxId;
+	protected String szMailboxPassword;
+	protected int Logging_Level;
+	protected String szLogLevel;
+	protected String szDomainUserGroup;
+	protected String szPrivateChatPort;
+	protected String szPublicChatPort;
+	protected String Allowpublicchat;
+	protected String Allowoperatorchat;
+	protected String Allowdiscussionforum;
+
+	protected String szEmailRequired;
+	protected String szChatRequired;
+	protected String szDiscussionForumRequired;
+	protected String szKnowledgebaseRequired;
+	protected String szPostCreate;
+	protected String szPostUpdate;
+	protected String szFont;
+	protected String szLanguage;
+protected int szpasswordtime;
+    protected boolean isPasswordExp = false;
+    protected int sznopasslockattempt;
+//	9/25/2009
+	protected String szEnableLDAPLogin;
+	protected Vector vADSDomains;
+	protected int iCurrentMonth = 0;
+	private Statement Statements = null;
+
+	protected String szRegistrationType;
+	Vector VUserSessions = new Vector();
+	Vector VUserSessionsID = new Vector();
+
+	//protected GA_KeyDecode KeyDecode = null;
+
+	/**
+	 * valuestore constructor comment.
+	 */
+
+	public valuestore() throws NoClassDefFoundError
+	{
+	}
+	
+	/**
+	 * Set the User registration type (java.lang.String) value.
+	 * @param aregistrationtype Registration type value
+ 	*/
+
+	public void setUserregistrationtype(String aregistrationtype)
+	{
+		szRegistrationType = aregistrationtype;
+    	}
+	
+	/**
+	 * Get the User registration type (java.lang.String) value.
+	 * @return registrationtype
+ 	*/
+
+	public String getUserregistrationtype()
+	{
+		return szRegistrationType;
+    	}
+
+
+	/**
+	 * Set the MeritCopyRightRequired (java.lang.String) value.
+	 * @param aMeritCopyRightRequired Yes/No
+ 	*/
+
+	public void setMeritCopyRightRequired(String aMeritCopyRightRequired)
+	{
+		szMeritCopyRightRequired = aMeritCopyRightRequired;
+	}
+	
+	/**
+	 * Get the MeritCopyRightRequired (java.lang.String) value.
+	 * @return szMeritCopyRightRequired 
+ 	*/
+
+	public String getMeritCopyRightRequired()
+	{
+		return szMeritCopyRightRequired;
+	}
+
+	/**
+	 * Set the szLoginURLReference mailbox id (java.lang.String) value.
+	 * This parameter will be used when the user logs out of ActionVector
+	 * @param aLoginURLReference Login URL Reference name
+ 	*/
+
+	public void setLoginURLReference(String aLoginURLReference)
+	{
+		szLoginURLReference = aLoginURLReference;
+	}
+	
+	/**
+	 * Get the LoginURLReference  (java.lang.String) value.
+	 * @return szLoginURLReference
+ 	*/
+
+	public String getLoginURLReference()
+	{
+		return szLoginURLReference;
+	}
+//
+	/**
+	 * Set the szStrongPwdChk mailbox id (java.lang.String) value.
+	 * This parameter will be used when the user is created in  ActionVector to set the password with spl-chars
+	 * @param aStrongPwdChk Login URL Reference name
+ 	*/
+
+	public void setStrongPwdChk(String aStrongPwdChk)
+	{
+		szStrongPwdChk = aStrongPwdChk;
+	}
+	
+	/**
+	 * Get the StrongPwdChk  (java.lang.String) value.
+	 * @return szStrongPwdChk
+ 	*/
+
+	public String getStrongPwdChk()
+	{
+		return szStrongPwdChk;
+	}
+	/**
+	 * Set the User registration mailbox id (java.lang.String) value.
+	 * @param amailboxid Mail id name
+ 	*/
+public void setPasswordPeriod(int apasswordtime)
+    {
+        szpasswordtime = apasswordtime;
+    }
+
+    public int getPasswordPeriod()
+    {
+        return szpasswordtime;
+    }
+
+    public int getSznopasslockattempt()
+    {
+        return sznopasslockattempt;
+    }
+
+    public void setSznopasslockattempt(int sznopasslockattempt)
+    {
+        this.sznopasslockattempt = sznopasslockattempt;
+    }
+    
+    public boolean isIsPasswordExp()
+    {
+        return isPasswordExp;
+    }
+
+    public void setIsPasswordExp(boolean isPasswordExp)
+    {
+        this.isPasswordExp = isPasswordExp;
+    }
+
+	public void setregmailboxid(String amailboxid)
+	{
+		szRegMailboxId = amailboxid;
+	}
+	
+	/**
+	 * Get the User registration mailbox id (java.lang.String) value.
+	 * @return mailboxid 
+ 	*/
+
+	public String getregmailboxid()
+	{
+		return szRegMailboxId;
+	}
+
+	/**
+	 * Set the User registration password (java.lang.String) value.
+	 * @param amailboxpassword Maibox password value
+ 	*/
+
+	public void setregmailboxpassword(String amailboxpassword)
+	{
+		szMailboxPassword = amailboxpassword;
+	}	
+
+	/**
+	 * Get the User registration password (java.lang.String) value.
+	 * @return mailboxpassword 
+ 	*/
+
+	public String getmailboxpassword()
+	{
+		return szMailboxPassword;
+	}
+	
+	/**
+	 * Set the Statement (java.sql.Statement) value.
+	 * @param statement Statement object
+ 	*/
+
+	public void setStatement(Statement statement)
+	{
+		Statements = statement;
+	}
+	
+	/**
+	 * Get the Statement (java.sql.Statement) value.
+	 * @return Statements
+ 	*/
+
+	public Statement getStatement()
+	{
+		return Statements;
+	}
+
+	/**
+	 * Set the Logging level (java.lang.String) value.
+	 * @param szLogLevel logging level value
+ 	*/
+	
+ 	public void setLogging_Level(String aLogging_Level)
+	{
+		szLogLevel = aLogging_Level;
+	}
+	
+	/**
+	 * Get the Logging level (java.lang.String) value.
+	 * @return szLogLevel
+	*/
+
+	public String getLogging_Level()
+	{
+		return szLogLevel;
+	}
+
+	/**
+	 * Set the SMTP Server (java.lang.String) value.
+	 * @param sServer SMTP Server name
+	*/
+	
+	public void setServer(String aServer)	
+	{
+		szSMTPServerAddr = aServer;
+    	}	
+	
+	/**
+	 * Set the SMTP Port (int) value.
+	 * @param aPort  SMTP port value
+	*/
+	
+	public void setPort(int aPort)
+	{
+		iSMTPPort = aPort;
+	}
+
+	/**
+	 * Set the SMTP User (java.lang.String) value.
+	 * @param asmtpuser Set SMTP user value
+	*/
+	
+	public void setsmtpuser(String asmtpuser)
+	{
+		szSMTPUser = asmtpuser;
+	}
+
+	/**
+	 * Get the SMTP User (java.lang.String) value.
+	 * @return smtpuser
+	*/
+
+	public String getsmtpuser()
+	{
+		return szSMTPUser;
+	}	
+	
+	/**
+	 * Set the SMTP Password (java.lang.String) value.
+	 * @param asmtppassword SMTP password value
+	*/
+	
+	public void setsmtppassword(String asmtppassword)
+	{
+		szSMTPPassword = asmtppassword;
+	}	
+	
+	/**
+	 * Get the SMTP Password (java.lang.String) value.
+	 * @return smtppassword
+	*/
+
+	public String getsmtppassword()
+	{
+		return szSMTPPassword;
+	}	
+
+	/**
+	 * Set the Fax Domain (java.lang.String) value.
+	 * @param afaxdomain Fax Domain value
+	*/
+
+	public void setfaxdomain(String afaxdomain)
+	{
+		szFAXDomain = afaxdomain;
+	}	
+	
+	/**
+	 * Set the SMS Domain (java.lang.String) value.
+	 * @param asmsdomain SMS Domain value
+	*/
+
+	public void setsmsdomain(String asmsdomain)
+	{
+		szSMSDomain = asmsdomain;
+	}
+	
+	/**
+	 * Get the Fax Domain (java.lang.String) value.
+	 * @return faxdomain
+	*/
+
+	public String getfaxdomain()
+	{
+		return szFAXDomain;
+	}	
+
+	/**
+	 * Get the SMS Domain (java.lang.String) value.
+	 * @return smsdomain 
+	*/
+
+	public String getsmsdomain()
+	{
+		return szSMSDomain;
+	}
+
+	/**
+	 * Set the Database Name (java.lang.String) value.
+	 * @param databasename 
+	*/
+
+	public void setDatabasename(String databasename)
+	{
+		szDatabaseName = databasename;
+	}	
+
+	/**
+	 * Set the Datasource Name (java.lang.String) value.
+	 * @param aDsn Datasource Name value
+	*/
+
+	public void setDatasourcename(String aDsn)
+	{
+		szDataSourceUrl = aDsn;
+    	}	
+
+	/**
+	 * Set the Datasource Driver (java.lang.String) value.
+	 * @param aDriver Database Driver value
+	*/
+
+	public void setDrivername(String aDriver)
+	{
+		szDriverName = aDriver;
+    	}
+	
+	/**
+	 * Set the Private Chat Port (java.lang.String) value.
+	 * @param aPrivateport varible to set private chat port
+	 * @deprecated
+	*/
+	
+	public void setPrivatechatport(String aPrivateport)
+	{
+		szPrivateChatPort = aPrivateport;
+    	}
+
+	/**
+	 * Set the Public Chat Port (java.lang.String) value.
+	 * @param aPublicport varible to set public chat port
+	 * @deprecated
+	*/
+
+	public void setPublicchatport(String aPublicport)
+	{
+		szPublicChatPort = aPublicport;
+    	}	
+	
+	/**
+	 * Get the Private Chat Port (java.lang.String) value.
+	 * @return  privatechatport
+	 * @deprecated
+	*/
+
+	public String getPrivatechatport()
+	{
+		return szPrivateChatPort;
+   	}	
+	
+	/**
+	 * Set the Post Create (java.lang.String) value.
+	 * @param setpostcreate Post create batch file pat
+	*/
+	
+	public void setpostcreate(String apostcreate)
+	{
+		szPostCreate = apostcreate;
+	}	
+
+	/**
+	 * Get the Post Create (java.lang.String) value.
+	 * @return  postcreate
+	*/
+	
+  	public String getpostcreate()
+	{
+		return szPostCreate;
+	}
+		
+	/**
+	 * Set the Post Update (java.lang.String) value.
+	 * @param setpostupdate Post create batch file pat
+	*/
+
+	public void setpostupdate(String apostupdate)
+	{
+		szPostUpdate = apostupdate;
+	}	
+
+	/**
+	 * Get the Post Update (java.lang.String) value.
+	 * @param postupdate Post create batch file pat
+	*/
+	
+	public String getpostupdate()
+	{
+		return szPostUpdate;
+	}
+	
+	/**
+	 * Set the Language (java.lang.String) value.
+	 * @param alanguage Language value
+	*/
+
+	public void setlanguage(String alanguage)
+	{
+		szLanguage = alanguage;
+	}
+
+//9/25/2009
+
+/**
+	 * Set the EnableLDAPLogin (java.lang.String) value.
+	 * @param alanguage EnableLDAPLogin value
+	*/
+
+	public void setEnableLDAPLogin(String aEnableLDAPLogin)
+	{
+		szEnableLDAPLogin = aEnableLDAPLogin;
+	}
+/**
+	 * Get the EnableLDAPLogin (java.lang.String) value.
+	 * @return  EnableLDAPLogin
+	*/
+
+	public String getEnableLDAPLogin()
+	{
+		return szEnableLDAPLogin;
+	}
+
+
+//	vADSDomains
+		public void setADSDomains(Vector ADSDomains)
+	{
+		vADSDomains = ADSDomains;
+	}
+/**
+	 * Get the EnableLDAPLogin (java.lang.String) value.
+	 * @return  EnableLDAPLogin
+	*/
+
+	public Vector getADSDomains()
+	{
+		return vADSDomains;
+	}
+//	9/25/2009
+
+	/**
+	 * Set the Font (java.lang.String) value.
+	 * @param alanguage Language value
+	*/
+
+	public void setfont(String afont)
+	{
+		szFont = afont;
+	}	
+
+	/**
+	 * Get the Language (java.lang.String) value.
+	 * @return  language
+	*/
+
+	public String getlanguage()
+	{
+		return szLanguage;
+	}
+
+
+	/**
+	 * Get the Font (java.lang.String) value.
+	 * @return  font
+	*/
+
+	public String getfont()
+	{
+		return szFont;
+	}	
+
+	/**
+	 * Get the Font (java.lang.String) value.
+	 * @return  font
+	*/
+
+	public String getPublicchatport()
+	{
+		return szPublicChatPort;
+    	}	
+
+	/**
+	 * Set the Public Chat allow (java.lang.String) value.
+	 * @param aAllowpublicchat String to set public chat allow
+	*/
+
+	public void setAllowpublicchat(String aAllowpublicchat)
+	{
+		Allowpublicchat = aAllowpublicchat;
+    	}	
+
+	/**
+	 * Get the Public Chat allow (java.lang.String) value.
+	 * @return Allowpublicchat
+	*/
+
+	public String getAllowpublicchat()
+	{
+		return Allowpublicchat;
+    	}	
+
+	/**
+	 * Set the Allow Operator chat (java.lang.String) value.
+	 * @param aAllowoperatorchat
+	*/
+	public void setcurrentmonth(int iCurrent_Month)
+	{
+		iCurrentMonth = iCurrent_Month;
+	}
+
+	public int getcurrentmonth()
+	{
+		return iCurrentMonth;
+	}
+
+	public void setAllowoperatorchat(String aAllowoperatorchat)
+	{
+		Allowoperatorchat = aAllowoperatorchat;
+    	}
+	
+	/**
+	 * Get the Allow Operator chat (java.lang.String) value.
+	 * @return Allowoperatorchat
+	*/
+
+	public String getAllowoperatorchat()
+	{
+		return Allowoperatorchat;
+    	}
+
+	/**
+	 * Set the Allow Discussion Forum (java.lang.String) value.
+	 * @param aAllowdiscussionforum
+	*/
+
+	public void setAllowdiscussionforum(String aAllowdiscussionforum)
+	{
+		Allowdiscussionforum = aAllowdiscussionforum;
+    	}
+	
+	/**
+	 * Get the Allow Discussion Forum (java.lang.String) value.
+	 * @param Allowdiscussionforum
+	*/
+	
+	public String getAllowdiscussionforum()
+	{
+		return Allowdiscussionforum;
+    	}
+
+	/**
+	 * Set the setemailrequired (java.lang.String) value.
+	 * @return szEmailRequired
+	*/
+	
+	public void setemailrequired(String aemailrequired)
+	{
+		szEmailRequired = aemailrequired;
+	}
+
+	public String getemailrequired()
+	{
+		return szEmailRequired;
+	}
+
+	public void setchatrequired(String achatrequired)
+	{
+		szChatRequired = achatrequired;
+	}
+
+	public String getchatrequried()
+	{
+		return szChatRequired;
+	}
+	
+	public void setdiscussionforumrequired(String adiscussionforumrequired)
+	{
+		szDiscussionForumRequired = adiscussionforumrequired;
+	}
+
+	public String getdiscussionforumrequried()
+	{
+		return szDiscussionForumRequired;
+	}
+	
+	public void setknowledgebaserequired(String aknowledgebaserequired)
+
+	{
+		szKnowledgebaseRequired = aknowledgebaserequired;
+	}
+
+	public String getknowledgebaserequired()
+	{
+		return szKnowledgebaseRequired;
+	}
+
+	public void setDatabaseuser(String aUser)
+	{
+		szDatabaseUser = aUser;
+    	}
+
+	public void setDatabasepasswd(String aPasswd)
+	{
+		szDatabasePasswd = aPasswd;
+    	}
+
+	public void setHomedir(String aHome)
+	{
+		szHomeDirectory = aHome;
+	}
+
+	public void setBanner(String aBanner)
+	{
+		szBannerFile = aBanner;
+    	}
+         
+        public void setHomeGIFFile(String aHomeGIf)
+	{
+		szHomeGIFFile = aHomeGIf;
+    	}        
+                
+
+	public void setBackground(String aBackground)
+	{
+		szBackgroundFile = aBackground;
+	}
+	
+	public void setBandcolor(String aBandcolor)
+	{
+		szBandColor = aBandcolor;
+	}
+	public void setHomePage(String aHomePage)
+	{
+		szHomePage = aHomePage;
+	}
+	public void setBackgroundcolor(String acolor)
+	{
+		szBackgroundColor = acolor;
+	}
+	public void setDomainemail(String aDomainemail)
+	{
+		szDomainemail = aDomainemail;
+	}
+
+	public String getBackgroundcolor()
+	{
+		return szBackgroundColor;
+	}
+
+	public void setLogoFile(String aLogo)
+	{
+		szLogoFile = aLogo;
+	}
+
+	public String getLogoFile()
+	{
+		return szLogoFile;
+	}
+
+	
+	public String getServer()
+	{
+		return szSMTPServerAddr;
+	}
+
+	public int getPort()
+	{
+		return iSMTPPort;
+	}
+	
+	public String getDatabasename()
+	{
+		return szDatabaseName;
+	}
+
+	public String getDatasourcename()
+	{
+		return szDataSourceUrl;
+	}
+
+	public String getDriver()
+	{
+		return szDriverName;
+	}
+
+	public String getDatabaseuser()
+	{
+		return szDatabaseUser;
+	}
+
+	public String getDatabasepaswd()
+	{
+		return szDatabasePasswd;
+	}
+
+	public String getHomedir()
+	{
+		return szHomeDirectory;
+	}
+
+	public String getBanner()
+	{
+		return szBannerFile;
+	}
+        public String getHomeGif()
+	{
+		return szHomeGIFFile;
+	}
+
+	public String getBackground()
+	{
+		return szBackgroundFile;
+	}
+	
+	public String getBandcolor()
+	{
+		return szBandColor;
+	}
+	public String getHomePage()
+	{
+		return szHomePage;
+	}
+	public boolean getFlag()
+	{
+		return flag;
+	}
+	public String getDomainemail()
+	{
+		return szDomainemail;
+	}
+	public void setFlag(boolean aflag)
+	{
+		flag = aflag;
+	}
+
+	//check for the usergroup
+
+	/**
+	 * Set the usergroup (java.lang.String) value.
+	 * @param szUserGroup value
+ 	*/
+	
+ 	public void setDomainUserGroup(String adomainusergroup)
+	{
+		szDomainUserGroup = adomainusergroup;
+	}
+	
+	/**
+	 * Get the usergroup (java.lang.String) value.
+	 * @return szUserGroup
+	*/
+
+	public String getDomainUserGroup()
+	{
+		return szDomainUserGroup;
+	}
+
+	public void setUsersession(HttpSession value)
+	{
+		try
+		{
+			VUserSessions.addElement(value);
+			VUserSessionsID.addElement(value.getId());
+			for( int i = 0; i < VUserSessions.size(); i++)
+			{
+			}
+
+/*
+			for( int i = 0; i < VUserSessions.size(); i++)
+			{
+				HttpSession sess = (HttpSession)VUserSessions.elementAt(i);
+				System.out.println("The SESSION ID IS  ********** ======"+sess.getId());
+			}
+*/
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	public HttpSession getUsersession(String sessionId)
+	{
+		try
+		{
+		int j=0;
+		boolean bChk=false;
+		for( int i = 0; i < VUserSessions.size(); i++)
+		{
+			if(sessionId.equalsIgnoreCase((String)VUserSessionsID.elementAt(i)))
+			{
+				System.out.println("SessionId from VUserSessionsID vector is "+VUserSessionsID.elementAt(i)+" SessionId from parameter is "+sessionId);
+				j =i;
+				bChk=true;
+				System.out.println(" j ="+j+" i = "+i);
+				break;			
+			}
+		}
+		System.out.println(" j ="+j);
+		//System.out.println("VUserSessions.elementAt(j)  getusersession :"+VUserSessions.elementAt(j));
+		if (bChk == false)
+		{
+
+			System.out.println("Before Returning null from  ==== :  sessionId: "+sessionId+"\n VUserSessions :"+VUserSessions.size() +"   VUserSessions->"+ VUserSessions+" VUserSessionsID  "+VUserSessionsID);
+			return null;
+
+		}
+		if(VUserSessions.elementAt(j) == null)
+		{
+			System.out.println(" equals to null");
+			VUserSessions.setElementAt(null,j);
+			return null;
+		}
+		else
+		{
+			System.out.println("not equals to null");
+			return (HttpSession)VUserSessions.elementAt(j);
+		}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
+	
+	public void setUsersessionclose(String value)
+	{
+
+		try
+		{
+			System.out.println("");	
+			for( int i = 0; i < VUserSessions.size(); i++)
+			{
+				String sess = (String)VUserSessionsID.elementAt(i);
+				if (sess.equals(value))
+				{
+					VUserSessions.removeElement(VUserSessions.elementAt(i));
+					VUserSessionsID.removeElement(VUserSessionsID.elementAt(i));
+				}
+				
+				System.out.println("");	
+			}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+  	public String appendchar(String input)
+	{
+		for(int i = 0; i < input.length(); i++)
+		{
+			char t = input.charAt(i);
+			int asp = (int)t;
+
+			if((int)t==32)
+			{
+				input = input.replace(t,(char)43);
+			}
+		}
+		return input;
+	}
+
+	public String appendspecialchar(String input)
+	{
+		StringBuffer sb = new StringBuffer(input);
+		for(int i = 0; i < input.length(); i++)
+		{
+			char t = sb.charAt(i);
+			int asp = (int)t;
+
+			if(asp == 62)
+			{
+				String str = "%";
+				sb.replace(i,i + 1,str);
+				input = sb.toString();
+			}
+		} 
+		return input;
+	}
+
+	public static void main(String args[])
+	{
+
+	}
+	public String GetFormattedDateString(java.util.Date szDate)
+	{
+		String szFormattedDateString ="";
+		SimpleDateFormat SDFormatter = null;
+		Date DCurrentDate = szDate;
+		if("Mysql".equalsIgnoreCase(getDatabasename()))
+		{
+			SDFormatter = new SimpleDateFormat("yyyy'-'MM'-'dd HH:mm:ss");
+		}
+		else if("Mysql4".equalsIgnoreCase(getDatabasename()))
+		{
+			SDFormatter = new SimpleDateFormat("yyyy'-'MM'-'dd HH:mm:ss");
+		}
+		else if("IBM DB2".equalsIgnoreCase(getDatabasename()))
+		{
+			SDFormatter = new SimpleDateFormat("yyyy'-'MM'-'dd'-'HH.mm.ss.mmmmmm");
+		}
+		else if ("Oracle".equalsIgnoreCase(getDatabasename()))
+		{
+			SDFormatter = new SimpleDateFormat("dd'-'MMM'-'yy' 'K.mm.ss a");
+			//SDFormatter = new SimpleDateFormat("dd'-'MMM'-'yyyy 'K.mm.ss a");
+//			SDFormatter = new SimpleDateFormat("dd'-'MMM'-'yyyy' 'HH:mm:ss");
+		}
+	
+
+		else
+		{
+			SDFormatter = new SimpleDateFormat("dd'-'MMM'-'yyyy HH:mm:ss");
+		}
+		szFormattedDateString = SDFormatter.format(DCurrentDate);
+
+		System.out.println("szFormattedDateString :"+szFormattedDateString);
+	/*	if ("Oracle".equalsIgnoreCase(getDatabasename()))
+		{
+			szFormattedDateString="TO_DATE("+szFormattedDateString+",'dd-MMM-yyyy HH24:mm:ss')";
+			System.out.println("szFormattedDateString :"+szFormattedDateString);
+		}*/
+		return szFormattedDateString;
+	}
+}
+

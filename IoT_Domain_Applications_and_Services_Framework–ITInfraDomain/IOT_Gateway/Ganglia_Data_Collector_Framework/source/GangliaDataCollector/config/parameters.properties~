@@ -1,0 +1,8 @@
+interval=1
+sshusername=gajendrak
+sship=192.168.1.2
+sshpassword=password
+cephost=192.168.1.177
+cepport=7102
+192.168.1.177=satya,password
+192.168.1.21=gajendrak,password

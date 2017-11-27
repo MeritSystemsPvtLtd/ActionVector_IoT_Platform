@@ -1,0 +1,262 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>SA-DashBoard</title>
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+
+
+	<link type="text/css" href="js/kendo.default.min.css" rel="stylesheet" />
+	<link type="text/css" href="js/kendo.common.min.css" rel="stylesheet" />
+	<link type="text/css" href="js/examples.css" rel="stylesheet" />
+	<link type="text/css" href="css/Dailog.css" rel="stylesheet" />
+	<link type="text/css" href="js/PopDialogu.css" rel="stylesheet" />
+	<link type="text/css" href="js/jquery-ui.css" rel="stylesheet" />
+	<link type="text/css" href="js/jquery.window.css" rel="stylesheet" />
+	<link type="text/css" href="js/common.css" rel="stylesheet" />
+
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/kendo.all.min.js"></script>
+	<script type="text/javascript" src="js/jquery.window.js"></script>
+	<script type="text/javascript" src="js/PopDialogu.js"></script>
+	<script type="text/javascript" src="js/commonChart.js"></script>
+
+
+	<style type="text/css">
+		/* .k-grid{
+			overflow: hidden;
+		}
+		#tabstrip ul a{
+
+		}
+		.FilesLinks {
+			background: white;
+			overflow: auto;
+			max-height: 150px;
+		}
+			#DownloadXLSFiles {
+			width: 380px;
+			height: 285px;
+			padding: 20px 20px 0 10px;
+			margin-left: 0;
+			font-size: 12px;
+		}
+		#xlsattach li {
+			list-style: none;
+			padding-top: 2px;
+		}
+
+		#xlsattach li img {
+			cursor: pointer;
+		}
+
+		h2 {
+		    border-bottom-color: #999999;
+		    border-bottom-style: solid;
+		    border-bottom-width: 1px;
+		    font-weight: normal;
+		    padding-bottom: 5px;
+		    padding-left: 0;
+		    padding-right: 0;
+		    padding-top: 5px;
+		}
+		html, body, h1, h2 {
+		    margin-bottom: 0;
+		    margin-left: 0;
+		    margin-right: 0;
+		    margin-top: 0;
+		    padding-bottom: 0;
+		    padding-left: 0;
+		    padding-right: 0;
+		    padding-top: 0;
+		} */
+	</style>
+</head>
+<body>
+	<div class="FilesLinks"></div>
+	<div id="DownloadXLSFiles" style="display: none;" class="k-header">
+		<h2>XLS Reports</h2><br/>
+		<div class="FilesLinks"></div>
+		<ul type='none' id="Actions">
+			<li style="text-align: center;">
+				<button onclick="closewnd();" style=" width: 60px; height: 30px;margin-right:45px;margin-top:15px" id="commentCancel" class="k-button">Cancel</button>
+			</li>
+		</ul>
+	</div>
+
+	<div  class="k-content">
+	<input type="hidden" value="Desktop" id="tabId"/>
+	<input type="hidden" value="hour" id="mainComboId"/>
+	<input type="hidden" value="" id="selectedIp"/>
+	<table id="refreshmain"
+		style="padding-top: 5px; width: 30%; border-radius: 5px; float: right">
+		<tr>
+			<td width="1" style="border:0"><input class="k-button" type="button" value="XLS Reports" onclick="XLSReportWindow()"/></td>
+			<td style="border:0" align="right"><label for="maincombo" style="color: 737C7D">Last:</label>
+			</td>
+			<td style="border:0"><input id="maincombo" style="width: 100%" /></td>
+			<td style="border:0"><input type="button" onclick="refreshbutton()"
+				value="Refresh" class="k-button" id="button1"
+				style="color: blueviolet; background-color: white; border-color: yellowgreen" />
+			</td>
+		</tr>
+		<tr>
+	</table>
+	<div id="tabstrip">
+			<ul>
+				<li id="desktopid" style="color: 737C7D">
+					<h3>
+						<font size="1" color=737C7D>Desktop</font>
+					</h3>
+				</li>
+				<li id="serverid" style="color: 737C7D">
+					<h3>
+						<font size="1" color=737C7D>Server</font>
+					</h3>
+				</li>
+				<li id="databaseid" style="color: 737C7D">
+					<h3>
+						<font size="1" color=737C7D>DataBase</font>
+					</h3>
+				</li>
+				<li id="networkid" style="color: 737C7D">
+					<h3>
+						<font size="1" color=737C7D>Network</font>
+					</h3>
+				</li>
+				<li id="jvmid" style="color: 737C7D">
+					<h3>
+						<font size="1" color=737C7D>JVM</font>
+					</h3>
+				</li>
+				<li id="inverterid" style="color: 737C7D">
+					<h3>
+						<font size="1" color=737C7D>Inverter</font>
+					</h3>
+				</li>
+				<li id="businessviewid" style="color: 737C7D">
+					<h3>
+						<font size="1" color=737C7D>Business View</font>
+					</h3>
+				</li>
+				<li id="slaviewid" style="color: 737C7D">
+					<h3>
+						<font size="1" color=737C7D>SLA View</font>
+					</h3>
+				</li>
+			</ul>
+			<FONT SIZE="3" FACE="courier" id="marqueeLabel" style="position: fixed;z-index: 1;width:100%;"  COLOR=blue></FONT>
+	</div>
+</div>
+<div id="summarywindow">
+	<div id="summarygrid"></div>
+</div>
+<div id="liveWindow"></div>
+
+
+<script>
+var dataItem;
+var selectedtab;
+var customer;
+var customerID;
+var menuChange=false;
+var menuItemSelected;
+var menuItemSelected2;
+var menuItemSelected3;
+var menuItemSelected4;
+var menuIndexes=new Array(4);
+
+	function changeDateTime() {
+		$('#loader').html('<img src="images/loading.gif">');
+        $('#loader').show();
+		menuChange=true;
+		dataItem = $("#maincombo").val();
+		$('#mainComboId').val(dataItem);
+		document.cookie='selectedmainComboCookies='+dataItem;
+		customer = customerID + "/" + $("#maincombo").val();
+		refreshbutton();
+	}
+
+
+	function TimeDateComboBox() {
+
+		var combodata = [ {
+				"value" : "Hour"
+			}, {
+				"value" : "Day"
+			}, {
+				"value" : "Week"
+			}, {
+				"value" : "Month"
+			}, {
+				"value" : "Year"
+			} ];
+
+		$("#maincombo").kendoDropDownList({
+				dataTextField : "value",
+				dataValueField : "value",
+				dataSource : combodata,
+				suggest : true,
+				change : changeDateTime,
+				index : 0
+
+		});
+
+		dataItem = "hour";
+
+	}
+	$(document).ready(function() {
+				var theCookies = document.cookie.split(/[;]+/);
+				for ( var i = 0; i < theCookies.length; i++) {
+					if (theCookies[i].indexOf("selectedtabCookies") != -1) {
+						$('#tabId').val(theCookies[i].substring(theCookies[i].indexOf("=")+1));
+					}
+					if(theCookies[i].indexOf("selectedmainComboCookies")!=-1){
+						$('#mainComboId').val(theCookies[i].substring(theCookies[i].indexOf("=")+1));
+					}
+					if(theCookies[i].indexOf("selectedHostCookies")!=-1){
+						$('#selectedIp').val(theCookies[i].substring(theCookies[i].indexOf("=")+1));
+					}
+				}
+
+				$('#maincombo').val($('#mainComboId').val());
+				var host = document.location.host;
+				var url = host.split(":");
+				customer = url[0];
+				customerID = url[0];
+				TimeDateComboBox();
+				$('#'+$('#tabId').val().replace(/ /g,'').toLowerCase().trim()+"id").addClass('k-state-active');
+				customer = customer + "/" + $("#maincombo").val();
+				selectedtab=$('#tabId').val();
+				$("#tabstrip").width($(window).width() - 3);
+				$("#tabstrip").height($(window).height() - 3);
+
+				$("#tabstrip").kendoTabStrip({
+					contentUrls :  ['Desktop.html',
+									'Servers.html',
+									'DataBase.html',
+									'Network.html',
+									'Jvm.html',
+									'Inverter.html',
+									'businessview.html',
+									'TimeLineView.html' ],
+					select : function(e) {
+									menuChange=false;
+									selectedtab = $(e.item).find("> .k-link").text().trim();
+									$('#selectedIp').val("");
+									if (selectedtab == "SLA View") {
+										$("#refreshmain").hide();
+									}
+									else {
+										$("#refreshmain").show();
+									}
+									$('#'+$('#tabId').val().replace(/ /g,'').toLowerCase().trim()+"id").removeClass('k-state-active');
+									$('#tabId').val(selectedtab);
+									document.cookie='selectedtabCookies='+selectedtab;
+									$(e.contentElement).empty();
+					}
+			});
+	});
+</script>
+</body>
+</html>

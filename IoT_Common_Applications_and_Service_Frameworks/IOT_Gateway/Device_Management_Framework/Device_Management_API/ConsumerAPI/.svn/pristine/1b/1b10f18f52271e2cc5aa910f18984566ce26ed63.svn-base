@@ -1,0 +1,98 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package businessmodel;
+
+import Model.DatabaseConnection;
+import java.nio.charset.Charset;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author niteshc
+ */
+public class GetMetricUOM {
+
+    static Logger log = Logger.getLogger(GetMetricUOM.class);
+
+    public static String getMetricUOM(javax.servlet.http.HttpServletRequest request, String customer, String service, String resourcetype, String metrictype) {
+
+        Connection con = null;
+        ResultSet rs = null;
+        Statement st = null;
+        String metricUOM = null;
+        final String All = "All";
+        StringBuffer sbr = new StringBuffer("");
+        String serviceQuery = " AND service is null";
+        try {
+            con = DatabaseConnection.getAVSAConnection(request);
+            if (con != null) {
+                log.info("Connection is not null before getting resource configuration");
+                st = con.createStatement();
+                try {
+                    if (service != null) {
+                        if (!(service.equals("")) && !(service.equals(All))) {
+                            serviceQuery = " AND service ='" + service + "'";
+                        }
+                    }
+                    boolean recFound = false;
+                    String query = "select metricuom from metricsinfo where resourcetype='" + resourcetype + "'"
+                            + "and metrictype='" + metrictype + "' and  customerid in (select id from"
+                            + " customerinfo where customername='" + customer + "')" + serviceQuery;
+                    // System.out.println("Query===>" + query);
+                    rs = st.executeQuery(query);
+                    while (rs.next()) {
+                        recFound = true;                         
+                        metricUOM = rs.getObject("metricuom").toString();
+                        sbr.append("{\"MetricUOM\":\"" + metricUOM + "\"},");
+                    }
+                    if (recFound) {
+                        sbr.deleteCharAt(sbr.length() - 1);
+                    }
+                    // System.out.println("MetricUOM ====>" + sbr);
+                    if (!recFound) {
+                        sbr.append("null");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("Error while fetching metricUOM list in GetMetricUOM ", e);
+                }
+            } else {
+                return null;
+            }
+            return sbr.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Error while establishing connection", e);
+            return null;
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+                if (st != null) {
+                    st.close();
+                }
+                if (metricUOM != null) {
+                    metricUOM = null;
+                }
+                if (sbr != null) {
+                    sbr = null;
+                }
+            } catch (NullPointerException npe) {
+                npe.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error("Error while closing connection ", e);
+            }
+        }
+
+    }
+}

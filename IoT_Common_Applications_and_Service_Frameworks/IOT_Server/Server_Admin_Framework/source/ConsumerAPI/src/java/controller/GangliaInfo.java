@@ -1,0 +1,188 @@
+/***************************************************************************
+ *
+ *                            Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *              #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8th Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *          THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ ***************************************************************************/
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import businessmodel.*;
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class GangliaInfo extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(GangliaInfo.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+        StringBuffer results = new StringBuffer("<userprofile>");
+        StringBuffer result = new StringBuffer();
+        String szSessionid = "";
+        String opStatus = "";
+        String opDescription = "";
+        boolean fchecksession = false;
+        boolean fchkParam = false;
+        String szIpaddress = "";
+        String szPort = "";
+        int iPort = 0;
+        String szClusterXML = null;
+        try
+        {
+            szSessionid = request.getParameter("szsessionid");
+            szIpaddress = request.getParameter("szipaddress");
+            szPort = request.getParameter("szport");
+            if ((szSessionid != null && !szSessionid.equalsIgnoreCase("")) && (szIpaddress != null && !szIpaddress.equalsIgnoreCase("")) && (szPort != null && !szPort.equalsIgnoreCase("")))
+            {
+                iPort = Integer.parseInt(szPort);
+                fchkParam = true;
+            }
+            if (fchkParam)
+            {
+                /*fchecksession = CheckSession.checkSession(request, szSessionid);
+                if (fchecksession)
+                {*/
+                    try
+                    {
+                        GangliaRequestXML gXMLObj = new GangliaRequestXML();
+                        szClusterXML = gXMLObj.getSocketXML(szIpaddress, iPort, request);
+                        //System.out.println("szClusterXML is::" + szClusterXML);
+                        if (szClusterXML.equalsIgnoreCase("success"))
+                        {
+                            //result.append(szClusterXML);
+                            opStatus = "0";
+                            opDescription = "Operation Success";
+
+                        } else
+                        {
+                            opStatus = "106";
+                            opDescription = "Unable to Configure the Ganglia Info";
+                        }
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        opStatus = "106";
+                        opDescription = "Unable to process the request action";
+                        log.debug("Unable to process the request action", e);
+                    }
+                /*} else
+                {
+                opStatus = "102";
+                opDescription = "Invalid Session";
+                }*/
+            } else
+            {
+                opStatus = "108";
+                opDescription = "Invalid Inputs";
+            }
+        } catch (Exception e)
+        {
+            log.debug("Exception while performing operation ", e);
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            /*if (!(result == null))
+            {
+            results.append(result);
+            }*/
+            results.append("</userprofile>");
+            response.getWriter().write(results.toString());
+
+        } catch (Exception e)
+        {
+            log.debug("exception while writing output", e);
+            log.debug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                results = null;
+                result = null;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

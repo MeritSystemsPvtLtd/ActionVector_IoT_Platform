@@ -1,0 +1,113 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Model;
+
+import java.io.*;
+import java.util.Properties;
+import java.util.logging.Level;
+import org.apache.log4j.Logger;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+/**
+ *
+ * @author  gopal
+ * Created on Apr 24, 2012, 5:26:41 PM
+ */
+public class ConfigValues implements Serializable
+{
+
+    private static Properties properties = null;
+    private static String driver = null;
+    private static String username = null;
+    private static String password = null;
+    private static String url = null;
+    private static Connection con = null;
+    private static final Logger log = Logger.getLogger(ConfigValues.class.getName());
+
+    public static boolean initialized() throws FileNotFoundException, IOException
+    {
+
+        try
+        {
+            properties = new Properties();
+            properties.load(new FileInputStream("config/parameters.properties"));
+            driver = properties.getProperty("driver");
+            username = properties.getProperty("username");
+            password = properties.getProperty("password");
+            url = properties.getProperty("url");
+            try
+            {
+                Class.forName(driver);
+                con = DriverManager.getConnection(url, username, password);
+
+            } catch (Exception e)
+            {
+                System.err.println("EXCEPTION : while Connecting to database:: " + e.getMessage());
+            }
+        } catch (Exception e)
+        {
+            log.error(" ERROR *** ******************- cannot continue!!");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public static Connection getCon()
+    {
+        return con;
+    }
+
+    public static void setCon(Connection con)
+    {
+        try
+        {
+            Class.forName(driver);
+            con = DriverManager.getConnection(url, username, password);
+
+        } catch (Exception e)
+        {
+            System.err.println("EXCEPTION : while Connecting to database:: " + e.getMessage());
+        }
+    }
+
+    public static void closeConnection()
+    {
+        if (con != null)
+        {
+            try
+            {
+
+                con.close();
+
+            } catch (SQLException ex)
+            {
+                java.util.logging.Logger.getLogger(ConfigValues.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public static String getDriver()
+    {
+        return driver;
+    }
+
+    public static String getPassword()
+    {
+        return password;
+    }
+
+    public static String getUrl()
+    {
+        return url;
+    }
+
+    public static String getUsername()
+    {
+        return username;
+    }
+}

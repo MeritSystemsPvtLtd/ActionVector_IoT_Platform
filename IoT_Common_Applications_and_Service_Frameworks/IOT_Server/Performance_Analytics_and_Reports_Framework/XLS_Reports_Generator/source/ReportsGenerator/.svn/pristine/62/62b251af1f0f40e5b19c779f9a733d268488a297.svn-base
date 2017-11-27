@@ -1,0 +1,599 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.reportsgenerator;
+
+import com.prokosha.reportsgenerator.configuration.ReportsGeneratorProperties;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+import org.apache.log4j.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+
+
+/**
+ *
+ * @author yedukondalu
+ */
+public class ReportsGenerator {
+    
+    private static Logger logger=Logger.getLogger(ReportsGenerator.class.getName());
+    public static String propertyFile=null;
+    public static String periods=null;
+    public static int intervel=0;
+     
+        public ReportsGenerator(String propertyFileName){
+                    logger.info("getting property file :"+propertyFileName);
+                    //accesing Property file 
+                    this.propertyFile = propertyFileName;
+                }
+        public boolean initialize() throws IOException {
+                     //calling the loadpropery methods
+                    if (!ReportsGeneratorProperties.loadProperties(propertyFile))
+                        {
+                        logger.error("Error in  loading propertyFile");
+                        System.exit(0);
+                        }
+                       logger.info("loaded properties sucessfully");
+                 return true;
+                }
+        public boolean createDirStructure(){
+            
+                HashMap dirStructure=null,subMap=null;
+                ArrayList list=null;
+                File peroidFiles=null,customerLevelFile=null,instalationLevelFile=null,deviceLevelFile=null;
+                //getting xlsxTemplatePath
+                String instancePath=ReportsGeneratorProperties.getxlsxTemplatePath();
+                //reading periods
+                periods=ReportsGeneratorProperties.getPeriods();
+                //getting hashmap object
+                //dirStructure=ReportsGeneratorProperties.getDirStructureMap();
+                try{
+                //Splitting periods     
+                String[] spiltePeriods=periods.split(",");
+               for(int j=0;j<spiltePeriods.length;j++)
+               {
+                     peroidFiles=new File(instancePath+spiltePeriods[j]);
+                    if(peroidFiles.exists()){
+                        logger.info(spiltePeriods[j]+"File is present");
+                    }else{
+                        //creating directory
+                        peroidFiles.mkdir();
+                        logger.info(spiltePeriods[j]+" File is created");
+                       String dirStructurePath=peroidFiles+File.separator;
+                        logger.info(dirStructurePath);
+                        //retriving all key from hashamp
+                        Set<String> keys = dirStructure.keySet();
+                          for(String key: keys){
+                          logger.info(key);
+                          String fileName=key;
+                           customerLevelFile=new File(dirStructurePath+fileName);
+                          if(customerLevelFile.exists()){
+                             logger.info(fileName+" Directory is present ");
+                                   }
+                                 else{
+                                   logger.info(fileName+" Directory is not present ");
+                                    if(customerLevelFile.mkdir()){
+                                      logger.info(fileName+" Directory is created ");
+                                     //adding rootpath with filename to get subderectorypath
+                                       String subDirStructurePath=dirStructurePath+fileName+File.separator;
+                                       logger.info(dirStructurePath);
+                                       logger.info(subDirStructurePath);
+                                        subMap=(HashMap) dirStructure.get(key);
+                                        logger.info(subMap);
+                                       //getting subdirectory all key from hashmap
+                                         Set<String> subKeys = subMap.keySet();
+                                         for(String subKey: subKeys){
+                                             logger.info(subKey);
+                                              String fileName1=subKey;
+                                              instalationLevelFile=new File(subDirStructurePath+fileName1);
+                                              instalationLevelFile.mkdir();
+                                              logger.info(fileName1+" file is created ");
+                                              list=new ArrayList();
+                                              //reading all array values of subdirectory
+                                               list=(ArrayList) subMap.get(subKey);
+                                               logger.info("array elements = "+list);
+                                             for(int i=0;i<list.size();i++){
+                                             logger.info("array elements = "+list.get(i));
+                                              String fileName2=(String) list.get(i);
+                                          String devicePath=subDirStructurePath+fileName1+File.separator;
+                                          logger.info("subSubFilePath="+devicePath);
+                                           deviceLevelFile=new File(devicePath+fileName2);
+                                               deviceLevelFile.mkdir();
+                                            logger.info(fileName2+" file is created");
+                                          }
+                                     }
+                                    }else{                    
+                                            logger.info("failed to create Directoty");
+                                }              
+                                }
+                                
+                        }
+                   }
+        }
+       }catch (Exception e) {
+		e.printStackTrace();
+                logger.error(e.toString());
+	}
+         finally{   
+            try{
+                if((dirStructure!=null)||(subMap!=null||list!=null)){
+            dirStructure=null;
+            subMap=null;
+            list=null;
+                }
+                if((peroidFiles!=null||customerLevelFile!=null)||(instalationLevelFile!=null||deviceLevelFile!=null)){
+                    peroidFiles=null;
+                    customerLevelFile=null;
+                    instalationLevelFile=null;
+                    deviceLevelFile=null;
+                }
+            }catch(Exception e){
+            logger.error(e.toString());
+            e.printStackTrace();
+            }
+    }
+        return true;
+}
+            
+       public static void generateXLS(){
+           
+               FileOutputStream fileOutputStream=null;
+               FileInputStream templateStream=null;
+               HashMap installationLevelPath=null,dirStructure=null,subMap=null,customerMap=null,installationMap=null;
+               Set<String> subKeys=null;
+               ArrayList list=null;
+               File xlsxFile=null,jsonDirectory=null,jsonSubDirectory=null;
+               File[] matchFiles=null,matchJsons=null;
+               JSONParser parser=null;
+               JSONArray jsonArray=null;
+               XSSFWorkbook wbDB = null;
+               XSSFSheet sheet = null;
+               XSSFRow row = null;
+               try{
+                 String jsonSource=ReportsGeneratorProperties.getJsonSource();
+                 List latestMetrics=ReportsGeneratorProperties.getLatestList();
+                 List averageMetrics=ReportsGeneratorProperties.getAverageList();
+                 String templatePath=ReportsGeneratorProperties.getxlsxTemplatePath();
+                 String dashBoardReports=ReportsGeneratorProperties.getDashBoardReports();
+                        //installationLevelPath=ReportsGeneratorProperties.getInstallationMap();
+                        dirStructure=ReportsGeneratorProperties.getDirStructureMap();
+                        periods=ReportsGeneratorProperties.getPeriods();
+                         customerMap =new HashMap();
+                         installationMap =new HashMap();
+                String[] spiltePeriods=periods.split(",");
+                for(int j=0;j<spiltePeriods.length;j++){  
+                //retriving all key from hashamp
+                Set<String> keys=dirStructure.keySet();
+                for(String key: keys){
+                String dbCustReportsFile=spiltePeriods[j]+"_";
+                String customerPath=spiltePeriods[j]+File.separator;
+                logger.info("key==> "+key);
+                customerPath+=key+File.separator;
+                dbCustReportsFile+=key+"_";
+                logger.info("customerPath==> "+customerPath);
+                logger.info("dbCustomerReports file "+dbCustReportsFile);
+                //retriving all key from subhashamp
+                subMap=(HashMap) dirStructure.get(key);
+                subKeys=subMap.keySet();
+                for(String subKey:subKeys){
+                
+                logger.info(subKey);
+                String installationPath=customerPath+subKey+File.separator;
+                String dbIstallreportsFile=dbCustReportsFile+subKey+"_";
+                logger.info(installationPath);
+                logger.info("reportsFiles1"+dbIstallreportsFile);
+                list=new ArrayList();
+                //retriving all key from list
+                list=(ArrayList) subMap.get(subKey);
+                
+                for(int i=0;i<list.size();i++){
+                String divicePath="";
+                divicePath=installationPath+list.get(i) +File.separator;
+                String dbDivicereportsFile="";
+                dbDivicereportsFile=dbIstallreportsFile+list.get(i) +"_";
+                logger.info(list.get(i));
+                logger.info("CurrentPAth= "+divicePath);
+                logger.info("reportsFile name= "+dbDivicereportsFile);
+                String custSourcePath=jsonSource+customerPath;
+                String installationSourcePath=jsonSource+installationPath;
+
+                String sourcePath=jsonSource+divicePath;
+                logger.info("SourcePath is="+sourcePath);
+                //logger.info("installationLevelPath="+installationLevelPath);
+                         
+            try{
+                
+               for(int y=0;y<3;y++){
+                        String destiFile=null;
+                         if(y==0){
+                             destiFile=dashBoardReports+dbCustReportsFile;
+
+                             if(customerMap.containsKey(key)){
+                                 logger.info("contain keyy" +customerMap);
+                             continue;
+                             }else{
+                             customerMap.put(key,true);
+                       logger.info("key====>"+ y +key);
+                         logger.info("customerMap==>"+customerMap);
+
+                         xlsxFile = new File(templatePath+"customer"+File.separator+spiltePeriods[j]+"_Summary.xlsx");
+                        jsonDirectory = new File(custSourcePath);
+                         matchFiles = jsonDirectory.listFiles(new FilenameFilter()
+                             { //retriving folder name startwith Timeline and it not ends with Availability
+                        public boolean accept(File directory, String name)
+                        {  
+                           return name.startsWith("Performance")|| name.startsWith("Energy");
+                        }
+                       });
+                        }
+                        }else if(y==1){
+                             destiFile=dashBoardReports+dbIstallreportsFile;
+                             if(installationMap.containsKey(subKey)){
+                                 logger.info("contain keyy" +installationMap);
+                             continue;
+                             }else{
+                             installationMap.put(subKey,true);
+                         logger.info("key=====> "+ y +subKey);
+                          logger.info("installationMap=====> "+installationMap);
+
+                         xlsxFile = new File(templatePath+"installation"+File.separator+spiltePeriods[j]+"_Summary.xlsx");
+                        jsonDirectory = new File(installationSourcePath);
+                         matchFiles = jsonDirectory.listFiles(new FilenameFilter()
+                             { //retriving folder name startwith Timeline and it not ends with Availability
+                        public boolean accept(File directory, String name)
+                        {  
+                           return name.startsWith("Performance");
+                        }
+                       });
+                             }
+                        }
+                         else{
+                              destiFile=dashBoardReports+dbDivicereportsFile;
+                             xlsxFile = new File(templatePath+spiltePeriods[j]+"_Summary.xlsx");
+                        jsonDirectory = new File(sourcePath);
+                         matchFiles = jsonDirectory.listFiles(new FilenameFilter()
+                             { //retriving folder name startwith Timeline and it not ends with Availability
+                        public boolean accept(File directory, String name)
+                        {
+                           return name.startsWith("TimeLine")&& !name.endsWith("Availability") ;
+                        }
+                       });
+                        }
+                         logger.info("match files ;"+matchFiles.length);
+                          templateStream = new FileInputStream(xlsxFile);
+                        wbDB = new XSSFWorkbook(templateStream);
+                      //loading mached files one by one
+                        for (File files : matchFiles) {
+                            if(y==0 ||y==1){
+                             matchJsons=matchFiles;
+                         logger.info("match files ;"+matchFiles.length);
+                            }else{
+                           logger.info("matchFiles of TimeLine======>"+files);
+                             jsonSubDirectory=new File(files+File.separator);
+                            matchJsons = jsonSubDirectory.listFiles(new FilenameFilter()
+                             { //retriving files its name endswith .json
+                           public boolean accept(File subDirectory, String name)
+                          {
+                          return name.endsWith(".json") ;
+                         }
+                        });
+                            }
+                            //loading json one by one
+                        for (File json : matchJsons) {
+                            String jsonName=json.toString();
+                         logger.info("matchesJson of .json=====>"+jsonName);
+                         logger.info("File is available");
+                        int sheetNo=wbDB.getNumberOfSheets();
+                         logger.info("File contain no of sheet : "+sheetNo);
+                         String sheetName=null;
+                        int sheetIndex=0;
+                        for(int s=0; s<sheetNo;s++){
+
+                            sheet = wbDB.getSheetAt(s);
+                         sheetName=sheet.getSheetName();
+                         logger.info("sheet no "+s+" Sheet name is "+sheetName);
+                         parser = new JSONParser();
+                     
+                          logger.info("File is available in device Level only........."+jsonName);
+                          jsonArray = (JSONArray) parser.parse(new FileReader(jsonName));
+                          logger.info("array size=========> "+jsonArray.size());
+                        int rowCount =1;
+                        int rowCountCust =1;
+                        int dummyRowCount=1;
+                        int rowCountSS=1;
+                        /*int rowCountS=0;
+
+                        if(sheetName.equalsIgnoreCase("Summary")){
+                            logger.info("in summary+++++++++++++++++++++");
+                            sheetIndex=s;
+                                   sheet = wbDB.getSheetAt(sheetIndex);
+                                   row = sheet.getRow(rowCountS);
+                                   if(y==0){
+                            logger.info("in summary+++++++++++++++++++++"+ y);
+                                   XSSFCell cellf = row.createCell(1);
+                                   cellf.setCellValue(key);
+                                   }
+                                  if(y==1){
+                             logger.info("in summary+++++++++++++++++++++"+y);
+                                   XSSFCell cellf = row.createCell(1);
+                                   cellf.setCellValue(subKey);
+                                     }
+                                    wbDB.setForceFormulaRecalculation(true);
+                                       logger.info("in summary+++++++++++++++++++++");
+                                           
+                        } */
+                        if(sheetName.equalsIgnoreCase("Summary_Sheet")){
+                            logger.info("in summary sheet");
+                            sheetIndex=s;
+                                   String templateSheet=spiltePeriods[j].toString();
+                                   sheet = wbDB.getSheetAt(sheetIndex);
+                                
+                                   row = sheet.getRow(rowCountSS);
+                               XSSFCreationHelper createHelper = (XSSFCreationHelper) wbDB.getCreationHelper();
+                                XSSFCellStyle cellStyle         = (XSSFCellStyle) wbDB.createCellStyle();
+                                cellStyle.setDataFormat(createHelper.createDataFormat().getFormat("yyyy/mm/dd hh:mm:ss"));
+                                //Applying the Date cell style to a cell
+                                XSSFCell cellf = row.createCell(0);
+                                Calendar cal = Calendar.getInstance();
+                                if(templateSheet.equalsIgnoreCase("Hour")){
+                                cal.add(Calendar.HOUR, -1);
+                                Date result = cal.getTime();
+                                cellf.setCellValue(result);
+                                }else if(templateSheet.equalsIgnoreCase("Day")){
+                                cal.add(Calendar.DATE, -1);
+                                Date result = cal.getTime();
+                               cellf.setCellValue(result);
+                               }else if(templateSheet.equalsIgnoreCase("Week")){
+                                cal.add(Calendar.DATE, -7);
+                                Date result = cal.getTime();
+                               cellf.setCellValue(result);
+                               }else if(templateSheet.equalsIgnoreCase("Month")){
+                                cal.add(Calendar.MONTH, -1);
+                                Date result = cal.getTime();
+                               cellf.setCellValue(result);
+                               }else if(templateSheet.equalsIgnoreCase("year")){
+                                cal.add(Calendar.YEAR, -1);
+                                Date result = cal.getTime();
+                               cellf.setCellValue(result);
+                               }
+                               cellf.setCellStyle(cellStyle);
+
+                                XSSFCell celle = row.createCell(1);
+                                celle.setCellValue(new Date());
+                                celle.setCellStyle(cellStyle);
+                        }
+                      for(int l=0;l<jsonArray.size();l++){
+                        JSONObject obj=(JSONObject) jsonArray.get(l);
+                            if(y==0){
+                                double values=0.0;
+                               String ServiceName=(String) obj.get("ServiceName");
+                            if(sheetName.equalsIgnoreCase("EnergyPerRatedPower")){
+                               sheetIndex=s;
+                               logger.info("EnergyPerRatedPower sheet in customer level");
+                               String energyPerRatedPower=(String) obj.get("EnergyPerRatedPower");
+                               values=Double.parseDouble(energyPerRatedPower);
+                            }else if(sheetName.equalsIgnoreCase("PerformanceRatio")){
+                               sheetIndex=s;
+                               logger.info("EnergyPerRatedPower sheet in customer level");
+                               String performanceRatio=(String) obj.get("PerformanceRatio");
+                               values=Double.parseDouble(performanceRatio);
+                            } if(sheetName.equalsIgnoreCase("EnergyPerRatedPower") || sheetName.equalsIgnoreCase("PerformanceRatio")){
+                            logger.info(sheet.getSheetName()+"sheet is available");
+                                   sheet = wbDB.getSheetAt(sheetIndex);
+                                   logger.info("loading sheet is "+sheet);
+                                    logger.info("Writing on existing Sheet ...."+sheet.getSheetName());
+                                      row = sheet.createRow(rowCountCust++);
+                                        XSSFCell cell0 = row.createCell(0);
+                                        cell0.setCellValue(ServiceName);
+
+                                      XSSFCell cell = row.createCell(1);
+                                        cell.setCellValue(values);
+                            }
+                            }
+                            else{
+                            logger.info("first part of jsonarray l=>"+l+jsonName);
+                        String resourceID=(String) obj.get("ResourceID");
+                        JSONArray timeStamp=(JSONArray) obj.get("TimeStamps");
+                        JSONArray resourceNames=(JSONArray) obj.get("ResourceNames");
+                        JSONArray resourceValues=(JSONArray) obj.get("ResourceValues");
+                        //logger.info("resourcevalues "+resourceValues);
+                              
+                        for(int k=0;k<resourceNames.size();k++){
+                        //logger.info("k====>"+k);
+                        JSONArray timeStamp1=(JSONArray) timeStamp.get(k);
+                        String resourceNames1=(String) resourceNames.get(k);
+                        JSONArray resourceValues1=(JSONArray) resourceValues.get(k);
+                        
+                        logger.info("sheetName==>"+sheetName);
+                        logger.info("resourceNames is==>"+resourceNames1);
+
+                             if(sheetName.equalsIgnoreCase(resourceNames1)){
+                                    sheetIndex=s;
+                                   logger.info(sheet.getSheetName()+"sheet is available");
+                                   sheet = wbDB.getSheetAt(sheetIndex);
+                                   logger.info("loading sheet is "+sheet);
+                                    logger.info("Writing on existing Sheet ...."+sheet.getSheetName());
+                                   int mValue=0;
+                                   if(y>1){
+                                   for(int i1=0;i1<latestMetrics.size();i1++){
+                                    if(sheetName.equalsIgnoreCase((String)latestMetrics.get(i1))){
+                                       // logger.info(latestMetrics.get(i1));
+                                    mValue=resourceValues1.size()-1;
+                                    }
+                                   }
+                                   }
+                                        int se=0,ss=0;
+                               for(int m=mValue;m<resourceValues1.size();m++){
+                                //logger.info("3rd for resource values=> "+m);
+                                ss++;
+                               
+                                row = sheet.createRow(rowCount++);
+                               // logger.info("row count "+rowCount);
+                               // logger.info("rsv=============================>"+resourceValues1.size());
+                               // logger.info("SS=============================>"+ss);
+                               // logger.info("M============================>"+m);
+                                //logger.info("ts============================>"+timeStamp1.size());
+                                if(ss ==resourceValues1.size()-1){
+                                    for(int i1=0;i1<averageMetrics.size();i1++){
+                                    if(sheetName.equalsIgnoreCase((String)averageMetrics.get(i1))){
+                                      //  logger.info(averageMetrics.get(i1));
+                                     if(se<1){
+                                       //logger.info("================="+ss);
+                                        row = sheet.createRow(dummyRowCount++);
+                                        XSSFCell cell = row.createCell(24);
+                                        cell.setCellValue(resourceID);
+                                         XSSFCell cell1 = row.createCell(25);
+                                      String temp="(SUMIF(ResourceID,\""+resourceID+"\",ResourceValues))/(COUNTIF(ResourceID,\""+resourceID+"\"))";
+                                    //  logger.info(cell1.getCellType());
+                                     // logger.info(temp);
+                                      cell1.setCellFormula(temp);
+                                        se++;
+                                       }
+                                    }
+                                 }
+                                }
+                                XSSFCell cell = row.createCell(0);
+                                cell.setCellValue(resourceID);
+
+                                XSSFCell cell0 = row.createCell(1);
+                                String str=(String)timeStamp1.get(m);
+                                cell0.setCellValue(str);
+                              
+                                XSSFCell cell1 = row.createCell(2);
+                                 if( resourceValues1.get(m) instanceof Long) {
+                                cell1.setCellValue((Long)resourceValues1.get(m));
+                                  //logger.info("in long ");
+                                 }
+                                    else if( resourceValues1.get(m) instanceof Double) {
+                                        cell1.setCellValue((Double)resourceValues1.get(m));
+                                        //logger.info("in double ");
+                                    }
+                                
+                        //logger.info("Resource val==> "+resourceValues1.get(m));
+                         
+                        }//end for
+                                      wbDB.setForceFormulaRecalculation(true);
+                             }else{
+                        logger.info("sheet name and resource name is different ");
+                        }
+                    }//end "k"for
+                   }
+                }//end "l" for             
+               }//end "s" for
+            }
+                         
+          }
+                        fileOutputStream = new FileOutputStream(destiFile+"Summary.xlsx");
+                  wbDB.write(fileOutputStream);
+                 logger.info("data writen sucessfully");
+                 
+         }
+
+       }catch (FileNotFoundException e) {
+            logger.error(e.toString());
+           e.printStackTrace();
+	}catch (IOException e) {
+		e.printStackTrace();
+                logger.error(e.toString());
+	}catch (Exception e) {
+		e.printStackTrace();
+                logger.error(e.toString());
+	}
+     }
+    }
+   }
+customerMap.clear();
+installationMap.clear();
+  }            
+ }catch(Exception e){
+     logger.error(e.toString());
+     e.printStackTrace();
+ }finally{
+
+            try{
+                if((fileOutputStream!=null)||templateStream!=null){
+            templateStream.close();
+            templateStream=null;
+            fileOutputStream.close();
+            fileOutputStream=null;
+            }else if(installationLevelPath!=null||(dirStructure!=null||subMap!=null)){
+               installationLevelPath=null;
+               dirStructure=null;
+               subMap=null;
+               }else if(subKeys!=null||list!=null){
+               subKeys=null;
+               list=null;
+               }else if(xlsxFile!=null||(jsonDirectory!=null||jsonSubDirectory!=null)){
+               xlsxFile=null;
+               jsonDirectory=null;
+               jsonSubDirectory=null;
+               }else if((matchFiles!=null||matchJsons!=null)||(parser!=null||jsonArray!=null)){
+               matchFiles=null;
+               matchJsons=null;
+               parser=null;
+               jsonArray=null;
+              }else if(wbDB!= null||(sheet!= null||row!= null)){
+               wbDB=null;
+               sheet= null;
+               row= null;
+              }else if(customerMap!=null){
+              customerMap.clear();
+              customerMap=null;
+              }
+            }catch(Exception e){
+            e.printStackTrace();
+            logger.error(e.toString());
+            }
+    }
+}
+            public static void main(String[] args) throws IOException{
+            String fs = System.getProperty("file.separator");
+            ReportsGenerator generator=new ReportsGenerator("config"+fs+"ReportGenerator.properties");
+             try {
+            while(true){
+            logger.info("calling the initilize method");
+            generator.initialize();
+            logger.info("After initialize Method Call");
+           // generator.createDirStructure();
+            logger.info("in generatexls Method Call");
+            generator.generateXLS();
+            intervel=ReportsGeneratorProperties.getIntervel();
+            logger.info("System will sleep "+intervel+".....");
+                Thread.sleep(intervel * 60 * 1000);
+                }
+            } catch (InterruptedException ex) {
+               ex.printStackTrace();
+               logger.error(ex.toString());
+            }finally{                   
+                    try{
+            if(intervel!=0)
+            intervel=0;
+            }catch(Exception e)
+            {
+                logger.error(e.toString());
+            e.printStackTrace();
+     }
+  }          
+}
+}

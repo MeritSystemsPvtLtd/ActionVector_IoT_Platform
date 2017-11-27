@@ -1,0 +1,307 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+import java.io.IOException;
+import java.util.logging.Level;
+//import java.util.logging.Logger;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ *
+ * This class will get the input from the user and validates the session
+ * Checks whether the groupname already exits or not if not then creates a new group
+ */
+public class CreateGroup extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(CreateGroup.class);
+    Connection con = null;
+    private String SWriter;
+    private String newgroup=null;
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+
+        response.setContentType("text/xml");
+        //getServletConfig();
+
+       /* StringBuffer results = new StringBuffer("<creategroup>");
+        String opStatus = null;
+        String opDescription = null;
+        HttpSession Hsessions = null;
+        boolean sessioncheck = true;
+        Object OUser1;
+        String szUsers = "";
+        Integer ISecurityUsers;
+
+        try
+        {
+            Hsessions = request.getSession(true);
+            OUser1 = Hsessions.getValue("user");
+            szUsers = OUser1.toString();
+            ISecurityUsers = (Integer) Hsessions.getValue("ints");
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            //sessioncheck = false;
+            System.out.println("Session failed");
+
+        }
+
+        CommandTask commandinsert = new CommandTask();
+        boolean bFLAG = true;
+        String szGroupName = "";
+        String szDescription = "";
+        String szUserGroup = "";
+        String szActions = "";
+        String customerid="";
+        String szAssigneeRequired = "";
+        String szDefaultUserView = "";
+        String szDefUserChecked = "";
+        String szContactDetails = "";
+        String szParameter1 = "NONE";
+        String szParameter2 = "NONE";
+        int iParameter3 = -1;
+
+        if (sessioncheck)
+        {
+            try
+            {
+                customerid=request.getParameter("customerid");
+                szGroupName = request.getParameter("group_name").trim();
+                System.out.println("GroupName==========>>>>" + szGroupName);
+                szDescription = request.getParameter("description");
+                szUserGroup = request.getParameter("user_group");
+                szAssigneeRequired = request.getParameter("assignee_required");
+                szDefaultUserView = request.getParameter("defaultusercomments");
+                szContactDetails = request.getParameter("contact_details");
+                System.out.println("parameters read successfully");
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                LogWriter.writeDebug("EXCEPTION : Getting the parameter values", 1, Hsessions);
+            }
+
+            try
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+                System.out.println("connection get successfully");
+                String szServerName = request.getServerName();
+
+                if (con != null)
+                {
+                    boolean checkgroup = checkGroup(szGroupName, con);
+                    if (!checkgroup)
+                    {
+                        // To check the Group liescence
+                        try
+                        {
+                            PreparedStatement statement10 = con.prepareStatement("SELECT count(groupname) from " + DBConstants.GROUPNAME_TABLE + " ");
+                            ResultSet rs10 = statement10.executeQuery();
+                            int iCount = 0;
+                            String sCount = "";
+                            while (rs10.next())
+                            {
+                                sCount = rs10.getString(1);
+                            }
+                            rs10.close();
+                            statement10.close();
+
+                            iCount = Integer.parseInt(sCount);
+
+                            //if (KeyDecode.getGroup_Lic() >= iCount)
+                            //{
+
+                            PreparedStatement statement = con.prepareStatement("INSERT INTO " + DBConstants.GROUPNAME_TABLE + " VALUES(?,?,?,?,?,?,?,?)");
+                            statement.setString(1, szGroupName);
+                            statement.setString(2, szDescription);
+                            if (!"".equalsIgnoreCase(szAssigneeRequired) && szAssigneeRequired != null)
+                            {
+                                statement.setString(3, "Yes");
+                            } else
+                            {
+                                statement.setString(3, "No");
+                            }
+                            statement.setInt(4, 1);
+                            if (!"".equalsIgnoreCase(szDefaultUserView) && szDefaultUserView != null)
+                            {
+                                statement.setString(5, "Yes");
+                            } else
+                            {
+                                statement.setString(5, "No");
+                            }
+                            statement.setString(6, szContactDetails);
+                            statement.setString(7, "NONE");
+                            statement.setInt(8, 0);
+
+                            statement.executeUpdate();
+                            System.out.println("insert data into group name table  ");
+                            statement.close();
+
+                            LogWriter.writeDebug("The usergroup is ..." + szUserGroup, 3, Hsessions);
+                            if (!"".equalsIgnoreCase(szUserGroup) && szUserGroup != null)
+                            {
+                                System.out.println("UserGroup:" + szUserGroup);
+                                System.out.println(" inside loop");
+                                PreparedStatement statement1 = con.prepareStatement("UPDATE " + DBConstants.DOMAIN_INFO_TABLE + " set usergroup = ? where domainname = ?");
+                                statement1.setString(1, szGroupName);
+                                statement1.setString(2, szServerName);
+                                statement1.executeUpdate();
+                                System.out.println(" updated domain info table successfully");
+                                statement1.close();
+                                PreparedStatement statement2 = con.prepareStatement("UPDATE " + DBConstants.USER_GROUP_TABLE + "  set groupname = ?");
+                                statement2.setString(1, szGroupName);
+                                statement2.executeUpdate();
+                                System.out.println(" user group updated");
+                                statement2.close();
+
+                            }
+                            szActions = "Added New Group " + szGroupName;
+                            boolean check = commandinsert.CommandTask(con, Hsessions.getId(), szUsers, szActions);
+                            opStatus = "0";
+                            opDescription = "Group added successfully";
+                            System.out.println("group added successfully ");
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            System.out.println("database problem");
+
+                        }
+                        //}
+                    }//if
+                    else
+                    {
+                        opStatus = "100";
+                        opDescription = "Group name already exits";
+                        System.out.println("group name already exist ");
+                    }
+                }//if
+                else
+                {
+                    opStatus = "101";
+                    opDescription = "fail to connect database";
+                    System.out.println("connection failed ");
+                    log.info("connection failed");
+                }
+            } catch (Exception ex)
+            {
+                log.error("exception while performing request action", ex);
+                ex.printStackTrace();
+                //Logger.getLogger(CreateGroup.class.getName()).log(Level.SEVERE, null, ex);
+            } finally
+            {
+                try
+                {
+                    con.close();
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    log.error("error while closing connection", e);
+                }
+            }
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid Session Login again";
+        }*/
+        try
+        {
+            /*results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</creategroup>");*/
+            businessmodel.AddNewGroup addGroup=new businessmodel.AddNewGroup();
+            newgroup=addGroup.addNewGroup(request);
+            //response.getWriter().write(results.toString());
+            System.out.println("Result in CreateGroup:"+newgroup);
+            response.getWriter().write(newgroup);
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            LogWriter.writeDebug("exception while writing out put");
+        }finally{
+            //results=null;
+            newgroup=null;
+        }
+    }
+
+//This method checks whether the user group exits or not
+
+    /*public boolean checkUserGroup(String groupname,Connection con)
+    {
+    if (con != null)
+    {
+
+    bFLAG = true;
+    try
+    {
+    PreparedStatement statement = con.prepareStatement("SELECT usergroup from " + DBConstants.DOMAIN_INFO_TABLE + " where domainname = ?");
+    statement.setString(1, szServerName);
+    ResultSet rs = statement.executeQuery();
+    while (rs.next())
+    {
+    szUserGroup = rs.getString("usergroup");
+    }
+    GALogwriter.writeDebug("The User group from GadomianInfo is" + szUserGroup, 3, session);
+    } catch (Exception e)
+    {
+    e.printStackTrace(PWriter);
+    GALogwriter.writeDebug("EXCEPTION : Getting the usergroup from DomainInfo " + SWriter, 1, session);
+    }
+    }*/
+//This method checks whether the group name already exits or not
+    public boolean checkGroup(String szgroupname, Connection con)
+    {
+        try
+        {
+
+            PreparedStatement statement3 = con.prepareStatement("select * from " + DBConstants.GROUPNAME_TABLE + " where groupname=?");
+            statement3.setString(1, szgroupname);
+            ResultSet rs = statement3.executeQuery();
+            while (rs.next())
+            {
+                if (szgroupname.equalsIgnoreCase(rs.getString("groupname")))
+                {
+                    return true;
+                }
+
+            }
+            statement3.close();
+            rs.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+
+        }
+        return false;
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+}

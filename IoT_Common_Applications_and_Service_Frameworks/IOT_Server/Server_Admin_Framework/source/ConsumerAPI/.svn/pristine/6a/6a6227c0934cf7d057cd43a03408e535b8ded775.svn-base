@@ -1,0 +1,303 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.DatabaseConnection;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.ObjectOutputStream;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.StringTokenizer;
+import loginservice.LoginServiceStub;
+import org.apache.log4j.Logger;
+import addcomments.AddCommentsStub;
+import java.util.Date;
+import sadeskException.SADeskException;
+import userlogout.UserLogoutStub;
+
+/**
+ *
+ * @author gopal
+ */
+public class CEPStateController extends HttpServlet
+{
+
+    private static String className = CEPStateController.class.getName();
+    private static Logger log = Logger.getLogger(CEPStateController.class);
+    private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static String exceptionString = null;
+    private String szSession = null;
+    String szUserName = "Admin";
+    String szPassword = "admin";
+
+    protected void callMyServ(HttpServletRequest request, HttpServletResponse response)
+            throws SADeskException
+    {
+        ObjectOutputStream outputStream = null;
+
+        Connection con = null;
+        Statement stat = null;
+        ResultSet rs = null;
+
+        String szHostName = request.getParameter("HostName");
+        String szTaskType = request.getParameter("TaskType");
+        String szAlertAcronym = request.getParameter("AlertAcronym");
+        long szTicketTimeOut = Long.parseLong(request.getParameter("ticketTimeOut"));
+        String szEventSymptoms = request.getParameter("EventSymptoms");
+        AddCommentsStub commentStub = null;
+        LoginServiceStub loginStub = null;
+        UserLogoutStub logoutStub = null;
+
+        try
+        {
+            outputStream = new ObjectOutputStream(response.getOutputStream());
+            //con = DatabaseConnectionManager.getConnection("CEPStateController");
+            con=DatabaseConnection.getAVSAConnection(request);
+            stat = con.createStatement();
+            String szQuery = "select task_id, created_date from gatask where task_id in (select max(task_id) from gatask where attributes6 = '" + szHostName + "' and  task_summary like '%" + szAlertAcronym + "' and task_type='" + szTaskType + "' and status!='Closed' )";
+
+            System.out.println(szQuery);
+
+            rs = stat.executeQuery(szQuery);
+            String taskID = null;
+            java.util.Date szTicketDate = null;
+            while (rs.next())
+            {
+                taskID = rs.getString(1);
+                //szTicketDate = rs.getDate(2);
+                szTicketDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse(rs.getString(2));
+                System.out.println("dbTimeStamp::" + rs.getString(2));
+            }
+            if (taskID != null)
+            {
+                //long currentTime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse(new java.util.Date().toString()).getTime();
+                Date now = new Date();
+                long currentTime = now.getTime();
+                long ticketTime = szTicketDate.getTime();
+                long timeDiff = currentTime - ticketTime;
+                long expiryDiff = szTicketTimeOut * 60 * 1000L;
+                System.out.println("taskID::" + taskID);
+                System.out.println("szTicketTimeOut::" + szTicketTimeOut);
+                System.out.println("currentTime::" + currentTime);
+                System.out.println("ticketTime::" + ticketTime);
+                System.out.println("timeDiff::" + timeDiff);
+                System.out.println("expiryDiff::" + expiryDiff);
+                System.out.println("Ticket date is : " + szTicketDate.toString());
+                System.out.println("Current date is : " + now.toString());
+                if ((expiryDiff > timeDiff)||szTicketTimeOut==-1)
+                {
+                   System.out.println("Ticket not older than " + szTicketTimeOut + "seconds, Adding Comment");
+                   /*g szServerName = request.getServerName();
+                    String szContextPath = request.getContextPath();
+                    String targetEndpoint = "http://" + szServerName + ":" + szPortNum + "/proChara/services/LoginService";
+                    loginStub = new LoginServiceStub(
+                            targetEndpoint);
+                    ChkUserRequest input = new ChkUserRequest();
+
+                    input.setSzUserName(szUserName);
+                    input.setSzUserAddr(szPassword);
+
+                    ChkUserResponse resp = loginStub.chkUser(input);
+                    szSession = resp.getSzSession();
+
+                    targetEndpoint = "http://" + szServerName + ":" + szPortNum + "/proChara/services/AddComments";
+                    AddCommentsResponse CommentResp = null;
+                    commentStub = new AddCommentsStub(
+                            targetEndpoint);
+                    AddCommentsRequest attachObj = new AddCommentsRequest();
+
+                    attachObj.setSzSessionId(szSession);
+                    attachObj.setSzTaskID(taskID);
+                    szEventSymptoms = URLEncoder.encode(szEventSymptoms, "UTF-8");
+                    attachObj.setSzComments(szEventSymptoms);
+                    attachObj.setSzUser(szUserName);
+                    CommentResp = commentStub.addTaskComments(attachObj);
+                    String szMessage = CommentResp.getMessage();
+                    System.out.println("END of calling AddComments from CEPStateController:" + szMessage);
+                    System.out.println("------------START of calling Logout service from Client cepLogoutServlet---------------");
+
+                    targetEndpoint = "http://" + szServerName + ":" + szPortNum + "/proChara/services/UserLogout";
+                    logoutStub = new UserLogoutStub(targetEndpoint);
+                    LogoutUserRequest inputLogout = new LogoutUserRequest();
+                    System.out.println("session value in logout call" + szSession);
+                    inputLogout.setSzUserName(szUserName);
+                    inputLogout.setSzSession(szSession);
+
+                    LogoutUserResponse respLogout = logoutStub.logoutUser(inputLogout);
+                    String output = respLogout.getSzLogout();
+
+                    System.out.println(szUserName + "And Session Is in cepLogOutServlet" + szSession);*/
+                    outputStream.writeObject("true"+","+taskID);
+                    outputStream.flush();
+                } else
+                {
+                    System.out.println("Ticket Expired. Create new one");
+                    outputStream.writeObject("false"+","+"new");
+                    outputStream.flush();
+                }
+            } else
+            {
+                System.out.println("Ticket does not exist. Create new one");
+                outputStream.writeObject("false"+","+"new");
+                outputStream.flush();
+            }
+        } catch (Exception e)
+        {
+            log.error("Error while updating CEP task");
+            e.printStackTrace();
+            throw new SADeskException("Error while updating CEP task");
+        } finally
+        {
+            try
+            {
+                if (con != null)
+                {
+                    con.close();
+                    con = null;
+                }
+                if (stat != null)
+                {
+                    stat.close();
+                    stat = null;
+                }
+                if (rs != null)
+                {
+                    rs.close();
+                    rs = null;
+                }
+                if (logoutStub != null)
+                {
+                    logoutStub._getServiceClient().cleanup();
+                    logoutStub.cleanup();
+                    logoutStub=null;
+                }
+                if (commentStub != null)
+                {
+                    commentStub._getServiceClient().cleanup();
+                    commentStub.cleanup();
+                    commentStub=null;
+
+                }
+                if (loginStub != null)
+                {
+                    loginStub._getServiceClient().cleanup();
+                    loginStub.cleanup();
+                    loginStub=null;
+                }
+                if (outputStream != null)
+                {
+                    outputStream = null;
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public String getProtocol(HttpServletRequest request)
+            throws SADeskException
+    {
+        String szProtocol = null;
+        try
+        {
+
+            StringTokenizer st = new StringTokenizer(request.getProtocol(), "/");
+            szProtocol = st.nextToken().toLowerCase();
+
+        } catch (Exception e)
+        {
+            throw new SADeskException(
+                    "ERROR in getting protocol in CEPStateController servlet.",
+                    e);
+        }
+        return szProtocol;
+    }
+
+    public String getContextPath(HttpServletRequest request)
+            throws SADeskException
+    {
+        String szContextPath = null;
+        try
+        {
+
+            szContextPath = request.getContextPath();
+
+        } catch (Exception e)
+        {
+            throw new SADeskException(
+                    "ERROR in getting context path in CEPStateController servlet.",
+                    e);
+        }
+        return szContextPath;
+    }
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+
+    /**
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        try
+        {
+            System.out.println("Im in CEPStateController doGet");
+            getProtocol(request);
+            getContextPath(request);
+            callMyServ(request, response);
+        } catch (Exception e)
+        {
+            System.out.println("Exception generated from doGet() method of CEPStateController servlet.");
+            e.printStackTrace();
+        }
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        try
+        {
+            System.out.println("Im in CEPStateController doPost");
+            getProtocol(request);
+            getContextPath(request);
+            callMyServ(request, response);
+
+        } catch (Exception e)
+        {
+            System.out.println("Exception generated from doPost() method of CEPStateController servlet.");
+            e.printStackTrace();
+        }
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

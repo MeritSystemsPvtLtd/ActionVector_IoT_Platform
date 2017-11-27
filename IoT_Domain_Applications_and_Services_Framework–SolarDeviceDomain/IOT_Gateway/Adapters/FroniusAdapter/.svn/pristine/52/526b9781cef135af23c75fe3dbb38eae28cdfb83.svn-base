@@ -1,0 +1,74 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.froniusadapter;
+
+import com.prokosha.froniusadapter.configuration.AdapterProperties;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import org.apache.log4j.Logger;
+import serialportapp.SerialPortApp;
+
+/**
+ *
+ * @author rekhas
+ */
+class FroniusModBusJSONCollector {
+
+    private static Logger logger = Logger.getLogger(FroniusModBusJSONCollector.class.getName());
+
+    public static boolean download(StringBuffer xmlBuff, String deviceID, String dataCollection, String timePeriod) {
+        if (!froniusConnect(xmlBuff, deviceID, dataCollection)) {
+            logger.error("*** ERROR *** Connecting to fronius failed. Terminating download!!");
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean froniusConnect(StringBuffer xmlBuff, String deviceID, String dataCollectionReq) {
+
+        logger.debug("Connecting to fronius device id: " + deviceID);
+        try {
+            String dataCollection = dataCollectionReq.split(":")[0];
+            //String httpRequest = dataCollectionReq.split(":")[1];
+            //String timePeriod = dataCollectionReq.split(":")[2];
+            String scope, tempDataCollection;
+            int tempDevID;
+            if (deviceID.equalsIgnoreCase("System")) {
+                scope = "System";
+                tempDevID = 1;
+                tempDataCollection = "CumulativeInverterData";
+            } else {
+                scope = "Device";
+                tempDevID = Integer.parseInt(deviceID);
+                tempDataCollection = dataCollection;
+            }
+            String jsonRequest = "{\"Scope\":\"" + scope + "\",\"DeviceId\":" + tempDevID + ",\"DataCollection\":\"" + tempDataCollection
+                    + "\"}";
+            logger.debug("jsonRequest==>>" + jsonRequest);
+            SerialPortApp szSerialPort = new SerialPortApp();
+            //String resp = szSerialPort.getInverterRealTimeData(jsonRequest);
+            //String resp = szSerialPort.getDeviceRealTimeData(jsonRequest);
+            String resp = szSerialPort.getDeviceData(jsonRequest);
+            if (xmlBuff == null) {
+                xmlBuff = new StringBuffer();
+            }
+            xmlBuff.append(resp);
+            logger.info("ModBusResponse==>>" + xmlBuff);
+            return true;
+        } catch (Exception ex) {
+            logger.error("*** ERROR *** Cannot connect to fronius device id: " + deviceID + ")!!\n" + ex);
+            logger.error("Send error event to CEP, msg and e-mail");
+            FroniusError.sendErrorEvent("Cannot connect to fronius device id:" + deviceID, ex.toString());
+            FroniusMailModule.sendSMS("Cannot connect to fronius device id:" + deviceID + "==>>" + ex.toString());
+
+            String szSubject = "FroniusAdapterError";
+            String szBody = "Cannot connect to fronius device id:" + deviceID + "==>>" + ex.toString();
+            FroniusMailModule.sendMail(szSubject, szBody);
+            ex.printStackTrace();
+            return false;
+        }
+    }
+}

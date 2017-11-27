@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : modules.xml
+    Created on : January 17, 2011, 7:52 PM
+    Author     : Abraham
+    Description:
+        Purpose of the document follows.
+-->
+
+<config>
+    <module>
+        Rules-CEP.epl
+    </module>
+ </config>

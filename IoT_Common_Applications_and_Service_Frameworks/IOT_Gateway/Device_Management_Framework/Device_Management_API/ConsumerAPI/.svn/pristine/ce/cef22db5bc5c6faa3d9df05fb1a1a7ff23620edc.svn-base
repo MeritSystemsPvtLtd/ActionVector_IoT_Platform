@@ -1,0 +1,216 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class Getroles extends HttpServlet {
+
+    static Logger log = Logger.getLogger(Getroles.class);
+    Connection con = null;
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/xml");
+        StringBuffer results = new StringBuffer("<rolelist>");
+        StringBuffer result = null;
+        boolean bFlag = false;
+        HttpSession sessions = null;
+        boolean sessioncheck = true;
+        Object OUser;
+        String szUsers;
+        Integer ISecurityUsers = 1;
+        String szFromAdminLogin = "";
+        String opStatus = "";
+        String opDescription = "";
+        String username = null;
+        String sessionid = null;
+        String customerid = null;
+        try {
+            sessions = request.getSession(true);
+            OUser = sessions.getValue("user");
+
+            szFromAdminLogin = (String) sessions.getAttribute("FromAdminLogin");
+            //sessionid=request.getParameter("sessionid");
+            //username=request.getParameter("username");
+            customerid = request.getParameter("customerid");
+        } catch (Exception npe) {
+            npe.printStackTrace();
+
+            System.out.println("Session Id" + (String) sessions.getId());
+
+            log.error("session failed");
+        }
+        if (sessioncheck) {
+            try {
+
+                con = DatabaseConnection.getGuiDatabaseConnection(request);
+                if (con != null) {
+                    System.out.println("Connection ::::::: " + con);
+                    if (ISecurityUsers.intValue() == 1) {
+                        System.out.println("inside security check");
+                        bFlag = true;
+
+                        try {
+                            int iLevel = 0;
+                            int iSecId = 0;
+                            String szSecurityName = "";
+
+
+                            if (con != null) {
+                                result = new StringBuffer("<roles>");
+                                try {
+                                    System.out.println(" inside con ::::::: " + con);
+                                    String Query = "SELECT security_id,\"level\",name from " + DBConstants.SECURITYLEVELS_TABLE + " order by \"level\"";
+                                    System.out.println(" Query here is ...." + Query);
+                                    PreparedStatement statement1 = con.prepareStatement(Query);
+                                    LogWriter.writeDebug(" Connection here is ...." + con, 3, sessions);
+                                    System.out.println(" Connection here is ...." + con);
+                                    ResultSet rs1 = statement1.executeQuery();
+                                    int i = 0;
+                                    while (rs1.next()) {
+
+                                        szSecurityName = rs1.getString("name");
+                                        iLevel = rs1.getInt("level");
+                                        //if(szSecurityName.equalsIgnoreCase("Ops Head")||szSecurityName.equalsIgnoreCase("Technical Head")||szSecurityName.equalsIgnoreCase("Manager")||szSecurityName.equalsIgnoreCase("System Analyst")||szSecurityName.equalsIgnoreCase("System Engineer"))
+                                        //{
+                                        result.append("<rolename>");
+                                        result.append(szSecurityName);
+                                        result.append("</rolename>");
+                                        //}
+
+                                    }
+                                    rs1.close();
+
+                                    statement1.close();
+                                    opStatus = "0";
+                                    opDescription = "Role list get successfully";
+                                    result.append("</roles>");
+                                    System.out.println("roles read");
+                                    log.info("roles get successfully");
+                                } catch (Exception e) {
+                                    result.append("</roles>");
+                                    opStatus = "106";
+                                    opDescription = "Unable to perform request action";
+                                    log.error("Unable to perform request action::" + e);
+                                }
+                            }
+
+                        } catch (Exception e) {
+                            opStatus = "106";
+                            opDescription = "Unable to perform request action";
+                            LogWriter.writeDebug("EXCEPTION : Perfroming the Operation Securitylevel " + e.getMessage(), 1, sessions);
+                            System.out.println("ReLogin");
+
+                        }
+
+                    } else {
+                        System.out.println("@@@@@@@");
+                        opStatus = "103";
+                        opDescription = "Security level fail login again";
+                        System.out.println("LoginFirst.jsp");
+                    }
+                } else {
+                    opStatus = "101";
+                    opDescription = "Database Connection failed";
+                    log.info("database connection failed");
+
+                }
+            } catch (Exception e) {
+                System.out.println("in exception catching");
+                LogWriter.writeDebug("EXCEPTION : Performing the Operation Securitylevel", 1, sessions);
+
+                System.out.println("Relogin");
+            } finally {
+                try {
+                    if (con != null) {
+                        con.close();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("error closing connection", e);
+                }
+            }
+
+        } else {
+            opStatus = "102";
+            opDescription = "Invalid Session Login again";
+            log.info("invalid session");
+        }
+        try {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            if (!(result == null)) {
+
+                results.append(result);
+
+            }
+            results.append("</rolelist>");
+            response.getWriter().write(results.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("xml response fail");
+        } finally {
+            result = null;
+            results = null;
+        }
+
+
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }// </editor-fold>
+}

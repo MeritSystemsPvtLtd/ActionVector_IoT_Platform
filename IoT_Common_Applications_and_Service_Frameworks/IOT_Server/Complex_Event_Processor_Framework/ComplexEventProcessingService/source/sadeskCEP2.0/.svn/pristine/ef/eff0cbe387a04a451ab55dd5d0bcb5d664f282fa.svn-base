@@ -1,0 +1,10 @@
+module com.prokosha.cep.filter.v1;
+
+//filter the invalid events - no hostname, no ipaddress, no timestamp
+//@Name("com.prokosha.sadeskCeP.LoadMonitor.istream.1")
+insert into ServerStateStream
+        select * from ServerStateEvent((HostName != "(null)"), (HostAddress != "(null)"), (TimeStamp != -1));
+
+insert into MemcacheLatencyStream
+	select HostName as MemcacheClient, MemcacheServer, MemcachePort, ElapsedTime as MemcacheLatency
+	from MemcacheReadLatencyEvent((HostName != "(null)"), (MemcacheServer != "(null)"), (MemcachePort != "(null)"), (ElapsedTime > 0.0f));

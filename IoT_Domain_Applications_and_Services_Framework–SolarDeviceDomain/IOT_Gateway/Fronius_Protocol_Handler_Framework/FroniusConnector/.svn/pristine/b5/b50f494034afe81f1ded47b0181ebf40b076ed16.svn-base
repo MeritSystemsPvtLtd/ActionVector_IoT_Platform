@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<DataCollectionSet>
+	<DataCollection>
+		<Name>CumulativeInverterData</Name>
+		<CommandSet>
+			<Command>
+				<Name>Get power NOW</Name>
+				<Code>0x10</Code>
+				<Unit>Wh</Unit>
+			</Command>
+			<Command>
+				<Name>Get energy - TOTAL</Name>
+				<Code>0x11</Code>
+				<Unit>Wh</Unit>
+			</Command>				
+			<Command>
+				<Name>Get energy - DAY</Name>
+				<Code>0x12</Code>
+				<Unit>Wh</Unit>
+			</Command>
+			<Command>
+				<Name>Get Energy - YEAR</Name>
+				<Code>0x13</Code>
+				<Unit>Wh</Unit>
+			</Command>
+			<Command>
+				<Name>Get Device Status</Name>
+				<Code>0x37</Code>
+				<Unit></Unit>
+			</Command>						
+		</CommandSet>
+	</DataCollection>
+	<DataCollection>
+		<Name>CommonInverterData</Name>
+		<CommandSet>
+			<Command>
+				<Name>Get Power - NOW</Name>
+				<Code>0x10</Code>
+				<Unit>Wh</Unit>
+			</Command>
+			<Command>
+				<Name>Get energy - TOTAL</Name>
+				<Code>0x11</Code>
+				<Unit>Wh</Unit>
+			</Command>				
+			<Command>
+				<Name>Get Energy - DAY</Name>
+				<Code>0x12</Code>
+				<Unit>Wh</Unit>
+			</Command>
+			<Command>
+				<Name>Get Energy - YEAR</Name>
+				<Code>0x13</Code>
+				<Unit>Wh</Unit>
+			</Command>
+			<Command>
+				<Name>Get AC Current - NOW</Name>
+				<Code>0x14</Code>
+				<Unit>A</Unit>
+			</Command>
+			<Command>
+				<Name>Get AC Voltage - NOW</Name>
+				<Code>0x15</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Get AC Frequency - NOW</Name>
+				<Code>0x16</Code>
+				<Unit>Hz</Unit>
+			</Command>
+			<Command>
+				<Name>Get DC Current - NOW</Name>
+				<Code>0x17</Code>
+				<Unit>A</Unit>
+			</Command>
+			<Command>
+				<Name>Get DC Voltage - NOW</Name>
+				<Code>0x18</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Get Device Status</Name>
+				<Code>0x37</Code>
+				<Unit></Unit>
+			</Command>
+		</CommandSet>
+	</DataCollection>
+	<DataCollection>
+		<Name>3PInverterData</Name>
+		<CommandSet>
+			<Command>
+				<Name>Get AC current - Phase1</Name>
+				<Code>0x2B</Code>
+				<Unit>A</Unit>
+			</Command>
+			<Command>
+				<Name>Get AC current - Phase2</Name>
+				<Code>0x2C</Code>
+				<Unit>A</Unit>
+			</Command>				
+			<Command>
+				<Name>Get AC current - Phase3</Name>
+				<Code>0x2D</Code>
+				<Unit>A</Unit>
+			</Command>
+			<Command>
+				<Name>Get AC voltage - Phase1</Name>
+				<Code>0x2E</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Get AC voltage - Phase2</Name>
+				<Code>0x2F</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Get AC voltage - Phase3</Name>
+				<Code>0x30</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Get Ambient temperature</Name>
+				<Code>0x31</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get Rotation speed FLF</Name>
+				<Code>0x32</Code>
+				<Unit>rpm</Unit>
+			</Command>
+			<Command>
+				<Name>Get Rotation speed FRF</Name>
+				<Code>0x33</Code>
+				<Unit>rpm</Unit>
+			</Command>
+				<Command>
+				<Name>Get Rotation speed BLF</Name>
+				<Code>0x34</Code>
+				<Unit>rpm</Unit>
+			</Command>
+			<Command>
+				<Name>Get Rotation speed BRF</Name>
+				<Code>0x35</Code>
+				<Unit>rpm</Unit>
+			</Command>
+		</CommandSet>
+	</DataCollection>
+	<DataCollection>
+		<Name>MinMaxInverterData</Name>
+		<CommandSet>
+			<Command>
+				<Name>Max AC power - Day</Name>
+				<Code>0x1A</Code>
+				<Unit>W</Unit>
+			</Command>
+			<Command>
+				<Name>Max AC voltage - Day</Name>
+				<Code>0x1B</Code>
+				<Unit>V</Unit>
+			</Command>				
+			<Command>
+				<Name>Min AC voltage - Day</Name>
+				<Code>0x1C</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Max DC voltage - Day</Name>
+				<Code>0x1D</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Max AC power - Year</Name>
+				<Code>0x20</Code>
+				<Unit>W</Unit>
+			</Command>
+			<Command>
+				<Name>Max AC voltage - Year</Name>
+				<Code>0x21</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Min AC voltage - Year</Name>
+				<Code>0x22</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Max DC voltage - Year</Name>
+				<Code>0x23</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Max AC power - Total</Name>
+				<Code>0x26</Code>
+				<Unit>W</Unit>
+			</Command>
+				<Command>
+				<Name>Max AC voltage - Total</Name>
+				<Code>0x27</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Min AC voltage - Total</Name>
+				<Code>0x28</Code>
+				<Unit>V</Unit>
+			</Command>
+			<Command>
+				<Name>Max DC voltage - Total</Name>
+				<Code>0x29</Code>
+				<Unit>V</Unit>
+			</Command>			
+		</CommandSet>
+	</DataCollection>
+	<DataCollection>
+		<Name>NowSensorData</Name>
+		<CommandSet>
+			<Command>
+				<Name>Get temperture channel1 - Now</Name>
+				<Code>0xE0</Code>
+				<Unit>\u00B0C</Unit>
+			</Command>
+			<Command>
+				<Name>Get temperture channel2 - Now</Name>
+				<Code>0xE1</Code>
+				<Unit>\u00B0C</Unit>
+			</Command>				
+			<Command>
+				<Name>Get irradiance - Now</Name>
+				<Code>0xE2</Code>
+				<Unit>W/m\u00B2</Unit>
+			</Command>
+			<Command>
+				<Name>Get value digital channel1-Now</Name>
+				<Code>0xF2</Code>
+				<Unit>kWh/m\u00B2</Unit>
+			</Command>
+			<Command>
+				<Name>Get value digital channel2-Now</Name>
+				<Code>0xF3</Code>
+				<Unit>kWh/m\u00B2</Unit>
+			</Command>
+		</CommandSet>
+	</DataCollection>
+	<DataCollection>
+		<Name>MinMaxSensorData</Name>
+		<CommandSet>
+			<Command>
+				<Name>Get min temperture channel1 - Day</Name>
+				<Code>0xE3</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max temperture channel1 - Day</Name>
+				<Code>0xE4</Code>
+				<Unit>C</Unit>
+			</Command>				
+			<Command>
+				<Name>Get min temperture channel1 - Year</Name>
+				<Code>0xE5</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max temperture channel1 - Year</Name>
+				<Code>0xE6</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get min temperture channel1 - Total</Name>
+				<Code>0xE7</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max temperture channel1 - Total</Name>
+				<Code>0xE8</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get min temperture channel2 - Day</Name>
+				<Code>0xE9</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max temperture channel2 - Day</Name>
+				<Code>0xEA</Code>
+				<Unit>C</Unit>
+			</Command>				
+			<Command>
+				<Name>Get min temperture channel2 - Year</Name>
+				<Code>0xEB</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max temperture channel2 - Year</Name>
+				<Code>0xEC</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get min temperture channel2 - Total</Name>
+				<Code>0xED</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max temperture channel2 - Total</Name>
+				<Code>0xEE</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max iradiance-Day</Name>
+				<Code>0xEF</Code>
+				<Unit>W/m2</Unit>
+			</Command>				
+			<Command>
+				<Name>Get max irradiance - Year</Name>
+				<Code>0xF0</Code>
+				<Unit>W/m2</Unit>
+			</Command>
+			<Command>
+				<Name>Get max irradiance - Total</Name>
+				<Code>0xF1</Code>
+				<Unit>W/m2</Unit>
+			</Command>
+			<Command>
+				<Name>Get max digital channel1 - Day</Name>
+				<Code>0xF4</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max digital channel1 - Year</Name>
+				<Code>0xF5</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max digital channel1 - Total</Name>
+				<Code>0xF6</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max digital channel2-Day</Name>
+				<Code>0xF7</Code>
+				<Unit>C</Unit>
+			</Command>				
+			<Command>
+				<Name>Get max digital channel2 - Year</Name>
+				<Code>0xF8</Code>
+				<Unit>C</Unit>
+			</Command>
+			<Command>
+				<Name>Get max digital channel2 - Total</Name>
+				<Code>0xF9</Code>
+				<Unit>C</Unit>
+			</Command>									
+		</CommandSet>
+	</DataCollection>			
+				
+</DataCollectionSet>
+

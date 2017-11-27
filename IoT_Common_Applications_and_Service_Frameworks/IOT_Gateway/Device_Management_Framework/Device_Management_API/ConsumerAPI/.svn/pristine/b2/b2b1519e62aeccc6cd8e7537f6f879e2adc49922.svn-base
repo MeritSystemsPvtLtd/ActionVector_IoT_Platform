@@ -1,0 +1,280 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import java.io.*;
+import java.util.Date;
+import javax.servlet.http.*;
+//import GIFTask.GA_DBConstants;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Apr 25, 2012, 9:58:41 AM
+ */
+public class LogWriter
+{
+
+    static String DebugFile = "";
+    static private String DebugDir = "";
+    static int iGIFTLoglevel = 0;
+    static String File_Separator = System.getProperty("file.separator");
+    static File FileDir;
+    static File FileDir1;
+    static Logger esclog = Logger.getLogger(LogWriter.class.getName());
+    static Logger esclog1 = Logger.getLogger("security");
+
+    public LogWriter()
+    {
+        super();
+    }
+    /*   static public Logwriter instance() {
+    try{
+    if(null == _instance) {
+    _instance = new Logwriter();
+    }
+
+    }
+    catch(Exception e){
+    e.printStackTrace();
+    }
+    return _instance;
+    }*/
+
+    public static void setDebugFileName(String s, int iLoglevel)
+    {
+        String FileDirPath = "";
+        try
+        {
+
+            FileDirPath = s + File_Separator + "proChara" + File_Separator + "Log";
+            FileDir = new File(FileDirPath);
+            if (!(FileDir.exists()))
+            {
+                FileDir.mkdirs();
+            }
+            DebugFile = FileDir + File_Separator + "ActionVector.log";
+            iGIFTLoglevel = iLoglevel;
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public static void setReportFileName(String s, int iLoglevel)
+    {
+        String FileDirPath = "";
+        try
+        {
+
+            FileDirPath = s + File_Separator + "gawork" + File_Separator + "reports";
+            FileDir1 = new File(FileDirPath);
+            if (!(FileDir1.exists()))
+            {
+                FileDir1.mkdirs();
+            }
+        //szDebugFile = FileDir+szFile_Separator+"ActionVector.log";
+        //iGIFTLoglevel = iLoglevel;
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public static void setArchiveLogFile(int iYear, int iDay, int iMonth)
+    {
+        //System.out.println("The ArchiveLog file is getting called");
+
+        File FileObj = null;
+        File FYearFile = null;
+        File FArchiveFile = null;
+        OutputStream OpStream = null;
+        InputStream IpStream = null;
+
+        int iNewMonth = -1;
+        String YearString = "";
+
+        FileObj = new File(DebugFile);
+        iNewMonth = iMonth - 1;
+        YearString = "ActionVector." + iYear;
+
+        if (iNewMonth == 0)
+        {
+            iNewMonth = 12;
+        }
+        if (FileObj.exists())
+        {
+            File FNewFile = new File(FileDir + File_Separator + "ActionVector.0" + iNewMonth);
+            if (!FNewFile.exists())
+            {
+                FileObj.renameTo(FNewFile);
+            }
+        }
+        if (iNewMonth == 12)
+        {
+            //System.out.println(" Inside the changing the new Year....");
+            FYearFile = new File(FileDir + File_Separator + YearString);
+            if (!FYearFile.exists())
+            {
+                FYearFile.mkdir();
+                try
+                {
+                    for (int j = 1; j <= 12; j++)
+                    {
+                        File sourcefile = new File(FileDir + File_Separator + "ActionVector.0" + j);
+                        File FDestFile = new File(FileDir + File_Separator + YearString + File_Separator + "ActionVector.00" + j);
+                        if (sourcefile.exists())
+                        {
+                            sourcefile.renameTo(FDestFile);
+
+                        }
+
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+    }
+
+    public static void writeDebug(String s)
+    {
+        writeDebug(s, DebugFile);
+    }
+
+    public static void writeDebug(String s, String szLogFile)
+    {
+        try
+        {
+            esclog.info(new Date() + ":" + s);
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
+
+    }
+
+    public static void printLog(String s)
+    {
+        esclog.info(new Date() + ":" + s);
+    }
+
+    public static void writeDebug(String s, HttpSession session)
+    {
+        writeDebug(s, 1, session);
+    }
+
+    public static void writeDebug(String s, int iLoglevel)
+    {
+        if (iLoglevel <= iGIFTLoglevel)
+        {
+            writeDebug(s, DebugFile);
+        }
+    }
+
+    public static void writeDebug(String s, int iLoglevel, HttpSession session)
+    {
+
+        try
+        {
+            if (iLoglevel >= 3)
+            {
+                esclog.debug(new Date() + ":" + s);
+            } else
+            {
+                esclog.info(new Date() + ":" + s);
+            }
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
+    }
+
+   /* public static void writeStatement(String s, int iLoglevel, HttpSession session)
+    {
+        String HomeDir = "";
+        FileOutputStream FOpStream = null;
+        String LogFile = "";
+        valuestore ValueStoreObj = null;
+        Login usercheck = null;
+        String UserName = "";
+        try
+        {
+            ValueStoreObj = (valuestore) session.getAttribute("directory");
+
+        } catch (Exception e)
+        {
+        }
+        try
+        {
+            usercheck = (Login) session.getAttribute("GAUserCheck");
+        } catch (Exception e)
+        {
+        }
+        if (usercheck != null)
+        {
+            UserName = usercheck.getUsername();
+            UserName = UserName.trim();
+        }
+        if (ValueStoreObj != null)
+        {
+            HomeDir = ValueStoreObj.getHomedir();
+            HomeDir = HomeDir.trim();
+            iGIFTLoglevel = Integer.parseInt(ValueStoreObj.getLogging_Level());
+        }
+
+        if (iLoglevel <= iGIFTLoglevel && ValueStoreObj != null)
+        {
+            LogFile = HomeDir + File_Separator + "ActionVector" + File_Separator + "Log" + File_Separator + "Statement.log";
+            DebugDir = HomeDir +File_Separator + "ActionVector" + File_Separator + "Log";
+            try
+            {
+// Test For theExistance Of File
+                File FileObj = new File(DebugDir);
+                if (!(FileObj.exists()))
+                {
+                    FileObj.mkdirs();
+                }
+                File FObj = new File(LogFile);
+                if (!FObj.exists())
+                {
+                    FObj.createNewFile();
+                    FOpStream = new FileOutputStream(FObj);
+                } else
+                {
+                    FOpStream = new FileOutputStream(LogFile, true);
+                }
+                s += "\n";
+                FOpStream.write((new Date(System.currentTimeMillis()).toString() + " : " + UserName + " : " + s).getBytes());
+            } catch (Exception e)
+            {
+                //System.out.println("Error Writing Debug File :"+e);
+                //System.out.println(s);
+            } finally
+            {
+                try
+                {
+                    FOpStream.close();
+                } catch (Exception e)
+                {
+                }
+            }
+        }//end of if
+    }*/
+
+    public static void checkLogArchieve(java.util.Date DCurrentDate, java.util.Date DLogFileDate)
+    {
+
+
+        int iCheck = DCurrentDate.compareTo(DLogFileDate);
+
+
+    }
+}

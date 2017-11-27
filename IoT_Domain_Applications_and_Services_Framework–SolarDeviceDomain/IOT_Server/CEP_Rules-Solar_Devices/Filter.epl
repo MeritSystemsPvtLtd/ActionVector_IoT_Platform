@@ -1,0 +1,19 @@
+module com.prokosha.cep.filter.v1;
+
+ @Name("com.prokosha.sadeskCeP.HealthMonitor.etl.1")
+  insert into WatchDogStream
+        select * from WatchDogEvent;
+
+@Name("com.prokosha.sadeskCeP.InverterRealTime.istream.2")
+insert into InverterRealTimeStream
+                select * from InverterRealTimeEvent;
+
+@Name("com.prokosha.sadeskCeP.FroniusError.istream.3")
+insert into FroniusErrorStream
+                select * from FroniusErrorEvent;
+
+@Name("com.prokosha.sadeskCeP.3PInverter.istream.4")
+insert into ThreePhaseInverterStream
+                select * from ThreePhaseInverterEvent;
+
+

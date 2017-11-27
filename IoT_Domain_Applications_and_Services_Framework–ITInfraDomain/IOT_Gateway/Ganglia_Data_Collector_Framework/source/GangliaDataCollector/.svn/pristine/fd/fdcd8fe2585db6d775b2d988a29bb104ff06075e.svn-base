@@ -1,0 +1,42 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.adapter.ganglia;
+
+import java.util.HashMap;
+import java.util.Set;
+import java.util.Iterator;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
+/**
+ *
+ * @author Abraham
+ */
+public class TestNodeListener implements GangliaNodeListener {
+
+    private static final Logger log = Logger.getLogger(TestNodeListener.class.getName());
+    private String ID;
+    
+    public TestNodeListener(String Id) {
+        this.ID = Id;
+    }
+    
+    public void nodeStart(String nodeType, String nodeName, HashMap avList) {
+        log.info("\n\n-----::"+ID+"::NODE START:: Called on nodeType: " + nodeType + " and nodeName: " + nodeName + " ------\n");
+        StringBuffer sbuf = new StringBuffer();
+        Set keys = avList.keySet();
+        Iterator index = keys.iterator();
+        String key;
+        while (index.hasNext()) {
+            key = (String) index.next();
+            sbuf.append("       ").append(key).append(" = ").append(avList.get(key)).append("   \n");
+        }
+        log.info("   The attributes are : \n" + sbuf + "\n");
+    }
+
+    public void nodeEnd(String nodeType) {
+        log.info("\n-----::"+ID+"::NODE END:: Called on nodeType: " + nodeType + " ------\n");
+    }
+}

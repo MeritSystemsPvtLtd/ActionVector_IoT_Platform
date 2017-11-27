@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Sample esperio-socket configuration file.
+-->
+<esperio-socket-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.espertech.com/schema/esperio-socket" xsi:noNamespaceSchemaLocation="esperio-socket-configuration-4-0.xsd">
+	<socket name="mysocketOne" port="7100" data="object"/>
+</esperio-socket-configuration>
+

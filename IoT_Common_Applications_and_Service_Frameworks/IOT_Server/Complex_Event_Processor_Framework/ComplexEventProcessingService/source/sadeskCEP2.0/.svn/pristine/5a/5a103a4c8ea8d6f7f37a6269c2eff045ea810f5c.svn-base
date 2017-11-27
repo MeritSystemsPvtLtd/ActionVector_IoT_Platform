@@ -1,0 +1,15 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.DispatchNode;
+
+// Declare other module(s) that this module depends on
+//uses org.myorganization.common;
+
+// Import any Java/.NET classes in an application package
+//import org.myorganization.events.*;
+
+// Declare an event type based on a Java class in the package that was imported as above
+//create schema MySwitchEvent as MySwitchEventPOJO;
+
+//Statements
+@Name ('DispatchNode')
+select * from DispatchNode;

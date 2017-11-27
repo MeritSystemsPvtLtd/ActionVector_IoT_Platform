@@ -1,0 +1,13 @@
+# This sets the global logging level and specifies the appenders
+log4j.rootLogger=INFO, myAppender
+# settings for the console appender
+#log4j.appender.myAppender=org.apache.log4j.RollingFileAppender
+log4j.appender.myAppender=org.apache.log4j.RollingFileAppender
+#log4j.appender.myAppender.File=/home/mkrekha/NetBeansProjects/CloudUserAPI/build/web/logs/CloudUserAPI.log
+log4j.appender.myAppender.File=${info.path}logs/CloudUserAPI.log
+#log4j.appender.myAppender.File=/home/mkrekha/CloudUserAPI.log
+log4j.appender.myAppender.Append = true
+log4j.appender.myAppender.MaxFileSize=5MB
+log4j.appender.myAppender.MaxBackupIndex=25
+log4j.appender.myAppender.layout=org.apache.log4j.PatternLayout
+log4j.appender.myAppender.layout.ConversionPattern= [%t] %-5p %c %x - %m%n

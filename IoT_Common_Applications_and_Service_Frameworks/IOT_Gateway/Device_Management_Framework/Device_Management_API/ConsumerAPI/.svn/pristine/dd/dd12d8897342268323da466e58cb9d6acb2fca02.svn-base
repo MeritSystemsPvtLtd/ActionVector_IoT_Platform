@@ -1,0 +1,266 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+import businessmodel.*;
+import Model.*;
+import java.util.ArrayList;
+import java.sql.*;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class CreateRole extends HttpServlet
+{
+
+    Connection con = null;
+    private String SWriter;
+    static Logger log = Logger.getLogger(CreateRole.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+
+        response.setContentType("text/xml");
+        StringBuffer results = new StringBuffer("<createrole>");
+        String opStatus = null;
+        String opDescription = null;
+        HttpSession sessions = null;
+        boolean sessioncheck = true;
+        Object OUser;
+        String szUsers = null;
+        Integer ISecurityUsers = 1;
+        PreparedStatement statement = null;
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+        PreparedStatement statement3 = null;
+        boolean bNameExists = false;
+        String sessionid = null;
+        String username = null;
+        boolean bLeveloneexists = false;
+        CommandTask commandinsert = new CommandTask();
+        try
+        {
+            sessions = request.getSession(true);
+            OUser = sessions.getValue("user");
+            szUsers = OUser.toString();
+            ISecurityUsers = (Integer) sessions.getValue("ints");
+
+        } catch (Exception npe)
+        {
+            npe.printStackTrace();
+            //sessioncheck = false;
+            System.out.println("Session Id" + (String) sessions.getId());
+            System.out.println("session failure");
+            log.error("invalid session");
+
+        }
+        int iSecurityLevel = 0;
+        String szSecurityName = "";
+        String szDescription = "";
+        String customerid = "";
+        String szCCActions = "";
+        boolean rolesAdd;
+
+        if (sessioncheck)
+        {
+            try
+            {
+                //username=request.getParameter("username");
+                //sessionid=request.getParameter("sessionid");
+                customerid = request.getParameter("customerid");
+                iSecurityLevel = Integer.parseInt(request.getParameter("level"));
+                szSecurityName = request.getParameter("name");
+                szDescription = request.getParameter("description").trim();
+            } catch (Exception e)
+            {
+                LogWriter.writeDebug("EXCEPTION : Getting the parameter values", 1, sessions);
+                
+            }
+
+
+            if (ISecurityUsers.intValue() == 1)
+            {
+                ArrayList<String>roleNames=new ArrayList<String>();
+                //rolesAdd=businessmodel.AddRole.addNewRoles(customerid,roleNames,request);
+
+                try
+                {
+                    con = DatabaseConnection.getDatabaseConnection(request);
+                    System.out.println("connected");
+                    if (con != null)
+                    {
+                        //check for the sec level 1 which is for admin only
+                        if (iSecurityLevel == 1)
+                        {
+
+
+
+                            statement3 = con.prepareStatement("Select \"level\" from " + DBConstants.SECURITYLEVELS_TABLE + " where \"level\" = 1");
+                            ResultSet rs3 = statement3.executeQuery();
+                            while (rs3.next())
+                            {
+                                bLeveloneexists = true;
+                            }
+                            rs3.close();
+                            statement3.close();
+
+
+                            if (bLeveloneexists)
+                            {
+                                bNameExists = true;
+                                opStatus = "105";
+                                opDescription = "You cannot add more than one security level for 1";
+
+                            }
+                            System.out.println("security level check:::" + bLeveloneexists);
+                        } else
+                        {
+                            /*check for max security level,you can only add upto a maximum of 256 levels.
+                            code added to check for the max value and then add
+                             */
+                            int i = 1;
+                            int iSecId = 0;
+                            statement1 = con.prepareStatement("select max(security_id) from " + DBConstants.SECURITYLEVELS_TABLE + "");
+                            ResultSet rs = statement1.executeQuery();
+                            while (rs.next())
+                            {
+                                iSecId = rs.getInt(1);
+                            }
+                            rs.close();
+                            statement1.close();
+                            if (iSecId < 256)
+                            {
+                                iSecId = iSecId + i;
+
+                                //check whether that security name laready exists with the same security level
+                                try
+                                {
+                                    statement2 = con.prepareStatement("Select name from " + DBConstants.SECURITYLEVELS_TABLE + " where name='" + szSecurityName + "' and \"level\"='" + iSecurityLevel + "'");
+                                    ResultSet rs1 = statement2.executeQuery();
+                                    while (rs1.next())
+                                    {
+                                        bNameExists = true;
+                                    }
+                                    rs1.close();
+                                    statement2.close();
+                                } catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                    opStatus = "101";
+                                    opDescription = "Database operation failed";
+                                }
+                                if (!bNameExists)
+                                {
+                                    statement = con.prepareStatement("INSERT INTO " + DBConstants.SECURITYLEVELS_TABLE + " VALUES(?,?,?,?)");
+                                    statement.setInt(1, iSecId);
+                                    statement.setInt(2, iSecurityLevel);
+                                    statement.setString(3, szSecurityName);
+                                    statement.setString(4, szDescription);
+                                    statement.executeUpdate();
+                                    szCCActions = "Added New Security Level " + iSecurityLevel + " with name " + szSecurityName;
+                                    //boolean check = commandinsert.CommandTask(con, sessions.getId(), szUsers, szCCActions);
+                                    opStatus = "0";
+                                    opDescription = "Security level added successfully";
+                                    System.out.println("security level added successfully");
+                                    log.info("security level added successfully");
+                                } else
+                                {
+                                    bNameExists = true;
+                                    opStatus = "100";
+                                    opDescription = "Security level with this name already exits";
+                                    log.info("security level already exists");
+
+                                }
+                            } else
+                            {
+                                LogWriter.writeDebug("Exception:More than 256 id");
+                                opStatus = "105";
+                                opDescription = "You cannot add more than 256 values";
+                            }
+                        }
+                    }//if
+                    else
+                    {
+                        opStatus = "101";
+                        opDescription = "Unable to connect database";
+                        log.info("unable to connect database");
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    opStatus = "106";
+                    opDescription = "Unable to perform request operation";
+                    log.info("unable to perform request action");
+                } finally
+                {
+                    try
+                    {
+                        statement.close();
+                        if (con != null)
+                        {
+                            con.close();
+                        }
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        log.error("error closing connection: ", e);
+                    }
+                }
+            } else
+            {
+                opStatus = "103";
+                opDescription = "User does not have permission to create security level.";
+                System.out.println("Don't have permissions to add");
+                log.info("security level failed");
+            }
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid session login again";
+            log.info("invalid session");
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</createrole>");
+
+            response.getWriter().write(results.toString());
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+
+        } finally
+        {
+            results = null;
+        }
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+}

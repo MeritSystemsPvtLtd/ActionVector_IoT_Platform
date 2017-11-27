@@ -1,0 +1,333 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package AV_Action;
+
+import Model.*;
+import controller.DBConstants;
+import controller.LogWriter;
+import java.io.IOException;
+import java.sql.*;
+import java.util.*;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_GetAllTrackTasksAction extends AV_Model {
+         
+    static Logger log = Logger.getLogger(AV_GetAllTrackTasksAction.class);
+    public static int iTicketCount = 0;
+    public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+        
+        System.out.println("Check....");
+        
+        response.setContentType("text/xml;charset=UTF-8");
+        Connection con = null;
+        CheckSLA checkSLA = null;
+        String szopration = "tasks-list";
+        String szrespStr = null;
+        StringBuffer result = null;
+        String startdate = null;
+        String enddate = null;
+        String status = null;
+        String priority = null;
+        String hostname = null;    
+        String username = null;
+        String customerid = null;
+        String szAssignee = null;
+        String szDescription = null;
+        String szTaskid = null;
+        String szCategory = null;
+        String szSessionid = "";
+        String installationid = null;
+        String service = null;
+        int ipageNo = 0;
+        int ipageLimit = 10;
+
+        String Tasktype = null;
+        String szPageLimit = null;
+        String szPageNo = null;//added for serverside pagination
+        boolean checkparam = false;
+        boolean checksession = false;
+        ResultSet rs = null;
+        ArrayList<TaskShow> owntaskids = null;
+        UserTask jobs = null;
+        Model.TaskFilter filter = null;
+        ArrayList<String> userTasktypes = new ArrayList<String>();
+
+        System.out.println("Check1");
+        
+        final String All = "All";
+        try {
+            
+            startdate = request.getParameter("startdate");
+            enddate = request.getParameter("enddate");
+            status = request.getParameter("statusname");
+            priority = request.getParameter("priority");
+            hostname = request.getParameter("hostgroup");
+            username = request.getParameter("szusername");
+            Tasktype = request.getParameter("tasktype");
+            szSessionid = request.getParameter("szsessionid");
+            szPageNo = request.getParameter("pageno");
+            szPageLimit = request.getParameter("pagelimit");
+            
+
+            if (request.getParameter("filterpriority") != null);
+            //priorityfilter = request.getParameter("filterpriority");
+
+            
+            //for filter purpose added on 1-08-2013
+            szAssignee = request.getParameter("assignee");
+            szDescription = request.getParameter("description");
+            szTaskid = request.getParameter("taskid");
+            szCategory = request.getParameter("category");
+            customerid = request.getParameter("customerid");
+            installationid = request.getParameter("service");
+            username = username.trim();
+
+
+
+            if (!username.equalsIgnoreCase("") && username != null && !Tasktype.equalsIgnoreCase("") && Tasktype != null && !startdate.equalsIgnoreCase("") && startdate != null && !enddate.equalsIgnoreCase("") && enddate != null) {
+                checkparam = true;
+            } else {
+                checkparam = false;
+            }
+            //added for serverside pagination
+            if (!szPageNo.isEmpty() && szPageNo != null && !szPageNo.equalsIgnoreCase("")) {
+                ipageNo = Integer.parseInt(szPageNo);
+            }
+            if (!szPageLimit.isEmpty() && szPageLimit != null && !szPageLimit.equalsIgnoreCase("")) {
+                ipageLimit = Integer.parseInt(szPageLimit);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            checkparam = false;
+        }
+
+        if (checkparam) {
+
+            try {
+                con = DatabaseConnection.getAVSAConnection(request);
+                if (con != null) {
+                    PreparedStatement statement4 = con.prepareStatement("Select * from " + DBConstants.TASKTYPE_TABLE + " ");
+                    ResultSet rs4 = statement4.executeQuery();
+                    while (rs4.next()) {
+                        userTasktypes.add((String) rs4.getString("task_type"));
+
+                    }
+                    statement4.close();
+                    rs4.close();
+
+                    int usertasktypesize = userTasktypes.size();
+
+
+                    System.out.println("=====================Inside GetAllTrackTasks=================");
+                    log.info("Coming task type is======>" + Tasktype + " Making connection with database");
+
+                    String attributes = DatabaseConnection.GetPropertyattribute(request, "chosenattributes1");
+
+                    log.info("Passing values=======>" + startdate + "   " + enddate + "   " + status + "   " + priority + "   " + hostname + "   " + Tasktype + "  " + userTasktypes + "  " +customerid+  "  " +installationid+ " >>>>>>>>>>>>");
+                     
+            
+                    log.info("%%%%%%%%%%%%%%%%%%Getting TaskJobs %%%%%%%%%%%%%%%%%%%%%%%");
+                    jobs = new UserTask();
+                    filter = new Model.TaskFilter();
+                    filter.setStatus(status);
+                    filter.setPriority(priority);
+                    filter.setAssignee(szAssignee);
+                    filter.setCategory(szCategory);
+
+                    filter.setDescription(szDescription);
+                    filter.setTaskid(szTaskid);
+
+                    filter.setHostname(hostname);
+                    filter.setStartdate(startdate);
+                    filter.setEnddate(enddate);
+
+                    if (customerid != null) {
+			System.out.println("Customerid not null");
+                        if(!(customerid.equals("")) && !(customerid.equals(All)))
+                            {
+				 System.out.println("Customerid not equals All");
+                        filter.setCustomerid(customerid);
+                        }
+                    }
+                    if (installationid != null) {
+                        if (!(installationid.equals("")) && !(installationid.equals(All))) {
+
+                        filter.setService(installationid);
+                        }
+
+                    }
+                    owntaskids = jobs.getTaskJobs(username, con, Tasktype, userTasktypes, filter, attributes, ipageNo, ipageLimit);
+                    System.out.println("Calling Sla status check..");
+                    checkSLA = new CheckSLA();
+                    checkSLA.checkSLA(owntaskids, con, szSessionid, request);
+                    try {
+                        result = new StringBuffer("<tasks>");
+                        int j = owntaskids.size();
+                        System.out.println("total number of tasks:" + j);
+                        log.info("total number of tasks:" + j);
+                        if (j != 0) {
+                            for (int i = 0; i < j; i++) {
+                                result.append("<task>");
+                                result.append("<taskid>");
+                                result.append((String) owntaskids.get(i).getTaskid());
+                                result.append("</taskid>");
+                                result.append("<category>");
+                                result.append((String) owntaskids.get(i).getCategory());
+                                result.append("</category>");
+                                result.append("<assignee>");
+                                result.append((String) owntaskids.get(i).getAssignee());
+                                result.append("</assignee>");
+                                result.append("<tasktype>");
+                                result.append((String) owntaskids.get(i).getTaskkind());
+                                result.append("</tasktype>");
+                                result.append("<createdby>");
+                                result.append((String) owntaskids.get(i).getCreatedby());
+                                result.append("</createdby>");
+                                result.append("<datetime>");
+                                result.append((String) owntaskids.get(i).getDatetime());
+                                result.append("</datetime>");
+                                result.append("<priority>");
+                                result.append((String) owntaskids.get(i).getTaskpriority());
+                                result.append("</priority>");
+                                result.append("<status>");
+                                result.append((String) owntaskids.get(i).getTaskstatus());
+                                result.append("</status>");
+                                result.append("<description>");
+                                result.append((String) owntaskids.get(i).getDescription());
+                                result.append("</description>");
+                                result.append("<host>");
+                                result.append((String) owntaskids.get(i).getHost());
+                                result.append("</host>");
+                                result.append("<sla>");
+                                result.append((String) owntaskids.get(i).getSLA());
+                                result.append("</sla>");
+                                result.append("<slaimage>");
+                                result.append((String) owntaskids.get(i).getSLAImage());
+                                result.append("</slaimage>");
+                                result.append("<taskhost>");
+                                result.append((String) owntaskids.get(i).getTaskhost());
+                                result.append("</taskhost>");
+                                result.append("<service>");
+                                result.append((String) owntaskids.get(i).getService());
+                                result.append("</service>");
+                                result.append("<subservice>");
+                                result.append((String) owntaskids.get(i).getSubservice());
+                                result.append("</subservice>");
+                                result.append("<tempattr>");
+                                result.append((String) owntaskids.get(i).getTempattr());
+                                result.append("</tempattr>");
+
+                                Iterator attrIt = owntaskids.get(i).getAttributeValues().entrySet().iterator();
+                                while (attrIt.hasNext()) {
+                                    Map.Entry me = (Map.Entry) attrIt.next();
+                                    result.append("<" + (String) me.getKey() + ">");
+                                    result.append((String) me.getValue());
+                                    result.append("</" + (String) me.getKey() + ">");
+
+                                }
+                                result.append("</task>");
+                                attrIt = null;
+
+                            }
+                        } else {
+                            result.append("<empty>");
+                            result.append("no tasks found");
+                            result.append("</empty>");
+                        }
+                        result.append("</tasks>");
+                        result.append("<ticketcount>");
+                        result.append("<totalcount>");
+
+
+                        result.append(iTicketCount);
+                        result.append("</totalcount>");
+                        result.append("</ticketcount>");
+
+
+                        AV_Constants.opStatus = AV_Constants.SUCCESS;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println("DIRECTLY GOING INTO Show.jsp");
+                } else {
+
+                    AV_Constants.opStatus = AV_Constants.DBERROR;
+                    log.debug("unable to process the database operation");
+                }
+            } catch (Exception ex) {
+
+                AV_Constants.opStatus = AV_Constants.FAILURE;
+                log.debug("unable to process the request action");
+                ex.printStackTrace();
+            } finally {
+                iTicketCount = 0;
+
+                filter = null;
+                owntaskids = null;
+                jobs = null;
+                try {
+
+                    con.close();
+
+                } catch (SQLException ex) {
+                    log.error("DBException::" + ex);
+
+                }
+                if (rs != null) {
+                    try {
+                        rs.close();
+                    } catch (SQLException ex) {
+                        log.error("Error while closing connection" + ex);
+
+                    }
+                }
+            }
+
+        } else {
+
+            AV_Constants.opStatus = AV_Constants.INVALID_INPUTS;
+        }
+
+        try {
+
+            szrespStr = AV_OutputFormat.formatOutPut(AV_Constants.opStatus, result, szopration, sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e) {
+            LogWriter.writeDebug("exception while writing output");
+        } finally {
+            try {
+                szrespStr = null;
+                result = null;
+                szopration = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response, ServletContext sc)
+            throws ServletException, IOException {
+        performRequestAction(request, response,sc);
+    }
+    
+    protected void doPost(HttpServletRequest request, HttpServletResponse response, ServletContext sc)
+            throws ServletException, IOException {
+        performRequestAction(request, response,sc);
+    }
+
+
+    }
+

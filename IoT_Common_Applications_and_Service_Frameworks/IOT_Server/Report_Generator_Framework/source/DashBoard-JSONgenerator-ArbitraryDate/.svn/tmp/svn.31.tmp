@@ -1,0 +1,372 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package com.merit.dashboard.DAO.metrics;
+
+import com.merit.dashboard.DBUtil.DBUtilHelper;
+import java.sql.ResultSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Set;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ *
+ * @author Manoj Kumar Sahu
+ * Creation Date: Apr 12, 2013
+ * Creation Time: 6:44:21 PM
+ */
+public class CommonMongoChangerMethods {
+    /* Generalized Method */
+    public static JSONArray getJSONArrayFromArrayMap(HashMap<String,JSONArray> map){
+        Collection<JSONArray> jsonArrays = map.values();
+        JSONArray arr = new JSONArray();
+        int len = 0;
+        try {
+            for (JSONArray temp : jsonArrays) {
+                len = temp.length();
+                for (int i = 0; i < len; i++) {
+                    arr.put(temp.get(i));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return arr;
+    }
+
+    public static JSONArray getJSONArrayFromObjectMap(HashMap<String,JSONObject> map){
+        Collection<JSONObject> jsonSet = map.values();
+        JSONArray arr = new JSONArray(jsonSet);
+        return arr;
+    }
+
+    public static HashMap<String,JSONArray> processMapForAggregationForJSONArr(HashMap<String,JSONArray> map, String[] numericField, String[] uniqueField, String [] discardCols){
+        Set<String> keySet = map.keySet();
+        JSONArray jsonArr = null;
+        JSONObject jsonObject = null;
+        HashMap<String,JSONArray> mapN = new HashMap<String,JSONArray>();
+        try {
+            for (String key : keySet) {
+                jsonArr = map.get(key);
+                jsonObject = processJSONArrayForAggregation(jsonArr, numericField, uniqueField, discardCols);
+                mapN.put(key, new JSONArray("[" + jsonObject.toString() + "]"));
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return mapN;
+    }
+
+    public static HashMap<String,JSONObject> processMapForAggregation(HashMap<String,JSONArray> map, String[] numericField, String[] uniqueField, String [] discardCols){
+        Set<String> keySet = map.keySet();
+        JSONArray jsonArr = null;
+        JSONObject jsonObject = null;
+        HashMap<String,JSONObject> mapN = new HashMap<String,JSONObject>();
+        for(String key : keySet){
+            jsonArr = map.get(key);
+            jsonObject = processJSONArrayForAggregation(jsonArr, numericField, uniqueField, discardCols);
+            mapN.put(key, jsonObject);
+        }
+        return mapN;
+    }
+
+    public static JSONObject processJSONArrayForAggregation(JSONArray jsonArr, String[] numericField, String[] uniqueField, String [] discardCols){
+        try {
+            int len = jsonArr.length();
+            JSONObject tempJSONobj = null;
+            JSONObject resultJObj = new JSONObject();
+//            if(discardCols != null){
+//                for(String dfield : discardCols)
+//                    tempJSONN.remove(dfield);
+//            }
+            String[] fieldSet = JSONObject.getNames(jsonArr.getJSONObject(0));
+            fieldSet = removeMtchingValuefromStringArr(fieldSet, uniqueField);
+            fieldSet = removeMtchingValuefromStringArr(fieldSet, discardCols);
+
+            double nFieldVal = 0;
+            //System.out.println("tempJSONN = " + tempJSONN);
+            for(String field: uniqueField){
+                resultJObj.put(field,jsonArr.getJSONObject(0).get(field));
+            }
+            for(String field: fieldSet){
+                if(isPresentIn(field,numericField)) {
+                    //System.out.println("field = " + field);
+                    nFieldVal = 0;
+                    for (int i = 0; i < len; i++) {
+                        tempJSONobj = jsonArr.getJSONObject(i);
+                        System.out.println("tempJSONobj = " + tempJSONobj);
+                        nFieldVal += tempJSONobj.getDouble(field);
+                    }
+                    resultJObj.put(field,nFieldVal);
+                } else {
+                    for (int i = 0; i < len; i++)
+                        resultJObj.accumulate(field,jsonArr.getJSONObject(i).get(field));
+                }
+            }
+            System.out.println("_________________________________________");
+            System.out.println("resultJObj  = " + resultJObj);
+            System.out.println("\n*****************************************************\n");
+            return resultJObj;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public static JSONArray changeReultSetToJSONArray(ResultSet rs, String[] columnLabels){
+        JSONArray arr = new JSONArray();
+        HashMap<String,Object> obj;
+        try {
+            while (rs.next()) {
+                obj = new HashMap<String,Object>();
+                for(String colmnName: columnLabels){
+                   obj.put(colmnName, rs.getObject(colmnName)) ;
+                }
+                arr.put(obj);
+            }
+            return arr;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    public static JSONObject accumulateJSONObject(JSONObject obj1, JSONObject obj2, String uniqueValueColumns[]){
+        return accumulateJSONObject(obj1, null, obj2, null, uniqueValueColumns);
+    }
+
+    public static JSONObject accumulateJSONObject(JSONObject obj1, String[] colOFObj1, JSONObject obj2, String[] colOFObj2, String uniqueValueColumns[]){
+        try {
+            //JSONObject obj1 = new JSONObject("{'0':'e','1':'hello!', '2':' anand', 'A':42}");
+            //JSONObject obj2 = new JSONObject("{'0':'e','3':' WelCome','4':' to Home. ', 'A':['e4',['ert',5],'uo',4]}");
+            //String uniqueColumns[] = new String[]{"0"};
+
+            JSONObject objN = null;
+            if(colOFObj1 != null){
+                objN = new JSONObject(obj1, colOFObj1); //new JSONObject(obj1,WantedArrayString Column);
+            }else{
+                objN = new JSONObject(obj1.toString()); //new JSONObject(obj1,WantedArrayString Column);
+            }
+
+            String keyarr[] = null;
+            if(colOFObj2 != null){
+                keyarr = colOFObj2;
+            }else{
+                keyarr = JSONObject.getNames(obj2);//Or wanted arrayColumns
+            }
+
+            keyarr = removeMtchingValuefromStringArr(keyarr, uniqueValueColumns);
+
+            String val1 = "";
+            Object val2 = "";
+            JSONArray tempArr = null;
+
+            for(String key : keyarr){
+                val2 = obj2.get(key);
+                if(val2.toString().startsWith("[")){
+                    val2 = val2.toString().substring(1, val2.toString().length());
+                    val2 = val2.toString().replaceAll("\"","");
+                    val2 = val2.toString().substring(0, val2.toString().length()-1);
+
+                    val1 = obj1.get(key).toString();
+                    if(val1.toString().startsWith("[")){
+                        val1 = val1.toString().substring(1, val1.toString().length());
+                        val1 = val1.toString().replaceAll("\"","");
+                        val1 = val1.toString().substring(0, val1.toString().length()-1);
+                    }
+                    tempArr = new JSONArray("[" + val1 + "," + val2 + "]");
+                    objN.remove(key);
+                    objN.put(key, tempArr);
+                }else{
+                    objN.accumulate(key, val2);
+                }
+            }
+            //System.out.println("objN = " + objN);
+            return objN;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public static HashMap<String,JSONArray> groupbyMap(JSONArray jsonArr, String keyName){
+       try {
+            /*Creating JSONArray*/
+            int len = jsonArr.length();
+            /*change DBObject to HashMap based on join key*/
+            JSONObject tempJSONObj = null;
+            JSONArray tempJSONArrObj = null;
+            String serviceKey = null;
+            HashMap<String, JSONArray> map = new HashMap<String, JSONArray>();
+            for (int i = 0; i < len; i++) {
+                tempJSONObj = jsonArr.getJSONObject(i);
+                serviceKey = tempJSONObj.getString(keyName);
+
+                tempJSONArrObj = map.get(serviceKey);
+                if(tempJSONArrObj == null){
+                    tempJSONArrObj = new JSONArray();
+                }
+                tempJSONArrObj.put(tempJSONObj);
+                map.put(serviceKey, tempJSONArrObj);
+            }
+            return map;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return  null;
+        }
+    }
+
+    public static HashMap<String,JSONArray> groupbyMap(JSONArray jsonArr, String[] keyNames){
+       try {
+            /*Creating JSONArray*/
+            int len = jsonArr.length();
+            /*change DBObject to HashMap based on join key*/
+            JSONObject tempJSONObj = null;
+            JSONArray tempJSONArrObj = null;
+            String serviceKey = "";
+            HashMap<String, JSONArray> map = new HashMap<String, JSONArray>();
+            for (int i = 0; i < len; i++) {
+                tempJSONObj = jsonArr.getJSONObject(i);
+                serviceKey = "";
+                for(String keyName : keyNames){
+                    serviceKey += tempJSONObj.getString(keyName) + "##";
+                }
+
+                tempJSONArrObj = map.get(serviceKey);
+                if(tempJSONArrObj == null){
+                    tempJSONArrObj = new JSONArray();
+                }
+                tempJSONArrObj.put(tempJSONObj);
+                map.put(serviceKey, tempJSONArrObj);
+            }
+            return map;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return  null;
+        }
+    }
+
+    public static JSONArray getJSONArray(Collection<JSONArray> arrObjSet) {
+        JSONArray arjsonObj = new JSONArray();
+        int len = 0;
+        try {
+            for (JSONArray jArr : arrObjSet) {
+                len = jArr.length();
+                for (int i = 0; i < len; i++) {
+                    arjsonObj.put(jArr.getJSONObject(i));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return arjsonObj;
+    }
+
+    public static String[] removeMtchingValuefromStringArr(String []first, String []matched){
+        if(first == null){
+            return null;
+        }else if(matched == null){
+            return first;
+        }
+        String total = ",";
+        for(String temp :first){
+            total += temp + "," ;
+        }
+        //System.out.println("total = " +total);
+        for(String temp : matched){
+            total = total.replaceAll(","+temp+",", ",");
+        }
+        //System.out.println("total = " + total + "\n\n");
+        if(total!= null && !total.trim().equalsIgnoreCase("")){
+            if(total.endsWith(",") && total.length()>1)
+                total = total.substring(0,total.length());
+        }
+        if(total!= null && !total.trim().equalsIgnoreCase("")){
+            if(total.startsWith(",") && total.length()>1)
+                total = total.substring(1,total.length()-1);
+        }
+        return total.split(",");
+    }
+
+    public static boolean isPresentIn(String gfield, String[] fieldSet) {
+        if(fieldSet == null){
+            return false;
+        }
+        if(gfield == null){
+            gfield = "null";
+        }
+        for(String field: fieldSet){
+            if(field == null && (gfield == "null" || gfield=="'null'")){
+                field = "null";
+                gfield = gfield.replaceAll("'", "");
+            }
+            if(field != null){
+                if(field.trim().equalsIgnoreCase(gfield.trim())){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static HashMap<String, String> reMap(HashMap<String, JSONObject> map){
+        return null;
+    }
+
+    public static JSONArray modifyMetricTypeAsPerProperties(JSONArray aobject){
+        try {
+            JSONArray naobject = new JSONArray();
+            JSONObject tempObj = null;
+            String key = "";
+            String sz_metrictype = "";
+            String psz_metrictype = null;
+            for (int i = 0; i < aobject.length(); i++) {
+                tempObj = aobject.getJSONObject(i);
+                if(tempObj.has("metrictype")){
+                    key = "metrictype";
+                }else if(tempObj.has("MetricType")){
+                    key = "MetricType";
+                }
+                sz_metrictype = tempObj.getString(key);
+                psz_metrictype = (new DBUtilHelper()).getMetrics_mapping_properties().getProperty(sz_metrictype);
+                if(psz_metrictype!=null){
+                    tempObj.put(key, psz_metrictype);
+                }
+                naobject.put(tempObj);
+            }
+            return naobject;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    public static JSONArray renameFieldFromJSonObjInJSONArr(JSONArray aobject, String key, String mdKey){
+        try {
+            JSONArray naobject = new JSONArray();
+            JSONObject tempObj = null;
+            JSONObject mdTempObj = null;
+            //key = "resourceType";
+            //mdKey = "ResourceType";
+            String[] fields = null;
+            for (int i = 0; i < aobject.length(); i++) {
+                tempObj = aobject.getJSONObject(i);
+                fields = JSONObject.getNames(tempObj);
+                fields = removeMtchingValuefromStringArr(fields, new String[]{key});
+                mdTempObj = new JSONObject(tempObj,fields);
+                mdTempObj.put(mdKey, tempObj.get(key));
+                naobject.put(mdTempObj);
+            }
+            return naobject;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+}

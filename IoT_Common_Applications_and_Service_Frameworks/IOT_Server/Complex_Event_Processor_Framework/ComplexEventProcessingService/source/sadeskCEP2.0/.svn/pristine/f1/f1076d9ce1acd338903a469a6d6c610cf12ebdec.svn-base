@@ -1,0 +1,107 @@
+module com.prokosha.sadeskCeP.MemcachePerfMonitor.v3;
+
+//
+// Event to be sent to SADesk has following fields:
+//  EventType - "Correlated Event"
+//  EventDesc - "Memcached Performance Degradation"
+//  EventSymptoms - "Latency too high, Latency spikes observed, Load too high, Load spikes, Swap usage too high, Swap spikes"
+//  MemcServer - Memcache Server  IP
+//  MemcPort - Memcache Server Instance Port
+//  MemcLatency - Read latency
+//  MemcClient - Client from which read latency measured
+//  ServerSwapMax - maximum swap available on memcached server
+//  ServerSwapUsed - swap usage on memcached server
+//  ServerLoad1 - load1 on memcached server
+//  ServerLoad5 - load5 on memcached server
+//  ServerLoad15 - load15 on memcached server
+//  MonitorWindow - no of minutes for which monitor calculates averages
+//  ServerLoad1Average - load1 average for on memcached server for the time window
+//  ServerLatencyAverage - read latency average for time window
+//
+
+//
+//  Conditions detected by monitor
+// 	1. In a 5 minute window, if average latency greater than 0.0005 and average Load1 greater than 2
+//
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.01")
+insert into Bse1
+    select MemcacheServer, MemcachePort, MemcacheLatency, avg(MemcacheLatency) as AvgMemcacheLatency
+    from LatencyBse1.win:time(5 minutes);
+insert into Bse2
+    select MemcacheServer, MemcachePort, MemcacheLatency, avg(MemcacheLatency) as AvgMemcacheLatency
+    from LatencyBse2.win:time(5 minutes);
+insert into Bse3
+    select MemcacheServer, MemcachePort, MemcacheLatency, avg(MemcacheLatency) as AvgMemcacheLatency
+    from LatencyBse3.win:time(5 minutes);
+insert into Nse1
+    select MemcacheServer, MemcachePort, MemcacheLatency, avg(MemcacheLatency) as AvgMemcacheLatency
+    from LatencyNse1.win:time(5 minutes);
+insert into Nse2
+    select MemcacheServer, MemcachePort, MemcacheLatency, avg(MemcacheLatency) as AvgMemcacheLatency
+    from LatencyNse2.win:time(5 minutes);
+insert into Nse3
+    select MemcacheServer, MemcachePort, MemcacheLatency, avg(MemcacheLatency) as AvgMemcacheLatency
+    from LatencyNse3.win:time(5 minutes);
+
+//compute time window load1 average
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.02")
+insert into LoadMemcache
+    select Load1, Load5, Load15, avg(Load1) as AverageLoad1
+    from LoadOnMemcache.win:time(5 minutes);
+insert into LoadMemcache1
+    select Load1, Load5, Load15, avg(Load1) as AverageLoad1
+    from LoadOnMemcache1.win:time(5 minutes);
+
+//(avg latency > threshold AND average load > threshold) grouped by MemcachePort on MemcacheServer
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into reportIssue
+    select MemcacheServer, MemcachePort, AvgMemcacheLatency,
+           Load1, Load5, Load15, AverageLoad1
+    from Bse1.win:length(1), LoadMemcache.win:length(1) 
+    having (AvgMemcacheLatency>0.0005 and AverageLoad1>2.0);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.2")
+insert into reportIssue
+    select MemcacheServer, MemcachePort, AvgMemcacheLatency,
+           Load1, Load5, Load15, AverageLoad1
+    from Bse3.win:length(1), LoadMemcache.win:length(1)
+    having (AvgMemcacheLatency>0.0005 and AverageLoad1>2.0);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.3")
+insert into reportIssue
+    select MemcacheServer, MemcachePort, AvgMemcacheLatency,
+           Load1, Load5, Load15, AverageLoad1
+    from Nse2.win:length(1), LoadMemcache.win:length(1)
+    having (AvgMemcacheLatency>0.0005 and AverageLoad1>2.0);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.4")
+insert into reportIssue
+    select MemcacheServer, MemcachePort, AvgMemcacheLatency,
+           Load1, Load5, Load15, AverageLoad1
+    from Nse1.win:length(1), LoadMemcache1.win:length(1)
+    having (AvgMemcacheLatency>0.0005 and AverageLoad1>2.0);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.5")
+insert into reportIssue
+    select MemcacheServer, MemcachePort, AvgMemcacheLatency,
+           Load1, Load5, Load15, AverageLoad1
+    from Bse2.win:length(1), LoadMemcache1.win:length(1)
+    having (AvgMemcacheLatency>0.0005 and AverageLoad1>2.0);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.6")
+insert into reportIssue
+    select MemcacheServer, MemcachePort, AvgMemcacheLatency,
+           Load1, Load5, Load15, AverageLoad1
+    from Nse3.win:length(1), LoadMemcache1.win:length(1)
+    having (AvgMemcacheLatency>0.0005 and AverageLoad1>2.0);
+
+
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+select "Correlated Event" as EventType,
+	"Memcached Performance Degradation Likely" as EventDesc,
+	"In the past 5 minutes, average memcache read latency exceeds 0.0005s and average memcache server load exceeds 2.0" as EventSymptoms,
+        MemcacheServer as HostName,
+	MemcacheServer, MemcachePort, AvgMemcacheLatency, Load1, Load5, Load15, AverageLoad1
+    from reportIssue;
+
+

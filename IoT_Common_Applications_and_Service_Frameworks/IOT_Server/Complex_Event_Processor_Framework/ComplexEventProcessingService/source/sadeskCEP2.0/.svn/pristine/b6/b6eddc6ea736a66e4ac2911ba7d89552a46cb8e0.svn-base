@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+        Defaullt (empty) configuration file.
+-->
+<esper-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xmlns="http://www.espertech.com/schema/esper"
+                     xsi:noNamespaceSchemaLocation="esper-configuration-4-0.xsd">
+    
+    <event-type name="MemoryStatsEvent">
+        <java-util-map>
+            <map-property name="MessageLength" class="string"/>
+            <map-property name="MessageType" class="string"/>
+            <map-property name="SubType" class="string"/>
+            <map-property name="RequestID" class="string"/>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostIP" class="string"/>
+            <map-property name="ResourceType" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="Service" class="string"/>
+            <map-property name="SubService" class="string"/>
+            <map-property name="HostGroup" class="string"/>
+            <map-property name="RealUsage" class="string"/>
+            <map-property name="MemUsed" class="string"/>
+            <map-property name="Mem-max" class="string"/>
+            <map-property name="Cache" class="string"/>
+            <map-property name="Swap" class="string"/>
+            <map-property name="Buffer" class="string"/>
+            <map-property name="Utilization" class="string"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="LoadAverageEvent">
+        <java-util-map>
+            <map-property name="MessageLength" class="string"/>
+            <map-property name="MessageType" class="string"/>
+            <map-property name="SubType" class="string"/>
+            <map-property name="RequestID" class="string"/>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostIP" class="string"/>
+            <map-property name="ResourceType" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="Service" class="string"/>
+            <map-property name="SubService" class="string"/>
+            <map-property name="HostGroup" class="string"/>
+            <map-property name="Load1" class="float"/>
+            <map-property name="Load5" class="float"/>
+            <map-property name="Load15" class="float"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="MemcacheReadLatencyEvent">
+        <java-util-map>
+            <map-property name="MessageLength" class="string"/>
+            <map-property name="MessageType" class="string"/>
+            <map-property name="SubType" class="string"/>
+            <map-property name="RequestID" class="string"/>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostIP" class="string"/>
+            <map-property name="ResourceType" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="Service" class="string"/>
+            <map-property name="SubService" class="string"/>
+            <map-property name="HostGroup" class="string"/>
+            <map-property name="ElapsedTime" class="float"/>
+            <map-property name="MemcacheServer" class="string"/>
+            <map-property name="MemcachePort" class="string"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="HTTPResponseTimeEvent">
+        <java-util-map>
+            <map-property name="MessageLength" class="string"/>
+            <map-property name="MessageType" class="string"/>
+            <map-property name="SubType" class="string"/>
+            <map-property name="RequestID" class="string"/>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostIP" class="string"/>
+            <map-property name="ResourceType" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="Service" class="string"/>
+            <map-property name="SubService" class="string"/>
+            <map-property name="HostGroup" class="string"/>
+            <map-property name="ResponseTime" class="float"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="ConcurrentProcessesEvent">
+        <java-util-map>
+            <map-property name="MessageLength" class="string"/>
+            <map-property name="MessageType" class="string"/>
+            <map-property name="SubType" class="string"/>
+            <map-property name="RequestID" class="string"/>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostIP" class="string"/>
+            <map-property name="ResourceType" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="Service" class="string"/>
+            <map-property name="SubService" class="string"/>
+            <map-property name="HostGroup" class="string"/>
+            <map-property name="ConcurrentProcesses" class="string"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="SwapStatsEvent">
+        <java-util-map>
+            <map-property name="MessageLength" class="string"/>
+            <map-property name="MessageType" class="string"/>
+            <map-property name="SubType" class="string"/>
+            <map-property name="RequestID" class="string"/>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostIP" class="string"/>
+            <map-property name="ResourceType" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="Service" class="string"/>
+            <map-property name="SubService" class="string"/>
+            <map-property name="HostGroup" class="string"/>
+            <map-property name="SwapUsage" class="string"/>
+            <map-property name="MaxSwaps" class="string"/>
+        </java-util-map>
+    </event-type>
+</esper-configuration>
+

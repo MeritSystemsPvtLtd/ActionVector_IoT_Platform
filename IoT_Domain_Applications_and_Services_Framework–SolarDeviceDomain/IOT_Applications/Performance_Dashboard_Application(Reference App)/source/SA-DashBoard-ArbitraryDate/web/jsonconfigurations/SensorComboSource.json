@@ -1,0 +1,139 @@
+[
+   {
+      "text":"Select Graph",
+      "value":"Options",
+      "items":[
+         {
+            "text":"Health",
+            "id":"Health_id",
+            "value":"Health",
+            "items":[
+               {
+                  "text":"Availability",
+                  "value":"Availability",
+                  "filename":"/Sensor/SensorAvail.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Availability"
+                  ],
+                  "index":"0"
+               },
+               {
+                  "text":"Sensor Temperature",
+                  "value":"Sensor Temperature",
+                  "filename":"/Sensor/SensorTemperatureMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Ambient_Temp",
+		     "Module_Temp"
+                  ],
+                  "index":"1"
+               },
+               {
+                  "text":"Sensor Irradiance",
+                  "value":"Sensor Irradiance",
+                  "filename":"/Sensor/SensorIrradianceMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Irradiance"
+                  ],
+                  "index":"2"
+               },
+               {
+                  "text":"Sensor WindSpeed",
+                  "value":"Sensor WindSpeed",
+                  "filename":"/Sensor/SensorWind_SpeedMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Wind_Speed"
+                  ],
+                  "index":"3"
+               },
+                {
+                        "value": "Time Line Availability",
+                        "text": "Time Line Availability",
+                        "filename": "/Sensor/SensorLineChartAvailability.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                   		 "Availability"],
+                        "index": "4"
+                    },
+                {
+                        "value": "Time Line Temperature",
+                        "text": "Time Line Temperature",
+                        "filename": "/Sensor/SensorLineChartTemperature.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                        "Ambient_Temp",
+                        "Module_Temp"],
+                        "index": "5"
+                    },
+                     {
+                        "value": "Time Line Irradiance",
+                        "text": "Time Line Irradiance",
+                        "filename": "/Sensor/SensorLineChartIrradiance.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [ "Irradiance"],
+                        "index": "6"
+                    },
+                     {
+                        "value": "Time Line WindSpeed",
+                        "text": "Time Line WindSpeed",
+                        "filename": "/Sensor/SensorLineChartWindSpeed.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType":[
+                     "Wind_Speed"],
+                        "index": "7"
+                    }
+            ]
+         },
+         {
+            "text":"Alert",
+            "value":"Alert",
+            "items":[
+               {
+                  "text":"Alerts By Assignee",
+                  "value":"Alerts By Assignee",
+                  "filename":"/Sensor/SensorAssignee.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"0"
+               },
+               {
+                  "text":"Alerts By Status",
+                  "value":"Alerts By Status",
+                  "filename":"/Sensor/SensorStatus.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"1"
+               },
+               {
+                  "text":"Critical Alerts",
+                  "value":"Critical Alerts",
+                  "filename":"/Sensor/SensorAlertCount.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+                    
+                  ],
+                  "index":"2"
+               }
+            ]
+         }
+      ]
+   }
+]

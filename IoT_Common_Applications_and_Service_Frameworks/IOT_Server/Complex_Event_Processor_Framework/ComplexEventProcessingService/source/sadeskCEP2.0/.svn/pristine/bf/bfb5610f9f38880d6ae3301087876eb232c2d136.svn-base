@@ -1,0 +1,82 @@
+module com.prokosha.sadeskCeP.MemcachePerfMonitor;
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+//insert into MC1
+//select MemcacheClient, MemcacheServer, MemcachePort, Latency
+//    from MemcacheMonitor(MemcacheServer='10.10.10.10', MemcachePort='1121').win:length(1)
+//    having (Latency>0.6);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+//insert into MC2
+//select avg(Latency) as AvgLatency
+//    from MemcacheMonitor(MemcacheServer='10.10.10.10', MemcachePort='1121').win:length(5)
+//    having (avg(Latency)>0.4);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+//insert into MC3
+//select Load1, Load5, Load15
+//    from LoadAvgMonitor.win:length(1);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+//insert into MC4
+//select avg(Load1) as AvgLoad1
+//    from LoadAvgMonitor.win:length(5)
+//    having (avg(Load1)>1.5);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+//select "MemcachePerfMonitor" as CorrEventType,
+//        MemcacheClient, MemcacheServer, MemcachePort, Latency, AvgLatency,
+//        AvgLoad1, Load1, Load5, Load15
+//    from MC1.win:length(1), MC2.win:length(1), MC3.win:length(1), MC4.win:length(1)
+//    having ((Latency>0.6) or (AvgLatency>0.4 and AvgLoad1>1.5));
+
+//save the context
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.context.1")
+//select "MemcachePerfMonitor" as CorrEventType,
+//        MemcacheClient, MemcacheServer, MemcachePort, Latency
+//    from MemcacheMonitor;
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.context.2")
+//select "MemcachePerfMonitor" as CorrEventType,
+//        Load1, Load5, Load15
+//    from LoadAvgMonitor;
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+//select distinct "MemcachePerfMonitor" as CorrEventType,
+//        MemcacheClient, MemcacheServer, MemcachePort, Latency
+//    from MemcacheMonitor.win:length(1)
+//    where (Latency>0.6);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.2")
+//select "MemcachePerfMonitor" as CorrEventType,
+//        MemcacheClient, MemcacheServer, MemcachePort, Latency, avg(Latency) as AvgLatency,
+//        avg(Load1) as AvgLoad1, Load1, Load5, Load15
+//    from LoadAvgMonitor.win:length(5), MemcacheMonitor.win:length(5)
+//    having ((Latency>0.6) or (avg(Latency)>0.4 and avg(Load1)>1.5));
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into MC1
+select MemcacheClient, MemcacheServer, MemcachePort, Latency
+    from MemcacheMonitor.win:length(1);
+
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into MC2
+select avg(Latency) as AvgLatency
+    from MemcacheMonitor(MemcacheServer='10.10.10.10', MemcachePort='1121').win:length(5);
+
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into MC3
+select Load1, Load5, Load15
+    from LoadAvgMonitor.win:length(1);
+
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into MC4
+select avg(Load1) as AvgLoad1
+    from LoadAvgMonitor.win:length(5);
+
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+select distinct "MemcachePerfMonitor" as CorrEventType,
+        MemcacheClient, MemcacheServer, MemcachePort, Latency, AvgLatency,
+        AvgLoad1, Load1, Load5, Load15
+    from MC1.win:length(1), MC2.win:length(1), MC3.win:length(1), MC4.win:length(1)
+    where ((Latency>0.6) or (AvgLatency>0.4 and AvgLoad1>1.5));

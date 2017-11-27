@@ -1,0 +1,21 @@
+host, resource,time,bytes
+Ril-Nsefeed,TCP,10000,1000
+Ril-Nsefeed,TCP,10010,2000
+Ril-Nsefeed,TCP,10020,3000
+Ril-Nsefeed,TCP,10030,4500
+Ril-Nsefeed,TCP,10040,6000
+Ril-Nsefeed,TCP,10050,8000
+Ril-Nsefeed,TCP,10060,9500
+Ril-Nsefeed,TCP,10070,11000
+Ril-Nsefeed,TCP,10080,13000
+Ril-Nsefeed,TCP,10090,14000
+Ril-Nsefeed,TCP,10100,18000
+Ril-Nsefeed,TCP,10110,18750
+Ril-Nsefeed,TCP,10120,20000
+Ril-Nsefeed,TCP,10130,22000
+Ril-Nsefeed,TCP,10140,23750
+Ril-Nsefeed,TCP,10150,27500
+Ril-Nsefeed,TCP,10160,31000
+Ril-Nsefeed,TCP,10170,35000
+Ril-Nsefeed,TCP,10180,36500
+Ril-Nsefeed,TCP,10190,39000

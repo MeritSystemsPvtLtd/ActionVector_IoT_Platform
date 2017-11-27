@@ -1,0 +1,52 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package com.prokosha.sadeskCeP;
+import com.espertech.esperio.*;
+import com.espertech.esperio.csv.*;
+import com.espertech.esper.client.*;
+import java.io.*;
+import java.util.*;
+
+/**
+ *
+ * @author Abraham
+ */
+public class CsvEmitter implements Runnable {
+    EPServiceProvider cepProv;
+    File fHandle;
+    AdapterInputSource evSrc;
+    CSVInputAdapter evEmitter;
+    String evName;
+
+    public CsvEmitter(EPServiceProvider theProv, String eventName, String fname) throws ClassNotFoundException
+    {
+        evName = eventName;
+        fHandle = new File(fname);
+        evSrc = new AdapterInputSource(fHandle);
+        cepProv = theProv;
+        evEmitter = new CSVInputAdapter(cepProv, evSrc, evName);
+    }
+
+    public CsvEmitter(CepEngine cepEngine, String eventName, String fname) throws ClassNotFoundException
+    {
+        evName = eventName;
+        fHandle = new File(fname);
+        evSrc = new AdapterInputSource(fHandle);
+        cepProv = cepEngine.getProvider();
+        evEmitter = new CSVInputAdapter(cepProv, evSrc, evName);
+    }
+
+   public void run()
+   {
+       start();
+   }
+
+    public void start()
+    {
+        evEmitter.start();
+    }
+
+}

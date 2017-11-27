@@ -1,0 +1,167 @@
+module com.prokosha.sadeskCeP.MemcachePerfMonitor.v2;
+
+/** 
+**  Conditions detected by monitor
+**		Latency spike -- latency greater than 5
+**	1. If no of latency spikes observed greater than 2 in the past 10 minutes
+** 	2. If latency greater than 7
+**/
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.3")
+insert into MRLE
+	select MemcClient, MemcServer, MemcPort, MemcLatency
+	from MRLE.win:time(5 minutes)
+	having count(MemcLatency>5) > 2
+
+
+
+/**
+**  Conditions detected by monitor
+**		Swap usage spike -- swap usage greater than 0.75
+**	1. If no of swap spikes observed greater than 2 in the past 10 minutes
+**	2. If swap usage greater than 0.85
+**
+**  Conditions detected by monitor
+**		Load spike -- load1 greater than 1.8
+**	1. If no of load spikes observed greater than 2 in the past 10 minutes
+**	2. If load1 is greater than 2
+**
+**/
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.2")
+insert into LAE
+	select Load1 as ServerLoad1, Load5 as ServerLoad5, Load15 as ServerLoad15
+	from LoadAverageEvent(HostIP='1.1.1.1');
+
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.6")
+insert into SSE
+	select SwapUsage as ServerSwapUsed, MaxSwaps as ServerSwapMax
+	from SwapStatsEvent(HostIP='1.1.1.1');
+
+
+
+
+
+/**
+** Event to be sent to SADesk has following fields:
+**  EventType - "Correlated Event"
+**  EventDesc - "Memcached Performance Degradation"
+**  EventSymptoms - "Latency too high, Latency spikes observed, Load too high, Load spikes, Swap usage too high, Swap spikes"
+**  MemcServer - Memcache Server  IP
+**  MemcPort - Memcache Server Instance Port
+**  MemcLatency - Read latency
+**  MemcClient - Client from which read latency measured
+**  ServerSwapMax - maximum swap available on memcached server
+**  ServerSwapUsed - swap usage on memcached server
+**  ServerLoad1 - load1 on memcached server
+**  ServerLoad5 - load5 on memcached server
+**  ServerLoad15 - load15 on memcached server
+**  MonitorWindow - no of minutes for which monitor calculates averages
+**  ServerLoad1Average - load1 average for on memcached server for the time window
+**  ServerLatencyAverage - read latency average for time window
+**/
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+select distinct "Correlated Event" as EventType,
+		"Memcached Performance Degradation" asEventDesc,
+		"Latency too high" as EventSymptoms,
+		MemcServer, MemcPort, MemcLatency, MemcClient, ServerSwapMax, ServerSwapUsed,
+		ServerLoad1, ServerLoad5, ServerLoad15, "5 minutes" as MonitorWindow,
+		ServerLoad1Average, ServerLatencyAverage
+		
+    from MC1.win:length(1), MC2.win:length(1), MC3.win:length(1), MC4.win:length(1)
+    where ((Latency>0.6) or (AvgLatency>0.4 and AvgLoad1>1.5));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+//insert into MC1
+//select MemcacheClient, MemcacheServer, MemcachePort, Latency
+//    from MemcacheMonitor(MemcacheServer='10.10.10.10', MemcachePort='1121').win:length(1)
+//    having (Latency>0.6);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+//insert into MC2
+//select avg(Latency) as AvgLatency
+//    from MemcacheMonitor(MemcacheServer='10.10.10.10', MemcachePort='1121').win:length(5)
+//    having (avg(Latency)>0.4);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+//insert into MC3
+//select Load1, Load5, Load15
+//    from LoadAvgMonitor.win:length(1);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+//insert into MC4
+//select avg(Load1) as AvgLoad1
+//    from LoadAvgMonitor.win:length(5)
+//    having (avg(Load1)>1.5);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+//select "MemcachePerfMonitor" as CorrEventType,
+//        MemcacheClient, MemcacheServer, MemcachePort, Latency, AvgLatency,
+//        AvgLoad1, Load1, Load5, Load15
+//    from MC1.win:length(1), MC2.win:length(1), MC3.win:length(1), MC4.win:length(1)
+//    having ((Latency>0.6) or (AvgLatency>0.4 and AvgLoad1>1.5));
+
+//save the context
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.context.1")
+//select "MemcachePerfMonitor" as CorrEventType,
+//        MemcacheClient, MemcacheServer, MemcachePort, Latency
+//    from MemcacheMonitor;
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.context.2")
+//select "MemcachePerfMonitor" as CorrEventType,
+//        Load1, Load5, Load15
+//    from LoadAvgMonitor;
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+//select distinct "MemcachePerfMonitor" as CorrEventType,
+//        MemcacheClient, MemcacheServer, MemcachePort, Latency
+//    from MemcacheMonitor.win:length(1)
+//    where (Latency>0.6);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.2")
+//select "MemcachePerfMonitor" as CorrEventType,
+//        MemcacheClient, MemcacheServer, MemcachePort, Latency, avg(Latency) as AvgLatency,
+//        avg(Load1) as AvgLoad1, Load1, Load5, Load15
+//    from LoadAvgMonitor.win:length(5), MemcacheMonitor.win:length(5)
+//    having ((Latency>0.6) or (avg(Latency)>0.4 and avg(Load1)>1.5));
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into MC1
+select MemcacheClient, MemcacheServer, MemcachePort, Latency
+    from MemcacheMonitor.win:length(1);
+
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into MC2
+select avg(Latency) as AvgLatency
+    from MemcacheMonitor(MemcacheServer='10.10.10.10', MemcachePort='1121').win:length(5);
+
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into MC3
+select Load1, Load5, Load15
+    from LoadAvgMonitor.win:length(1);
+
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into MC4
+select avg(Load1) as AvgLoad1
+    from LoadAvgMonitor.win:length(5);
+
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+select distinct "MemcachePerfMonitor" as CorrEventType,
+        MemcacheClient, MemcacheServer, MemcachePort, Latency, AvgLatency,
+        AvgLoad1, Load1, Load5, Load15
+    from MC1.win:length(1), MC2.win:length(1), MC3.win:length(1), MC4.win:length(1)
+    where ((Latency>0.6) or (AvgLatency>0.4 and AvgLoad1>1.5));

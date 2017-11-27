@@ -1,0 +1,118 @@
+<html>
+<head><meta content="text/html;charset=utf-8" http-equiv="Content-Type"></head>
+<body>
+<div id = "loader" style = "position : absolute; left : 65%; top : 50%; z-index : 100"></div>
+<div id="example4" class="k-content">
+	<table id="diagram4"><tr>
+			<td>
+				<div id="jvmcharthead">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="jvminput" />
+							</td>
+							<td>
+								<input id="jvmchartname" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="jvmRTButton" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="jvmchart" style="border: 0;"></div>
+			</td>
+			<td>
+				<div id="jvmcharthead2">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="jvminput2" />
+							</td>
+							<td>
+								<input id="jvmchartname2" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="jvmRTButton2" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="jvmchart2" style="border: 0;"></div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div id="jvmcharthead3">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="jvminput3" />
+							</td>
+							<td>
+								<input id="jvmchartname3" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="jvmRTButton3" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="jvmchart3" style="border: 0;"></div>
+			</td>
+			<td>
+				<div id="jvmcharthead4">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="jvminput4" />
+							</td>
+							<td>
+								<input id="jvmchartname4" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="jvmRTButton4" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="jvmchart4" style="border: 0;"></div>
+			</td>
+		</tr></table>
+		<div id="jvmlistView"></div>
+</div>
+
+<script>
+
+var chartheaddiv=["jvmchartname","jvmchartname2","jvmchartname3","jvmchartname4"]
+
+var combodiv = [ "#jvminput", "#jvminput2", "#jvminput3", "#jvminput4",
+		"#jvmcharthead", "#jvmcharthead2", "#jvmcharthead3",
+		"#jvmcharthead4", "#example4", "#diagram4", "#jvmchart",
+		"#jvmchart2", "#jvmchart3", "#jvmchart4", "#jvmlistView",
+		"jvmtypeColumn", "jvmtypeColumn2", "jvmtypeColumn3",
+		"jvmtypeColumn4", "jvmseriesType", "jvmseriesType2",
+		"jvmseriesType3", "jvmseriesType4" ]
+var headdiv = [ [ "jvmtypeColumn", "jvmtypeBar", "jvmtypeLine" ],
+		[ "jvmtypeColumn2", "jvmtypeBar2", "jvmtypeLine2" ],
+		[ "jvmtypeColumn3", "jvmtypeBar3", "jvmtypeLine3" ],
+		[ "jvmtypeColumn4", "jvmtypeBar4", "jvmtypeLine4" ] ]
+
+var combourl;
+var gridurl;
+var gridtitle = "<font color=737C7D ><b>JVM</b></font>";
+
+$(document).ready(function() {
+	gridurl = customer + "/JVM/JVMLeftGrid.json";
+	combourl = "jsonconfigurations/JVMComboSource.json";
+	displayAdjust()
+	loadgrid(combodiv[14], gridurl, gridtitle);
+
+	$(window).resize(function() {
+		$("#jvmlistView").data("kendoGrid").refresh();
+		$("#jvmchart").data("kendoChart").refresh();
+		$("#jvmchart2").data("kendoChart").refresh();
+		$("#jvmchart3").data("kendoChart").refresh();
+		$("#jvmchart4").data("kendoChart").refresh();
+		$(combodiv[0]).data("kendoComboBox").refresh();
+		$(combodiv[1]).data("kendoComboBox").refresh();
+		$(combodiv[2]).data("kendoComboBox").refresh();
+		$(combodiv[3]).data("kendoComboBox").refresh();
+	})
+});
+</script>
+
+</body>
+</html>

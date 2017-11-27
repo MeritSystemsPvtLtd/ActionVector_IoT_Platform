@@ -1,0 +1,110 @@
+/* -------------------------------------------------------------------------
+                              Software Developed by
+                             Merit Systems Pvt. Ltd.,
+                          No. 71/5, Elephant Rock Road
+                              Jayanagar 3rd Block
+                          Bangalore _ 560 011, India
+                  Work Created for Merit Systems Pvt. Ltd., 
+                    		 All rights reserved
+                              
+  THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT LAWS AND TREATIES
+  						  NO PART OF THIS WORK MAY BE 
+		USED, PRACTICED, PERFORMED, COPIED, DISTRIBUTED, REVISED, MODIFIED, 
+				TRANSLATED, ABRIDGED,CONDENSED, EXPANDED, COLLECTED, 
+								COMPILED, LINKED, 
+						RECAST, TRANSFORMED OR ADAPTED
+              		  WITHOUT THE PRIOR WRITTEN CONSENT
+		  ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+		COULD SUBJECT THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+   ------------------------------------------------------------------------- */
+
+/***************************************************************************
+
+PROGRAM			:       User.java
+PURPOSE			:       Serialized object to store user object, security level object
+						IP address of client machine, in hash table for whole session context
+***************************************************************************/
+
+/**************************** Revision History *****************************
+
+Date			Revision No.	Author						Description
+07/08/2002		0000			Srikanth					Added comments and copy right message for
+																original code
+***************************************************************************/
+package controller;
+import java.io.*;
+import java.beans.*;
+//import GIFTask.GA_DBConstants;
+//import GIFTask.Logwriter;
+import org.apache.log4j.Logger;
+
+public class User implements Comparable,Serializable
+{
+	private String userId;
+	private String userName;
+	private static String ipAddress;
+	private int security_level;
+//	Logger esclog = Logger.getLogger(Logwriter.class.getName());
+
+	public User()
+	{
+	}
+	
+	public User(String auser)
+	{
+		this.userId =  auser;
+	}
+
+	public User(String auser,String aUserName)
+	{
+		this.userId =  auser;
+		this.userName =  aUserName;
+	}
+
+	public User(int alevel)
+	{
+		this.security_level =  alevel;
+	}
+		
+	public String getUserId()
+	{
+		return userId;
+	}
+
+	public void setIpAddress(String ipaddress)
+	{
+		this.ipAddress = ipaddress;
+	}
+
+	public  String getIpAddress()
+	{
+//		 esclog.info("IP ADDress = "+ipAddress);
+		return ipAddress;
+	}
+	public  String getUserName()
+	{
+//		 esclog.info("UserName = "+userName);
+		return userName;
+	}
+	public String toString()
+	{
+		return userId;
+	}
+
+	public int hashCode()
+	{
+		return 13*userId.hashCode() + 7*ipAddress.hashCode();
+	}
+
+	public boolean equals(Object user)
+	{
+		return compareTo(user) == 0;
+	}
+	
+	public int compareTo(Object user)
+	{
+		int result = userId.compareTo(((User)user).getUserId());
+		return result == 0? ipAddress.compareTo(((User)user).getIpAddress()):result;
+	}
+	
+}

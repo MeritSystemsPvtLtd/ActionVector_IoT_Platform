@@ -1,0 +1,152 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package AV_Action;
+import Model.*;
+import controller.LogWriter;
+import java.io.IOException;
+
+import org.apache.log4j.Logger;
+import java.sql.*;
+/**
+ *
+ * @author gopal
+ */
+public class AV_UserProfile extends AV_Model{
+     public static Logger log = Logger.getLogger(AV_UserProfile.class);
+public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "userprofile";
+        String szrespStr=null;
+        StringBuffer result = null;
+        Connection con = null;
+        Statement stat = null;
+        Statement stat1 = null;
+        ResultSet rs = null;
+        ResultSet rs1 = null;
+        String szSessionid = "";
+        String szUserName = "";
+        try
+        {
+            szUserName = request.getParameter("username");
+            szSessionid = request.getParameter("szsessionid");
+            if ((szUserName != null && szSessionid != null) && (!szUserName.equalsIgnoreCase("") && !szSessionid.equalsIgnoreCase("")))
+            {
+                    con = DatabaseConnection.getAVSAConnection(request);
+                    if (con != null)
+                    {
+                        stat = con.createStatement();
+                        result = new StringBuffer("<summary>");
+                        try
+                        {
+                            log.info("select user_name,user_email,phone from gaoperator where lower(user_id)=lower('" + szUserName + "')");
+                            System.out.println("select user_name,user_email,phone from gaoperator where lower(user_id)=lower('" + szUserName + "')");
+                            rs = stat.executeQuery("select user_name,user_email,phone from gaoperator where lower(user_id)=lower('" + szUserName + "')");
+
+                            while (rs.next())
+                            {
+                                result.append("<username>");
+                                result.append(rs.getString("user_name"));
+                                result.append("</username>");
+                                result.append("<email>");
+                                result.append(rs.getString("user_email"));
+                                result.append("</email>");
+                                result.append("<phone>");
+                                result.append(rs.getString("phone"));
+                                result.append("</phone>");
+
+                            }
+                            rs.close();
+                                stat.close();
+
+                        } catch (Exception ex)
+                        {
+                            
+                            ex.printStackTrace();
+                            System.out.println("Getting Excxeption  getting data from gaoperator");
+                            log.debug("Getting Excxeption  getting data from gaoperator", ex);
+                        }
+                        try
+                        {
+                            stat1=con.createStatement();
+                            System.out.println(" select a.groupname,a.role,b.tasktype from gaagentgroup a INNER JOIN gatasktypegroup b on a.groupname=b.groupname  where  lower(a.userid)=lower('" + szUserName + "')");
+                            rs1 = stat1.executeQuery(" select a.groupname,a.role,b.tasktype from gaagentgroup a INNER JOIN gatasktypegroup b on a.groupname=b.groupname  where  lower(a.userid)=lower('" + szUserName + "')");
+                            while (rs1.next())
+                            {
+                                result.append("<profilegrouproles>");
+                                result.append("<group>");
+                                result.append(rs1.getString("groupname"));
+                                result.append("</group>");
+                                result.append("<role>");
+                                result.append(rs1.getString("role"));
+                                result.append("</role>");
+                                result.append("<tasktype>");
+                                result.append(rs1.getString("tasktype"));
+                                result.append("</tasktype>");
+                                result.append("</profilegrouproles>");
+
+                            }
+                            rs1.close();
+                                 stat1.close();
+                        } catch (Exception ex)
+                        {
+                            
+                            ex.printStackTrace();
+                        }
+                        result.append("</summary>");
+                        AV_Constants.opStatus=AV_Constants.SUCCESS;
+                    } else
+                    {
+                        
+                        AV_Constants.opStatus=AV_Constants.DBERROR;
+                    }
+                
+            } else
+            {
+                
+                AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+            }
+        } catch (Exception ex)
+        {
+            log.debug("Exception while processing request action", ex);
+            ex.printStackTrace();
+        } finally
+        {
+            if (con != null)
+            {
+                try
+                {
+                    con.close();
+                } catch (SQLException ex)
+                {
+                    log.debug("exception in sql querying ", ex);
+                }
+            }
+
+        }
+        try
+        {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,result,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e)
+        {
+            log.debug("exception while writing output", e);
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                szopration=null;
+                szrespStr = null;
+                result = null;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+}
+}

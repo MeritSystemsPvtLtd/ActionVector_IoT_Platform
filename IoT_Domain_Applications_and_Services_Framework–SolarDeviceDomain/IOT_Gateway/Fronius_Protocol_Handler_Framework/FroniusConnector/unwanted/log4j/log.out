@@ -1,0 +1,143 @@
+13-08-2014 12:48:23-main--DEBUG-SerialPortApp:-------------------BEGIN---------------------
+13-08-2014 12:48:23-main--DEBUG-SerialPortApp:Inside getDeviceData() ----
+13-08-2014 12:48:23-main--DEBUG-JSONBuilder:getJSONRequest(
+13-08-2014 12:48:23-main--DEBUG-DataCollectionProcessor:DataCollection.processData() ----------- 
+13-08-2014 12:48:23-main--DEBUG-DataCollectionProcessor:dataCollectionNameFromRequest :: CommonInverterData
+13-08-2014 12:48:23-main--DEBUG-DataCollectionProcessor: Data Collection Name is CommonInverterData..
+13-08-2014 12:48:23-main--DEBUG-DataCollectionProcessor:Inside processCommonInverterData()
+13-08-2014 12:48:23-main--DEBUG-DataCollectionProcessor:In processCommonInverterData()
+13-08-2014 12:48:23-main--DEBUG-DataCollectionProcessor:inside for loop j=0
+13-08-2014 12:48:23-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:23-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 10 12 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:23-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@f56959
+13-08-2014 12:48:23-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:23-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:23-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:23-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:23-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:23-main--DEBUG-SerialConnection:In sendData()..[B@f56959
+13-08-2014 12:48:23-Thread-1--DEBUG-SerialConnection:
+Num bytes read=11Bytes read: [B@5347c3
+13-08-2014 12:48:25-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 03 01 01 10 34 c8 ff 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:25-main--DEBUG-DataCollectionProcessor:inside for loop j=1
+13-08-2014 12:48:25-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:25-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 11 13 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:25-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@1066d88
+13-08-2014 12:48:25-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:25-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:25-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:25-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:25-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:25-main--DEBUG-SerialConnection:In sendData()..[B@1066d88
+13-08-2014 12:48:25-Thread-3--DEBUG-SerialConnection:
+Num bytes read=11Bytes read: [B@6a16d4
+13-08-2014 12:48:27-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 03 01 01 11 2f 54 03 9c 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:27-main--DEBUG-DataCollectionProcessor:inside for loop j=2
+13-08-2014 12:48:27-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:27-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 12 14 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:27-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@115272a
+13-08-2014 12:48:27-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:27-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:27-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:27-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:27-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:27-main--DEBUG-SerialConnection:In sendData()..[B@115272a
+13-08-2014 12:48:27-Thread-5--DEBUG-SerialConnection:
+Num bytes read=11Bytes read: [B@faf9c1
+13-08-2014 12:48:29-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 03 01 01 12 f1 77 fe 7d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:29-main--DEBUG-DataCollectionProcessor:inside for loop j=3
+13-08-2014 12:48:29-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:29-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 13 15 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:29-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@18a9e64
+13-08-2014 12:48:29-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:29-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:29-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:29-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:29-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:29-main--DEBUG-SerialConnection:In sendData()..[B@18a9e64
+13-08-2014 12:48:29-Thread-7--DEBUG-SerialConnection:
+Num bytes read=11Bytes read: [B@2db3da
+13-08-2014 12:48:31-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 03 01 01 13 33 fd 02 4a 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:31-main--DEBUG-DataCollectionProcessor:inside for loop j=4
+13-08-2014 12:48:31-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:31-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 14 16 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:31-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@1ba11bc
+13-08-2014 12:48:31-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:31-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:31-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:31-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:31-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:31-main--DEBUG-SerialConnection:In sendData()..[B@1ba11bc
+13-08-2014 12:48:31-Thread-9--DEBUG-SerialConnection:
+Num bytes read=11Bytes read: [B@1e5879
+13-08-2014 12:48:33-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 03 01 01 14 e1 f9 fc ef 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:33-main--DEBUG-DataCollectionProcessor:inside for loop j=5
+13-08-2014 12:48:33-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:33-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 15 17 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:33-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@a58c89
+13-08-2014 12:48:33-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:33-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:33-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:33-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:33-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:33-main--DEBUG-SerialConnection:In sendData()..[B@a58c89
+13-08-2014 12:48:33-Thread-11--DEBUG-SerialConnection:
+Num bytes read=11Bytes read: [B@7b2d93
+13-08-2014 12:48:35-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 03 01 01 15 00 e5 00 ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:35-main--DEBUG-DataCollectionProcessor:inside for loop j=6
+13-08-2014 12:48:35-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:35-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 16 18 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:35-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@81cf46
+13-08-2014 12:48:35-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:35-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:35-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:35-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:35-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:35-main--DEBUG-SerialConnection:In sendData()..[B@81cf46
+13-08-2014 12:48:35-Thread-13--DEBUG-SerialConnection:
+Num bytes read=11Bytes read: [B@1eef3c1
+13-08-2014 12:48:38-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 03 01 01 16 00 32 00 4d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:38-main--DEBUG-DataCollectionProcessor:inside for loop j=7
+13-08-2014 12:48:38-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:38-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 17 19 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:38-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@17fdc2d
+13-08-2014 12:48:38-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:38-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:38-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:38-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:38-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:38-main--DEBUG-SerialConnection:In sendData()..[B@17fdc2d
+13-08-2014 12:48:38-Thread-15--DEBUG-SerialConnection:
+Num bytes read=11Bytes read: [B@1a2f279
+13-08-2014 12:48:40-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 03 01 01 17 1e 6c fd a3 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:40-main--DEBUG-DataCollectionProcessor:inside for loop j=8
+13-08-2014 12:48:40-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:40-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 18 1a 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:40-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@196c8c2
+13-08-2014 12:48:40-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:40-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:40-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:40-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:40-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:40-main--DEBUG-SerialConnection:In sendData()..[B@196c8c2
+13-08-2014 12:48:40-Thread-17--DEBUG-SerialConnection:
+Num bytes read=11Bytes read: [B@1b5eaed
+13-08-2014 12:48:42-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 03 01 01 18 45 85 fe e5 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:42-main--DEBUG-DataCollectionProcessor:inside for loop j=9
+13-08-2014 12:48:42-main--DEBUG-CommandProcessor:Inside checkSum() ---------- 
+13-08-2014 12:48:42-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Send bytes: 80 80 80 00 01 01 37 39 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:42-main--DEBUG-CommandProcessor:In ModbusCmdTxRx, input= [B@b679e1
+13-08-2014 12:48:42-main--DEBUG-SerialConnection:In openConnection(): COM5
+13-08-2014 12:48:42-main--DEBUG-SerialConnection:In openConnection(): inside try..catch block COM5
+13-08-2014 12:48:42-main--DEBUG-SerialConnection:In openConnection(): inside try block,portid=  1
+13-08-2014 12:48:42-main--DEBUG-SerialConnection:In openConnection(): port type= 1
+13-08-2014 12:48:42-main--DEBUG-CommandProcessor:Connection is open..
+13-08-2014 12:48:42-main--DEBUG-SerialConnection:In sendData()..[B@b679e1
+13-08-2014 12:48:42-Thread-19--DEBUG-SerialConnection:
+Num bytes read=9Bytes read: [B@105454a
+13-08-2014 12:48:44-main--DEBUG-DataCollectionProcessor:processCommonInverterData(): Rcvd bytes: 80 80 80 01 01 01 37 02 3c 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+13-08-2014 12:48:44-main--DEBUG-DataCollectionProcessor:cmd response :: serialportapp.CmdResponse@13b792
+13-08-2014 12:48:44-main--DEBUG-SerialPortApp:In getDeviceData(): cmdresponse is=serialportapp.CmdResponse@13b792
+13-08-2014 12:48:44-main--DEBUG-JSONBuilder:In buildJSONResponse() ------------ 
+13-08-2014 12:48:44-main--DEBUG-JSONBuilder:cmdResponse in JSONBuilder :: serialportapp.CmdResponse@13b792
+13-08-2014 12:48:44-main--DEBUG-JSONBuilder:jsonResponse in JSONBuilder :: {"Head":{"RequestArguments":{"Scope":"Device","DeviceId":1,"DataCollection":"CommonInverterData"},"Status":{"Code":0,"Reason":"","UserMessage":""},"Timestamp":""},"Body":{"Data":{"DAY_ENERGY":{"Value":61815,"Unit":"Wh"},"FAC":{"Value":50,"Unit":"Hz"},"IAC":{"Value":5.78,"Unit":"A"},"IDC":{"Value":7.79,"Unit":"A"},"PAC":{"Value":13512,"Unit":"Wh"},"TOTAL_ENERGY":{"Value":12116,"Unit":"Wh"},"UAC":{"Value":229,"Unit":"V"},"UDC":{"Value":17797,"Unit":"V"},"YEAR_ENERGY":{"Value":13309,"Unit":"Wh"},"DeviceStatus":{"StatusCode":2,"MgmtTimerRemainingTime":0,"ErrorCode":0,"LEDColor":0,"LEDState":0,"StateToReset":false}}}}

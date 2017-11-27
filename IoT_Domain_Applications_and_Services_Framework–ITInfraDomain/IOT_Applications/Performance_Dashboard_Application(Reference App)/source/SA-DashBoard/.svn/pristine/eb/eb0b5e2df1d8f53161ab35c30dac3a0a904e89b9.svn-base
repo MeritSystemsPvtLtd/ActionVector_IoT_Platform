@@ -1,0 +1,118 @@
+
+<html>
+<head><meta content="text/html;charset=utf-8" http-equiv="Content-Type"></head>
+<body>
+<div id = "loader" style = "position : absolute; left : 65%; top : 50%; z-index : 100"></div>
+<div id="example3" class="k-content">
+	<table id="diagram3"><tr>
+			<td>
+				<div id="ntcharthead">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="ntinput" />
+							</td>
+							<td>
+								<input id="ntchartname" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="ntRTButton" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="ntchart" style="border: 0;"></div>
+			</td>
+			<td>
+				<div id="ntcharthead2">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="ntinput2" />
+							</td>
+							<td>
+								<input id="ntchartname2" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="ntRTButton2" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="ntchart2" style="border: 0;"></div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div id="ntcharthead3">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="ntinput3" />
+							</td>
+							<td>
+								<input id="ntchartname3" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="ntRTButton3" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="ntchart3" style="border: 0;"></div>
+			</td>
+			<td>
+				<div id="ntcharthead4">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="ntinput4" />
+							</td>
+							<td>
+								<input id="ntchartname4" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="ntRTButton4" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="ntchart4" style="border: 0;"></div></td>
+		</tr></table>
+		<div id="ntlistView"></div>
+</div>
+<script>
+
+var chartheaddiv=["ntchartname","ntchartname2","ntchartname3","ntchartname4"]
+var combodiv = [ "#ntinput", "#ntinput2", "#ntinput3", "#ntinput4",
+		"#ntcharthead", "#ntcharthead2", "#ntcharthead3",
+		"#ntcharthead4", "#example3", "#diagram3", "#ntchart",
+		"#ntchart2", "#ntchart3", "#ntchart4", "#ntlistView",
+		"nttypeColumn", "nttypeColumn2", "nttypeColumn3",
+		"nttypeColumn4", "ntseriesType", "ntseriesType2",
+		"ntseriesType3", "ntseriesType4" ]
+var headdiv = [ [ "nttypeColumn", "nttypeBar", "nttypeLine" ],
+		[ "nttypeColumn2", "nttypeBar2", "nttypeLine2" ],
+		[ "nttypeColumn3", "nttypeBar3", "nttypeLine3" ],
+		[ "nttypeColumn4", "nttypeBar4", "nttypeLine4" ] ]
+
+var gridurl;
+var combourl;
+var gridtitle = "<font color=737C7D ><b>NETWORK</b></font>";
+
+$(document).ready(function() {
+	gridurl = customer + "/Network/NetworkLeftGrid.json";
+	combourl = "jsonconfigurations/NetworkComboSource.json";
+	displayAdjust();
+
+	loadgrid(combodiv[14], gridurl, gridtitle);
+
+	$(window).resize(function() {
+		$("#ntlistView").data("kendoGrid").refresh();
+		$("#ntchart").data("kendoChart").refresh();
+		$("#ntchart2").data("kendoChart").refresh();
+		$("#ntchart3").data("kendoChart").refresh();
+		$("#ntchart4").data("kendoChart").refresh();
+		$(combodiv[0]).data("kendoComboBox").refresh();
+		$(combodiv[1]).data("kendoComboBox").refresh();
+		$(combodiv[2]).data("kendoComboBox").refresh();
+		$(combodiv[3]).data("kendoComboBox").refresh();
+	})
+
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,78 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.froniusadapter;
+
+import com.prokosha.froniusadapter.configuration.AdapterProperties;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author rekhas
+ */
+class FroniusHTTPJSONCollector {
+
+    private static Logger logger = Logger.getLogger(FroniusHTTPJSONCollector.class.getName());
+    private static String tempURL = null;
+
+    public static boolean download(StringBuffer xmlBuff, String deviceID, String dataCollection, String timePeriod) {
+        if (!froniusConnect(xmlBuff, deviceID, dataCollection)) {
+            logger.error("*** ERROR *** Connecting to fronius failed. Terminating download!!");
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean froniusConnect(StringBuffer xmlBuff, String deviceID, String dataCollectionReq) {
+
+        logger.debug("Connecting to fronius device id: " + deviceID);
+        String froniusURL;
+        try {
+                    tempURL=AdapterProperties.getFroniusURL();
+            //GetInverterRealTimeData.cgi?Scope=Device&DeviceId=0&DataCollection=CommonInverterData
+            //GetInverterRealTimeData.cgi?Scope=System
+            String dataCollection = dataCollectionReq.split(":")[0];
+            String httpRequest = dataCollectionReq.split(":")[1];
+            String timePeriod = dataCollectionReq.split(":")[2];
+            if (deviceID.equalsIgnoreCase("System")) {
+                //froniusURL = tempURL + dataCollectionReq + ".cgi?Scope=System";
+                froniusURL = tempURL + httpRequest + "?Scope=System";
+            } else {
+                //froniusURL = tempURL + httpRequest + ".cgi?Scope=Device&DeviceId=" + deviceID + "&DataCollection=" + dataCollection;
+                froniusURL = tempURL + httpRequest + "?Scope=Device&DeviceId=" + deviceID + "&DataCollection=" + dataCollection;
+            }
+            froniusURL += "&TimePeriod=" + timePeriod;
+            logger.info("Connecting to ==>>" + froniusURL);
+            URL url = new URL(froniusURL);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+            String temp = "";
+            while ((temp = br.readLine()) != null) {
+                if(xmlBuff == null){
+                    xmlBuff = new StringBuffer();
+                }
+                xmlBuff.append(temp);
+            }
+            conn.disconnect();
+            logger.info("HttpResponse==>>" + xmlBuff);
+            return true;
+        } catch (Exception ex) {
+            logger.error("*** ERROR *** Cannot connect to fronius device id: " + deviceID + ")!!\n" + ex);
+            logger.error("Send error event to CEP, msg and e-mail");
+            FroniusError.sendErrorEvent("Cannot connect to fronius device id:" + deviceID, ex.toString());
+            FroniusMailModule.sendSMS("Cannot connect to fronius device id:" + deviceID + "==>>" + ex.toString());
+
+            String szSubject = "FroniusAdapterError";
+            String szBody = "Cannot connect to fronius device id:" + deviceID + "==>>" + ex.toString();
+            FroniusMailModule.sendMail(szSubject, szBody);
+            ex.printStackTrace();
+            return false;
+        }
+    }
+}

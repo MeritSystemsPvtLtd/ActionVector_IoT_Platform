@@ -1,0 +1,103 @@
+module com.prokosha.cep.heapstepflapmonitor.v1;
+
+create variable int HEAP_STEP_AVERAGING_TIME=3;//minutes
+create variable int HEAP_STEP_TOLERANCE_PERC=5;//percentage
+create variable int HEAP_FLAP_DETECTION_TIME=5;//minutes
+create variable string HEAP_ACRO_STEP="[HEAP_STEP]";
+create variable string HEAP_ACRO_FLAP="[HEAP_FLAP]";
+
+//@Name("com.prokosha.cep.heapstepflapmonitor.istream.1")
+insert into HeapStreamSF
+        select HostName as HostName, hostipaddress as HostAddress,
+	heapMemoryUsage.used as HeapUsage,CustomerID,resourceType,resourceId
+        from JVMStream;
+
+//@Name("com.prokosha.cep.heapstepflapmonitor.istream.2")
+insert into HeapCurrentStreamSF
+        select HostName,HostAddress,HeapUsage,CustomerID,resourceType,resourceId,
+        'HeapCurrentStreamSF' as StreamName
+        from HeapStreamSF.win:time(HEAP_STEP_AVERAGING_TIME minutes)
+	group by HostName;
+
+//@Name("com.prokosha.cep.heapstepflapmonitor.istream.2.1")
+insert into HeapTempStreamSF
+        select first(HostName) as HostName,first(HostAddress) as HostAddress,first(HeapUsage) as HeapUsage,
+	first(CustomerID) as CustomerID,
+	first(resourceType) as resourceType ,first(resourceId) as resourceId,
+        'HeapTempStreamSF' as StreamName
+        from HeapCurrentStreamSF.win:time(2 minutes)
+	group by HostName;
+    
+//@Name("com.prokosha.cep.heapstepflapmonitor.istream.3")
+insert into HeapPriorStreamSF
+        select HostName,HostAddress,HeapUsage,
+	CustomerID as CustomerID,
+	resourceType as resourceType,resourceId as resourceId,
+        'HeapPriorStreamSF' as StreamName
+        from HeapTempStreamSF
+	group by HostName;
+
+//@Name("com.prokosha.cep.heapstepflapmonitor.istream.4")
+insert into HeapAveragesStreamSF
+	select avg(CW.HeapUsage) as currentHeapAvg,avg(PW.HeapUsage) as priorHeapAvg,
+	CW.HostName as HostName,CW.HostAddress as HostAddress,CW.CustomerID as CustomerID,
+	CW.resourceType as resourceType,CW.resourceId as resourceId
+	from HeapCurrentStreamSF.win:time(HEAP_STEP_AVERAGING_TIME minutes) as CW,
+	HeapPriorStreamSF.win:time(HEAP_STEP_AVERAGING_TIME minutes) as PW
+	where (CW.HostName=PW.HostName)
+	group by CW.HostName;	
+
+@Name("com.prokosha.cep.heapstepflapmonitor.dispatch.5")
+select "Server" as EventType,
+	(("ALERT - Sudden raise in Heap Usage detected").concat(HEAP_ACRO_STEP)) as EventDesc,
+	(("Sudden raise in Heap Usage detected")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentHeapAvg,priorHeapAvg from HeapAveragesStreamSF
+	where ((priorHeapAvg!=null) and (currentHeapAvg!=null) and ((currentHeapAvg-priorHeapAvg) >= ((STEP_TOLERANCE_PERC/100)*priorHeapAvg)))
+	group by HostName
+	output first every 30 minutes;	
+
+@Name("com.prokosha.cep.heapstepflapmonitor.dispatch.6")
+select "Server" as EventType,
+	(("ALERT - Sudden drop in Mem Usage detected").concat(HEAP_ACRO_STEP)) as EventDesc,
+	(("Sudden drop in Heap Usage detected")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentHeapAvg,priorHeapAvg from HeapAveragesStreamSF
+	where ((priorHeapAvg!=null) and (currentHeapAvg!=null) and ((priorHeapAvg-currentHeapAvg) >= ((STEP_TOLERANCE_PERC/100)*priorHeapAvg)))
+	group by HostName
+	output first every 30 minutes;
+
+//@Name("com.prokosha.cep.heapflap.istream.6")
+insert into HeapStepFlapStream
+	select case when ((currentHeapAvg-priorHeapAvg) >= ((STEP_TOLERANCE_PERC/100)*priorHeapAvg)) then 1
+	when ((priorHeapAvg-currentHeapAvg) >= ((STEP_TOLERANCE_PERC/100)*priorHeapAvg)) then -1
+	else 0 end as HeapStepFlapFlag,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentHeapAvg,priorHeapAvg from HeapAveragesStreamSF
+	//where (priorHeapAvg!=null)
+	group by HostName;
+
+//@Name("com.prokosha.cep.heapflap.istream.7")
+insert into HeapFlapStream
+	select case when ((last(HeapStepFlapFlag)*last(HeapStepFlapFlag,1))=-1) then 1
+	else 0 end as HeapFlapFlag,
+	last(HostName) as HostName,last(HostAddress) as HostAddress,
+	last(CustomerID) as CustomerID,last(resourceType) as resourceType,last(resourceId) as resourceId,
+	last(currentHeapAvg) as currentHeapAvg,last(priorHeapAvg) as priorHeapAvg
+	from HeapStepFlapStream.win:time(HEAP_STEP_AVERAGING_TIME minutes)
+	group by HostName;
+
+//@Name("com.prokosha.cep.heapflap.istream.8")
+insert into HeapFlapMinStream
+	select avg(HeapFlapFlag) as AvgHeapFlapFlag,HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentHeapAvg,priorHeapAvg from HeapFlapStream.win:time(HEAP_FLAP_DETECTION_TIME minutes)
+	group by HostName;
+
+@Name("com.prokosha.cep.heapflap.dispatch.9")
+select "Server" as EventType,
+	(("ALERT - Heap Usage has been Flapping in the past ").concat(cast(HEAP_FLAP_DETECTION_TIME,String)).concat(" minutes").concat(HEAP_ACRO_FLAP)) as EventDesc,
+	(("Heap Usage has been Flapping in the past ").concat(cast(HEAP_FLAP_DETECTION_TIME,String)).concat(" minutes")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentHeapAvg,priorHeapAvg from HeapFlapMinStream
+	where (AvgHeapFlapFlag=1)
+	group by HostName;

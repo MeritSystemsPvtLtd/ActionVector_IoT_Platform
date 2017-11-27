@@ -1,0 +1,238 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/***************************************************************************
+
+Software Developed by
+Merit Systems Pvt. Ltd.,
+#55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+Bangalore - 560 070, India
+Work Created for Merit Systems Private Limited
+All rights reserved
+
+THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+LAWS AND TREATIES
+NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+CONDENSED,
+EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ADAPTED
+WITHOUT THE PRIOR WRITTEN CONSENT
+ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+COULD SUBJECT
+THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+
+
+ ***************************************************************************/
+package businessmodel;
+
+import Model.*;
+import java.sql.*;
+
+import controller.CommandTask;
+import controller.DBConstants;
+import controller.LogWriter;
+import java.util.*;
+import java.util.HashMap;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.*;
+import org.apache.log4j.Logger;
+
+
+/**
+ *
+ * @author gopal
+ * Created on Jul 11, 2012, 11:31:54 AM
+ */
+public class GroupRoleConfig
+{
+static Logger log = Logger.getLogger(GroupRoleConfig.class);
+
+    public static boolean addGroupRoles(String customerid, HashMap<String, String> grouproles, javax.servlet.http.HttpServletRequest request)
+    {
+        boolean fflag=false;
+        Connection con = null;
+        ResultSet rs = null;
+        int size=0;
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+        Statement statement3 = null;
+        PreparedStatement statement4 = null;
+        Statement statement5 = null;
+        ArrayList<String> szGroupName = new ArrayList<String>();
+        HashMap<String, String> hashMap = new HashMap<String, String>();
+       // boolean checksession = true;
+        //String szGroupRoles = null;
+        //String szGroup = null;
+        //String szTemp[] = null;
+        //String Temp[] = null;
+        boolean test = false;
+        //ArrayList<String> szRoles = new ArrayList<String>();
+        try
+        {
+            //con = DatabaseConnection.getDatabaseConnection(request);
+            if (customerid != null && !customerid.equalsIgnoreCase(""))
+            {
+                con = DatabaseConnection.getDbConnection(request, customerid);
+            } else
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+            }
+            log.info("database connected");
+
+            if (con != null)
+            {
+               /* try
+                {
+                    System.out.println("Before getting groupname");
+                    statement3 = con.createStatement();
+                    System.out.println("Statement::" + statement3);
+                    ResultSet rs1 = statement3.executeQuery("SELECT * from " + DBConstants.GROUPNAME_TABLE + " order by groupname");
+
+                    while (rs1.next())
+                    {
+
+                        szGroupName.add(rs1.getString("groupname"));
+                    }
+                    rs1.close();
+                    statement3.close();
+                } catch (Exception e)
+                {
+                    
+                    e.printStackTrace();
+                    log.error("no data found");
+                }*/
+                try
+                {
+                    /*statement5 = con.createStatement();
+                    ResultSet rs4 = statement5.executeQuery("select name from gasecuritylevels where level !=1 and name != 'User'");
+                    while (rs4.next())
+                    {
+                        szRoles.add((String) rs4.getString("name"));
+                    }
+                    rs4.close();
+                    statement5.close();
+                    Iterator it = szGroupName.iterator();
+                    while (it.hasNext())
+                    {
+                        szGroup = (String) it.next();
+                        szGroupRoles = (String) request.getParameter(szGroup);
+                        if (szGroupRoles != null)
+                        {
+                            Temp = szGroupRoles.split(",");
+                            for (int l = 0; l < Temp.length; l++)
+                            {
+                                test = szRoles.contains(Temp[l]);
+                                if (!test)
+                                {
+                                    break;
+                                }
+                            }
+                            //szTemp=szGroupRoles.split(",");
+                            if (test)
+                            {
+                                hashMap.put(szGroup, szGroupRoles);
+                            } else
+                            {
+                               
+                                log.info("invalid inputs");
+                                break;
+                            }
+
+                        }
+                        Temp = null;
+                    }*/
+                    if(grouproles!=null){
+                        test=true;
+                        size=grouproles.size();
+                    }
+                    Set st = grouproles.entrySet();
+                    Iterator itr = st.iterator();
+                    if (test)
+                    {
+                        int i=0;
+                        while (itr.hasNext())
+                        {
+                            Map.Entry me = (Map.Entry) itr.next();
+                            statement2 = con.prepareStatement("select * from gagrouproles where groupname=?");
+                            statement2.setString(1, (String) me.getKey());
+                            rs = statement2.executeQuery();
+                            if (rs.next())
+                            {
+                                System.out.println("updating grouproles"+i);
+                                statement4 = con.prepareStatement("update gagrouproles set role=? where groupname=?");
+                                statement4.setString(1, (String) me.getValue());
+                                statement4.setString(2, (String) me.getKey());
+                                statement4.executeUpdate();
+                            } else
+                            {
+                                System.out.println("Inserting data into group roles"+i);
+                                statement4 = con.prepareStatement("insert into gagrouproles values(?,?)");
+                                statement4.setString(1, (String) me.getKey());
+                                statement4.setString(2, (String) me.getValue());
+                                statement4.executeUpdate();
+                            }
+                            i++;
+                            log.info("operation success");
+                        }
+                        if(i==size){
+                            fflag=true;
+                        }
+                    } else
+                    {
+
+                        log.info("invalid inputs");
+
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                   
+                    log.info("database error");
+                }
+            } else
+            {
+
+                log.info("unable to connect database");
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+
+            log.info("Unable to process request");
+
+        } finally
+        {
+
+            try
+            {
+               
+                statement4.close();
+                statement2.close();
+                rs.close();
+                if (con != null)
+                {
+                    con.close();
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error closing connection", e);
+            }
+        }
+
+
+
+
+
+
+
+        return fflag;
+    }
+}

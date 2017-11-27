@@ -1,0 +1,115 @@
+<html>
+<head><meta content="text/html;charset=utf-8" http-equiv="Content-Type"></head>
+<body>
+<div id = "loader" style = "position : absolute; left : 65%; top : 50%; z-index : 100"></div>
+<div id="example2" class="k-content">
+	<table id="diagram2"><tr>
+			<td>
+				<div id="dbcharthead">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="DBinput" />
+							</td>
+							<td>
+								<input id="dbchartname" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="dbRTButton" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="DBchart" style="border: 0;"></div>
+			</td>
+			<td>
+				<div id="dbcharthead2">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="DBinput2" />
+							</td>
+							<td>
+								<input id="dbchartname2" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="dbRTButton2" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="DBchart2" style="border: 0;"></div></td>
+		</tr>
+		<tr>
+			<td>
+				<div id="dbcharthead3">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="DBinput3" />
+							</td>
+							<td>
+								<input id="dbchartname3" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="dbRTButton3" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="DBchart3" style="border: 0;"></div>
+			</td>
+			<td>
+				<div id="dbcharthead4">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="DBinput4" />
+							</td>
+							<td>
+								<input id="dbchartname4" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="dbRTButton4" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="DBchart4" style="border: 0;"></div>
+			</td>
+		</tr></table>
+		<div id="DBlistView"></div>
+</div>
+
+<script>
+var chartheaddiv=["dbchartname","dbchartname2","dbchartname3","dbchartname4"]
+var combodiv = [ "#DBinput", "#DBinput2", "#DBinput3", "#DBinput4",
+		"#dbcharthead", "#dbcharthead2", "#dbcharthead3",
+		"#dbcharthead4", "#example2", "#diagram2", "#DBchart",
+		"#DBchart2", "#DBchart3", "#DBchart4", "#DBlistView",
+		"DBtypeColumn", "DBtypeColumn2", "DBtypeColumn3",
+		"DBtypeColumn4", "DBseriesType", "DBseriesType2",
+		"DBseriesType3", "DBseriesType4" ]
+var headdiv = [ [ "DBtypeColumn", "DBtypeBar", "DBtypeLine" ],
+		[ "DBtypeColumn2", "DBtypeBar2", "DBtypeLine2" ],
+		[ "DBtypeColumn3", "DBtypeBar3", "DBtypeLine3" ],
+		[ "DBtypeColumn4", "DBtypeBar4", "DBtypeLine4" ] ]
+var gridurl;
+var combourl;
+var gridtitle = "<font color=737C7D ><b>DATABASE</b></font>";
+$(document).ready(function() {
+	gridurl = customer + "/DataBase/DataBaseLeftGrid.json";
+	combourl = "jsonconfigurations/DataBaseComboSource.json";
+	displayAdjust();
+
+loadgrid(combodiv[14], gridurl, gridtitle);
+	$(window).resize(function() {
+
+		$("#DBlistView").data("kendoGrid").refresh();
+		$("#DBchart").data("kendoChart").refresh();
+		$("#DBchart2").data("kendoChart").refresh();
+		$("#DBchart3").data("kendoChart").refresh();
+		$("#DBchart4").data("kendoChart").refresh();
+		$(combodiv[0]).data("kendoComboBox").refresh();
+		$(combodiv[1]).data("kendoComboBox").refresh();
+		$(combodiv[2]).data("kendoComboBox").refresh();
+		$(combodiv[3]).data("kendoComboBox").refresh();
+	});
+
+
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+package com.prokosha.adapter.ganglia;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.net.Socket;
+
+public class DownloadXML {
+	public static void main(String args[]){
+		try{
+		Socket gmondSocket = new Socket("202.137.234.115", 8651);
+		BufferedReader fromGmond = new BufferedReader(new InputStreamReader(gmondSocket.getInputStream()));
+		FileWriter file = new FileWriter("sample.xml");
+		BufferedWriter bw = new BufferedWriter(file);
+		String str;
+		while((str = fromGmond.readLine()) != null){
+		bw.write(str);
+		}
+		bw.flush();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+}

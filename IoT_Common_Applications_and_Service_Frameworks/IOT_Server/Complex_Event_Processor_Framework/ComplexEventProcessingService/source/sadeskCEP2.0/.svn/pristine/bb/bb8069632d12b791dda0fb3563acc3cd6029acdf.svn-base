@@ -1,0 +1,33 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.FilterNode.v1;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.1")
+select Load1,Load5,Load15,"Correlated Load Event" as EventType,
+   "Memcached Performance Degradation" as EventDesc,
+   "Latency in WARNING range [avg>0.6] and server load in WARNING range [avg>8]" as EventSymptoms
+    from LoadAverageEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.2")
+select "Correlated  Memory Event" as EventType,
+   "Memcached Performance Degradation" as EventDesc,
+   "Latency in memory" as EventSymptoms
+    from MemoryStatsEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.3")
+select "Correlated Http Event" as EventType,
+   "Memcached Performance Degradation" as EventDesc,
+   "Latency in Http" as EventSymptoms
+    from HTTPResponseTimeEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.4")
+select "Correlated  Apache Event" as EventType,
+   "Memcached Performance Degradation" as EventDesc,
+   "Latency in process" as EventSymptoms
+    from ConcurrentProcessesEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.5")
+select "Correlated Swap Event" as EventType,
+   "Memcached Performance Degradation" as EventDesc,
+   "Latency in Swap" as EventSymptoms
+    from SwapStatsEvent;
+

@@ -1,0 +1,109 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package AV_Action;
+
+import addcomments.*;
+import Model.*;
+import controller.LogWriter;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_AddCommentsOnlyAction extends AV_Model {
+
+    static Logger log = Logger.getLogger(AV_AddCommentsOnlyAction.class);
+
+    public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "addcomments";
+        String szrespStr = null;
+        String szSession = null;
+        AddCommentsStub commentStub = null;
+        AddCommentsRequest attachObj = null;
+        String Taskid = null;
+        boolean checkparam = false;
+        String customerid = "";
+
+        try {
+            customerid = request.getParameter("customerid");
+            szSession = (String) request.getParameter("szsessionid");
+            Taskid = (String) request.getParameter("taskid");
+            String szComments = (String) request.getParameter("comment");
+            String szUser = (String) request.getParameter("szusername");
+            checkparam = true;
+
+            if (checkparam) {
+
+
+                AddCommentsResponse resp = null;
+                String szMessage = "";
+
+                System.out.println("------------I m in START of calling Add Comments service from Client----------------");
+                log.info(szSession + Taskid + szComments + szUser);
+
+                String sztarget = TargetEndpoint.getTargetEndpoint(request);
+                String targetEndpoint = sztarget + "/proChara/services/AddComments";
+                log.info("Target End Point " + targetEndpoint);
+                commentStub = new AddCommentsStub(targetEndpoint);
+                attachObj = new AddCommentsRequest();
+                attachObj.setSzSessionId(szSession);
+                attachObj.setSzTaskID(Taskid);
+                attachObj.setSzComments(szComments);
+                attachObj.setSzUser(szUser);
+                resp = commentStub.addTaskComments(attachObj);
+                szMessage = resp.getMessage();
+                log.info(szMessage + "in AddCommentsOnly servlet ");
+                System.out.println("------------I m in END of calling AddComments service from Client----------------" + szMessage);
+
+                if (szMessage.equalsIgnoreCase("Comments Added")) {
+
+                    AV_Constants.opStatus = AV_Constants.SUCCESS;
+                } else {
+                    AV_Constants.opStatus = AV_Constants.FAILURE;
+
+                }
+
+            } else {
+                AV_Constants.opStatus = AV_Constants.INVALID_INPUTS;
+            }
+        } catch (Exception e) {
+            System.out.println("========= ERROR ===============");
+            log.debug("error while processing request action");
+            e.printStackTrace();
+            if (!checkparam) {
+
+                AV_Constants.opStatus = AV_Constants.INVALID_INPUTS;
+
+            }
+            AV_Constants.opStatus = AV_Constants.FAILURE;
+
+        } finally {
+            try {
+                if (commentStub != null) {
+                    commentStub.cleanup();
+                    commentStub = null;
+                }
+                if (attachObj != null) {
+                    attachObj = null;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+
+            szrespStr = AV_OutputFormat.formatOutPut(AV_Constants.opStatus, szopration, sc);
+            response.getWriter().write(szrespStr);
+            log.info("Response sent successfully");
+
+        } catch (Exception e) {
+            LogWriter.writeDebug("exception while writing output");
+        }
+    }
+}

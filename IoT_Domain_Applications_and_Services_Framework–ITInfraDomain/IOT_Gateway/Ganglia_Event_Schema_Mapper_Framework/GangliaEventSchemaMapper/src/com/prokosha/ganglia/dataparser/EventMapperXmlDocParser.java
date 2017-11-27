@@ -1,0 +1,97 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.ganglia.dataparser;
+
+import java.io.*;
+import java.util.*;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.*;
+import org.xml.sax.helpers.*;
+
+/**
+ *
+ * @author Abraham
+ */
+public class EventMapperXmlDocParser {
+
+    private static final Logger log = Logger.getLogger(EventMapperXmlDocParser.class.getName());
+
+    private static class EventRegisterSAXHandler extends DefaultHandler {
+
+        public void startDocument() throws SAXException {
+            log.debug("Parsing the Ganglia XML state document...");
+        }
+
+        public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
+            //<CepEvent evName="ServerState" containerNode="HOST">
+            //<Parameter evField="HostName" gNode="HOST" gName="*" gVal="NAME"></Parameter>
+            //<Parameter evField="OSName" gNode="METRIC" gName="os_name" gVal="VAL" evType="string"></Parameter>
+
+            String nodeName = null;
+            HashMap hm = new HashMap<String,String>();
+            for (int att = 0; att < atts.getLength(); att++) {
+                String attName = atts.getQName(att);
+                String attVal = atts.getValue(attName);
+                hm.put(attName, attVal);
+            }
+            if (!GangliaCepEventFactory.nodeStart(qName, hm)) {
+                log.error("**** ERROR **** parsing error in event mapper XML....");
+            }
+        }
+
+        public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
+            //log.debug("End Element:- localname: " + localName + " and element: " + qName);
+            if (!GangliaCepEventFactory.nodeEnd(qName)) {
+                log.error("**** ERROR **** parsing error in event mapper XML....");
+            }
+        }
+
+        public void characters(char[] ch, int start, int length) throws SAXException {
+            String token = new String(ch, start, length);
+            //ignore newlines
+            token = token.trim();
+            if (!token.isEmpty()) {
+                log.debug(token);
+            }
+        }
+
+        public void ignorableWhitespace() {
+        }
+    }
+
+    public EventMapperXmlDocParser() {
+    }
+
+    public void parseDocument(String gangliaXmlFile) throws ParserConfigurationException, SAXException, IOException {
+
+        XMLReader xmlReader = null;
+        SAXParserFactory spfactory = SAXParserFactory.newInstance();
+        spfactory.setValidating(false);
+        SAXParser saxParser = spfactory.newSAXParser();
+        xmlReader = saxParser.getXMLReader();
+
+        EventRegisterSAXHandler saxHandler = new EventRegisterSAXHandler();
+        xmlReader.setContentHandler(saxHandler);
+
+        InputSource source = new InputSource(gangliaXmlFile);
+        
+        xmlReader.parse(source);
+    }
+
+    public static void main(String args[]) throws IOException, InterruptedException, ParserConfigurationException, SAXException {
+
+        PropertyConfigurator.configure("config/logger.properties");
+        log.debug("Starting Ganglia to CEP Event Mapper Parser...");
+
+        EventMapperXmlDocParser csp = new EventMapperXmlDocParser();
+        csp.parseDocument("./config/eventmapper.xml");
+
+        NodeWatcher.printNodeListeners();
+    }
+}

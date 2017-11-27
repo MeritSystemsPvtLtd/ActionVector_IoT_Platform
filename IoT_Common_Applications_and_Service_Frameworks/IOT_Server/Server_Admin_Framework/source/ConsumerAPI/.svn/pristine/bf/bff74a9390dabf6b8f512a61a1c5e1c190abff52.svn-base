@@ -1,0 +1,161 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package AV_Action;
+
+import Model.*;
+import changestatus.*;
+import controller.LogWriter;
+import java.sql.*;
+import org.apache.log4j.Logger;
+import java.util.logging.Level;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_ChangeStatusOnlyAction extends AV_Model {
+
+    static Logger log = Logger.getLogger(AV_ChangeStatusOnlyAction.class);
+
+    public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "addcomments";
+        String szrespStr=null;
+        String customerid = "";
+        String szSession = null;
+        String Taskid = null;
+        String szUser = null;
+        String szNewStatus = null;
+        String szComments = null;
+        ChangeStatusResponse changedresp = null;
+
+        Connection con = null;
+        Statement stat = null;
+        ResultSet rs = null;
+        boolean checkparam = false;
+        Updatelastupdateddate date = null;
+        boolean checksession = false;
+
+        try {
+            try {
+                Taskid = request.getParameter("taskid");
+                customerid = request.getParameter("customerid");
+                szUser = (String) request.getParameter("szusername");
+                szNewStatus = request.getParameter("status");
+                szComments = request.getParameter("comment");
+                szSession = (String) request.getParameter("szsessionid");
+                if (Taskid != null && !Taskid.equals("") && szUser != null && !szUser.equals("") && szNewStatus != null && !szNewStatus.equals("") && szComments != null && !szComments.equals("") && szSession != null && !szSession.equals("")) {
+                    checkparam = true;
+                    System.out.println("checkparam:" + checkparam);
+                } else {
+                    System.out.println("checkparam:" + checkparam);
+                    checkparam = false;
+                }
+
+
+            } catch (Exception e) {
+                System.out.println("checkparam:" + checkparam);
+                checkparam = false;
+                e.printStackTrace();
+
+            }
+            if (checkparam) {
+              
+                System.out.println(Taskid + szUser + szNewStatus + szComments + szSession);
+                log.info(Taskid + szUser + szNewStatus + szComments + szSession);
+                System.out.println("------------I m in START of calling changestatusdetails service from Client----------------");
+                log.info("------------I m in START of calling changestatusdetails service from Client----------------");
+                String sztarget = TargetEndpoint.getTargetEndpoint(request);
+                //String targetEndpoint = "http://" + szServerName + ":" + szPortNum + "/proChara/services/ChangeStatus";
+                String targetEndpoint = sztarget + "/proChara/services/ChangeStatus";
+                System.out.println("Target End Point***************** " + targetEndpoint);
+                log.info("Target End Point***************** " + targetEndpoint);
+                ChangeStatusStub statusstub = new ChangeStatusStub(targetEndpoint);
+                ChangeStatusRequest statreq = new ChangeStatusRequest();
+                statreq.setSzUser(szUser);
+                statreq.setSzTaskID(Taskid);
+                statreq.setSzSessionId(szSession);
+                statreq.setSzNewStatus(szNewStatus);
+                statreq.setSzComments(szComments);
+                changedresp = statusstub.changeTaskStatus(statreq);
+                log.info(changedresp.getMessage());
+
+                statreq = null;
+                statusstub.cleanup();
+                statusstub = null;
+                date = new Updatelastupdateddate();
+
+                try {
+                    con = DatabaseConnection.getAVSAConnection(request);
+                    if (con != null) {
+                        date.Changedate(con, Taskid);
+                        AV_Constants.opStatus=AV_Constants.SUCCESS;
+                    } else {
+                    
+                        AV_Constants.opStatus=AV_Constants.DBERROR;
+                    }
+                } catch (Exception sqle) {
+                    java.util.logging.Logger.getLogger(AV_ChangeStatusOnlyAction.class.getName()).log(Level.SEVERE, null, sqle);
+                    AV_Constants.opStatus=AV_Constants.DBERROR;
+                }
+
+            } else {
+                
+                AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+            }
+
+        } catch (Exception e) {
+            java.util.logging.Logger.getLogger(AV_ChangeStatusOnlyAction.class.getName()).log(Level.SEVERE, null, e);
+
+            System.out.println("changestatusDetailsonly catching Exception");
+            AV_Constants.opStatus=AV_Constants.FAILURE;
+            log.info("changestatusDetailsonly catching Exception");
+        } finally {
+            date = null;
+            con = null;
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException ex) {
+                    java.util.logging.Logger.getLogger(AV_ChangeStatusOnlyAction.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            if (stat != null) {
+                try {
+                    stat.close();
+                } catch (SQLException ex) {
+                    java.util.logging.Logger.getLogger(AV_ChangeStatusOnlyAction.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException ex) {
+                    java.util.logging.Logger.getLogger(AV_ChangeStatusOnlyAction.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        try {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e) {
+            LogWriter.writeDebug("exception while writing output");
+        } finally {
+            try {
+                szrespStr = null;
+                szopration=null;
+
+            } catch (Exception e) {
+                java.util.logging.Logger.getLogger(AV_ChangeStatusOnlyAction.class.getName()).log(Level.SEVERE, null, e);
+            }
+        }
+
+
+
+    }
+}

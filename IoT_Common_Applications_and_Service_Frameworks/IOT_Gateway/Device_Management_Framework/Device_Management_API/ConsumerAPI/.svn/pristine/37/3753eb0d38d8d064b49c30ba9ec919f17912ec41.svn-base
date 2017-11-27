@@ -1,0 +1,157 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package AV_Action;
+
+import Model.*;
+import controller.LogWriter;
+import java.util.logging.Level;
+import loginservice.*;
+import org.apache.axis2.AxisFault;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_LoginAction extends AV_Model {
+
+    static Logger log = Logger.getLogger(AV_LoginAction.class);
+
+    public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+        response.setContentType("text/xml;charset=UTF-8");
+        log.info("am in LoginServlet");
+        StringBuffer sb = new StringBuffer();
+        String szopration = "logincheck";
+        String szrespStr = null;
+        StringBuffer result = null;
+        String szSession = "";
+        String output = "";
+        String customerid = null;
+        GetGroupsRequest grpReq = null;
+        boolean checkparam = false;
+        long szPasswordExpiry = 5;
+        LoginServiceStub loginStub = null;
+        String[] szGroups = null;
+        esclog.info("------------I m in START of calling Login service from Client----------------");
+        log.info("------------I m in START of calling Login service from Client----------------");
+        try {
+            String szUserName = request.getParameter("username").trim();
+            String szPassword = request.getParameter("password");
+            customerid = request.getParameter("customerid");
+            String szPasswordLock = "off";
+            checkparam = true;
+
+            if (checkparam) {
+
+                try {
+                    result = new StringBuffer("<result>");
+                    int szPortNum = request.getServerPort();
+                    log.info(szUserName + "%%" + szPassword);
+                    String sztarget = TargetEndpoint.getTargetEndpoint(request);
+                    System.out.println("Service target::" + sztarget + "/proChara/services/LoginService");
+                    //String targetEndpoint = "http://" + szServerName + ":" + szPortNum + "/proChara/services/LoginService";
+                    String targetEndpoint = sztarget + "/proChara/services/LoginService";
+                    esclog.info("Target End Point " + targetEndpoint);
+                    System.out.println("Target End Point:::" + targetEndpoint);
+                    log.info("Target End Point***************** " + targetEndpoint);
+                    loginStub = new LoginServiceStub(targetEndpoint);
+                    ChkUserRequest input = new ChkUserRequest();
+                    input.setSzUserName(szUserName);
+                    input.setSzUserAddr(szPassword);
+                    ChkUserResponse resp = loginStub.chkUser(input);
+                    szSession = resp.getSzSession();
+                    esclog.info("------------I m in END of calling Login service from Client----------------" + resp.getSzValidate());
+                    log.info("------------I m in END of calling Login service from Client----------------" + resp.getSzValidate());
+                    szPasswordExpiry = resp.getSzPasswordExpiry();
+                    System.out.println(" REMAINING DAYS FOR PASSWORD EXPIRY :::::: " + szPasswordExpiry);
+                    output = resp.getSzValidate();
+                    szSession = resp.getSzSession();
+                    log.info("------------I m in Calling getGropu");
+                    grpReq = new GetGroupsRequest();
+                    grpReq.setSzSessionId(szSession);
+                    GroupInput respOut = loginStub.getGroups(grpReq);
+                    szGroups = respOut.getSzGroups();
+                    System.out.println("Prochara sessionid is ==========>" + szSession);
+                    szGroups = null;
+
+                } catch (Exception e) {
+                    esclog.info("========= ERROR ===============");
+                    System.out.println("========= ERROR ===============");
+                    output = "InvalidUser";
+                    szSession = null;
+
+                    szPasswordExpiry = 5;
+                    if (szPasswordLock.equals("on")) {
+                        try {
+                            output = "Password Locked";
+                            AV_Constants.opStatus = AV_Constants.PASSWORD_LOCKED;
+                        } catch (Exception ex) {
+                            java.util.logging.Logger.getLogger(AV_LoginAction.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                } finally {
+                    if (loginStub != null) {
+                        try {
+                            loginStub.cleanup();
+                        } catch (AxisFault axisFault) {
+                            axisFault.printStackTrace();
+                        }
+                    }
+                }
+
+
+                try {
+
+                    if (szPasswordExpiry == 0) {
+
+                        AV_Constants.opStatus = AV_Constants.PASSWORD_EXPIRED;
+                    } else if (!output.equals("InvalidUser") && szSession != null) {
+                        AV_Constants.opStatus = AV_Constants.SUCCESS;
+                        result.append("<userid>");
+                        result.append(szUserName);
+                        result.append("</userid>");
+                        result.append("<sessionid>");
+                        result.append(szSession);
+                        result.append("</sessionid>");
+                        result.append("<loginstatus>");
+                        result.append((String) output);
+                        result.append("</loginstatus>");
+                    } else if (output.equals("InvalidUser") && szSession == null) {
+
+                        AV_Constants.opStatus = AV_Constants.PASSWORD_LOCKED;
+
+                    }
+                    result.append("</result>");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+
+                AV_Constants.opStatus = AV_Constants.INVALID_INPUTS;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            AV_Constants.opStatus = AV_Constants.INVALID_INPUTS;
+        }
+        try {
+            szrespStr = AV_OutputFormat.formatOutPut(AV_Constants.opStatus, result, szopration, sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e) {
+            LogWriter.writeDebug("exception while writing output");
+        } finally {
+            try {
+                grpReq = null;
+                szrespStr = null;
+                szopration = null;
+                result = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+}

@@ -1,0 +1,149 @@
+[
+   {
+      "text":"Select Graph",
+      "value":"Options",
+      "items":[
+         {
+            "text":"Health",
+            "id":"Health_id",
+            "value":"Health",
+            "items":[
+               {
+                  "text":"Availability",
+                  "value":"Availability",
+                  "filename":"/Inverter/InverterAvail.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Availability"
+                  ],
+                  "index":"0"
+               },
+               {
+                  "text":"Inverter Energy",
+                  "value":"Inverter Energy",
+                  "filename":"/Inverter/InverterEnergyMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "DayEnergy",
+                     "YearEnergy",
+		     "TotalEnergy"
+                  ],
+                  "index":"1"
+               },
+               {
+                  "text":"Inverter AC",
+                  "value":"Inverter AC",
+                  "filename":"/Inverter/InverterACMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "ACPower",
+		     "ACVoltage",
+		     "ACCurrent",
+                     "ACFrequency"
+                  ],
+                  "index":"2"
+               },
+               {
+                  "text":"Inverter DC",
+                  "value":"Inverter DC",
+                  "filename":"/Inverter/InverterDCMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "DCCurrent",
+                     "DCVoltage"
+                  ],
+                  "index":"3"
+               },
+                {
+                        "value": "Time Line Availability",
+                        "text": "Time Line Availability",
+                        "filename": "/Inverter/InverterLineChartAvailability.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                   		 "Availability"],
+                        "index": "4"
+                    },
+                {
+                        "value": "Time Line Energy",
+                        "text": "Time Line Energy",
+                        "filename": "/Inverter/InverterLineChartEnergy.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                        "DayEnergy",
+                        "YearEnergy",
+		        "TotalEnergy"],
+                        "index": "5"
+                    },
+                     {
+                        "value": "Time Line AC",
+                        "text": "Time Line AC",
+                        "filename": "/Inverter/InverterLineChartAC.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [ "ACPower",
+					"ACCurrent",
+					"ACVoltage",
+					"ACFrequency"],
+                        "index": "6"
+                    },
+                     {
+                        "value": "Time Line DC",
+                        "text": "Time Line DC",
+                        "filename": "/Inverter/InverterLineChartDC.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                     "DCCurrent",
+                     "DCVoltage"],
+                        "index": "7"
+                    }
+            ]
+         },
+         {
+            "text":"Alert",
+            "value":"Alert",
+            "items":[
+               {
+                  "text":"Alerts By Assignee",
+                  "value":"Alerts By Assignee",
+                  "filename":"/Inverter/InverterAssignee.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"0"
+               },
+               {
+                  "text":"Alerts By Status",
+                  "value":"Alerts By Status",
+                  "filename":"/Inverter/InverterStatus.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"1"
+               },
+               {
+                  "text":"Critical Alerts",
+                  "value":"Critical Alerts",
+                  "filename":"/Inverter/InverterAlertCount.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+                    
+                  ],
+                  "index":"2"
+               }
+            ]
+         }
+      ]
+   }
+]

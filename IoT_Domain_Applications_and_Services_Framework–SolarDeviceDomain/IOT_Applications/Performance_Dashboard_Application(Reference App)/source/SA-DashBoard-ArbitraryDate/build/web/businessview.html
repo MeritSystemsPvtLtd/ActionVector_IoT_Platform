@@ -1,0 +1,363 @@
+
+<html>
+<head>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+</head>
+<body>
+	<div id="loader"
+		style="position: absolute; left: 65%; top: 50%; z-index: 100"></div>
+	<div id="businessexample" class="k-content">
+		<table id="businessdiagram">
+			<tr>
+				<td>
+					<div id="businesscharthead">
+						<table width="100%">
+							<tr>
+								<td>
+									<ul id="businessinput" />
+								</td>
+								<td><input id="businesschartname" type="text"
+									class="k-textbox" readonly="readonly" /></td>
+							</tr>
+						</table>
+					</div>
+					<div id="businesschart" style="border: 0;"></div>
+				</td>
+				<td>
+					<div id="businesscharthead2">
+						<table width="100%">
+							<tr>
+								<td>
+									<ul id="businessinput2" />
+								</td>
+								<td><input id="businesschartname2" type="text"
+									class="k-textbox" readonly="readonly" /></td>
+							</tr>
+						</table>
+					</div>
+					<div id="businesschart2" style="border: 0;"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div id="businesscharthead3">
+						<table width="100%">
+							<tr>
+								<td>
+									<ul id="businessinput3" />
+								</td>
+								<td><input id="businesschartname3" type="text"
+									class="k-textbox" readonly="readonly" /></td>
+							</tr>
+						</table>
+					</div>
+					<div id="businesschart3" style="border: 0;"></div>
+				</td>
+				<td>
+					<div id="businesscharthead4">
+						<table width="100%">
+							<tr>
+								<td>
+									<ul id="businessinput4" />
+								</td>
+								<td><input id="businesschartname4" type="text"
+									class="k-textbox" readonly="readonly" /></td>
+							</tr>
+						</table>
+					</div>
+					<div id="businesschart4" style="border: 0;"></div>
+				</td>
+			</tr>
+		</table>
+		<div id="businessgrid"></div>
+	</div>
+
+	<script>
+		var chartheaddiv = [ "businesschartname", "businesschartname2",
+				"businesschartname3", "businesschartname4" ]
+		var combodiv = [ "#businessinput", "#businessinput2",
+				"#businessinput3", "#businessinput4", "#businesscharthead",
+				"#businesscharthead2", "#businesscharthead3",
+				"#businesscharthead4", "#businessexample", "#businessdiagram1",
+				"#businesschart", "#businesschart2", "#businesschart3",
+				"#businesschart4", "#businessgrid", "businesstypeColumn",
+				"businesstypeColumn2", "businesstypeColumn3",
+				"businesstypeColumn4", "businessseriesType",
+				"businessseriesType2", "businessseriesType3",
+				"businessseriesType4", "businesstypeBar", "businesstypeBar2",
+				"businesstypeBar3", "businesstypeBar4", "businesstypeLine",
+				"businesstypeLine2", "businesstypeLine3", "businesstypeLine4" ]
+		var headdiv = [
+				[ "businesstypeColumn", "businesstypeBar", "businesstypeLine" ],
+				[ "businesstypeColumn2", "businesstypeBar2",
+						"businesstypeLine2" ],
+				[ "businesstypeColumn3", "businesstypeBar3",
+						"businesstypeLine3" ],
+				[ "businesstypeColumn4", "businesstypeBar4",
+						"businesstypeLine4" ] ]
+		var dataSource5;
+		var gridurl = customerID + "/" + $('#maincombo').val() + "/"
+				+ "Defaultservice.json";
+		var gridtitle = "<font color=737C7D ><b>SERVICENAME</b></font>";
+		var servicefirst = "";
+		var sub = "";
+		var finalgriddata;
+		var service = "";
+		var host;
+		var hosthead;
+		var combourl;
+		var startup = true;
+
+		function maingrid(division, url, title) {
+			$("#businessgrid").empty();
+			dataSource5 = srReadFiles1(url)
+			var element = $(division).kendoGrid({
+				dataSource : dataSource5,
+				filterable : true,
+				scrollable : true,
+				resizable : true,
+				reorderable : true,
+				sortable : true,
+				selectable : "single",
+				detailInit : detailInit,
+				dataBound : function() {
+					this.select(this.tbody.find(">tr:first"));
+					/* if(startup) */
+					this.expandRow(this.tbody.find(">tr:first"));
+				},
+				change : function() {
+					var grid = this;
+					grid.collapseRow(grid.tbody.find("tr.k-master-row"));
+					var data = this.dataSource.view();
+					selected = $.map(this.select(), function(item) {
+						return data[$(item).index()].ServiceName;
+					});
+					host = selected.toString();
+					hosthead = "ServiceName";
+				},
+				detailCollapse : function() {
+					//this.refresh();
+				},
+				detailExpand : function() {
+				},
+
+				columns : [ {
+					field : "ServiceName",
+					title : title,
+					filterable : true,
+					width : "120px",
+
+				}, {
+					field : "Health",
+					title : "<font color=737C7D ><b>HEALTH</b></font>",
+					template : "#=generateAlertstatus(Health)#",
+					filterable : false,
+
+				}, {
+					field : "Alert",
+					title : "<font color=737C7D ><b>ALERT</b></font>",
+					template : "#=generateAlertstatus(Alert)#",
+					filterable : false,
+
+				} ]
+			});
+		}
+
+		function detailInit(e) {
+			servicefirst = e.data.ServiceName;
+			var secondGrid = new kendo.data.DataSource({
+				transport : {
+					read : {
+						url : customerID + "/" + $('#maincombo').val() + "/"
+								+ "DefaultResourcetype.json",
+						dataType : "json"
+					}
+				},
+				filter : {
+					field : "ServiceName",
+					operator : "eq",
+					value : servicefirst
+				}
+			});
+			$("<div/>")
+					.appendTo(e.detailCell)
+					.kendoGrid(
+							{
+								dataSource : secondGrid,
+								scrollable : false,
+								resizable : true,
+								reorderable : true,
+								detailInit : detailInit2,
+								selectable : "single",
+								sortable : true,
+								dataBound : function() {
+									$(combodiv[10]).empty();
+									$(combodiv[13]).empty();
+									$(combodiv[11]).empty();
+									$(combodiv[12]).empty();
+									$(combodiv[0]).html('');
+									$(combodiv[1]).html('');
+									$(combodiv[2]).html('');
+									$(combodiv[3]).html('');
+									this.select(this.tbody.find(">tr:first"));
+									if (startup)
+										this.expandRow(this.tbody
+												.find(">tr:first"));
+									startup = false;
+
+									//this.expandRow(this.tbody.find("tr.k-master-row").first());
+								},
+								change : function() {
+									var grid = this;
+									grid.collapseRow(grid.tbody
+											.find("tr.k-master-row"));
+								},
+								detailExpand : function() {
+								},
+								detailCollapse : function() {
+									this.refresh();
+								},
+								columns : [
+										{
+											field : "ResourceType",
+											title : "<font color=737C7D size=1px ><b>Resource Type</b></font>",
+											width : "100px",
+										},
+										{
+											field : "Health",
+											title : "<font color=737C7D ><b>HEALTH</b></font>",
+											template : "#=generateAlertstatus(Health)#",
+											filterable : false,
+										},
+										{
+											field : "Alert",
+											title : "<font color=737C7D ><b>ALERT</b></font>",
+											template : "#=generateAlertstatus(Alert)#",
+											filterable : false,
+										} ]
+							});
+
+		}
+
+		function detailInit2(e) {
+
+			sub = e.data.ResourceType;
+			service = e.data.ServiceName;
+			combourl = "jsonconfigurations/" + sub + "ComboSource.json";
+			finalgriddata = new kendo.data.DataSource({
+				transport : {
+					read : {
+						url : customerID + "/" + $('#maincombo').val() + "/"
+								+ sub + "/" + sub
+								+ "LeftGridForBusinessSLA.json",
+						dataType : "json"
+					}
+				},
+				filter : [ {
+					field : "ServiceName",
+					operator : "eq",
+					value : service
+				}, {
+					field : "ResourceType",
+					operator : "eq",
+					value : sub
+				} ]
+
+			});
+
+			$("<div/>")
+					.appendTo(e.detailCell)
+					.kendoGrid(
+							{
+								dataSource : finalgriddata,
+								scrollable : false,
+								selectable : "single",
+								filterable : true,
+								sortable : true,
+								resizable : true,
+								dataBound : onDataBound,
+								change : onChange,
+								reorderable : true,
+								columns : [
+										{
+											field : "ServerName",
+											title : "<font color=737C7D size=1px ><b>"
+													+ sub + "</b></font>",
+											template : "#=generateLeftGrid(ResourceType,ServerName,ResourceID)#",
+											filterable : true,
+											width : "100px",
+										},
+										{
+											field : "Health",
+											title : "<font color=737C7D ><b>HEALTH</b></font>",
+											template : "#=generateHealthstatus(ResourceNames,Health)#",
+											filterable : false,
+
+										},
+										{
+											field : "Alert",
+											title : "<font color=737C7D ><b>ALERT</b></font>",
+											template : "#=generateAlertstatus(hstdwnstatus)#",
+											filterable : false,
+										} ]
+
+							});
+		}
+
+		$(document).ready(
+				function() {
+					$("#businessexample").width($(window).width() - 25);
+					$("#businessexample").height($(window).height() - 75);
+					$("#businessdiagram").width(
+							3 * ($("#businessexample").width()) / 4 - 65);
+					$("#businessdiagram").height(
+							$("#businessexample").height() - 20);
+					$("#businessgrid").width(
+							1 * ($("#businessexample").width()) / 4 + 60);
+					$("#businessgrid").height(
+							$("#businessdiagram").height() + 20);
+					$("#businesschart").width(
+							($("#businessdiagram").width()) / 2 - 8);
+					$("#businesschart2").width(
+							($("#businessdiagram").width()) / 2 - 8);
+					$("#businesschart3").width(
+							($("#businessdiagram").width()) / 2 - 8);
+					$("#businesschart4").width(
+							($("#businessdiagram").width()) / 2 - 8);
+					$("#businesscharthead").width(
+							($("#businessdiagram").width()) / 2 - 8);
+					$("#businesscharthead2").width(
+							($("#businessdiagram").width()) / 2 - 8);
+					$("#businesscharthead3").width(
+							($("#businessdiagram").width()) / 2 - 8);
+					$("#businesscharthead4").width(
+							($("#businessdiagram").width()) / 2 - 8);
+					$("#businesschart").height(
+							($("#businessdiagram").height()) / 2 - 20);
+					$("#businesschart2").height(
+							($("#businessdiagram").height()) / 2 - 20);
+					$("#businesschart3").height(
+							($("#businessdiagram").height()) / 2 - 20);
+					$("#businesschart4").height(
+							($("#businessdiagram").height()) / 2 - 20);
+					$("#businesscharthead").height(
+							($("#businessdiagram").height()) / 20);
+					$("#businesscharthead2").height(
+							($("#businessdiagram").height()) / 20);
+					$("#businesscharthead3").height(
+							($("#businessdiagram").height()) / 20);
+					$("#businesscharthead4").height(
+							($("#businessdiagram").height()) / 20);
+					maingrid(combodiv[14], gridurl, gridtitle)
+					$(window).resize(function() {
+						$("#businessgrid").data("kendoGrid").refresh();
+						$("#businesschart").data("kendoChart").refresh();
+						$("#businesschart2").data("kendoChart").refresh();
+						$("#businesschart3").data("kendoChart").refresh();
+						$("#businesschart4").data("kendoChart").refresh();
+					});
+				});
+	</script>
+
+</body>
+</html>

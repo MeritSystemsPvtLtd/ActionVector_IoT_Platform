@@ -1,0 +1,69 @@
+module com.prokosha.cep.heapramp.v1;
+
+create variable int HEAP_RAMP_AVERAGING_TIME=5;//minutes
+create variable int HEAP_RAMP_DETECTION_TIME=5;//minutes
+create variable int HEAP_RAMP_TOLERANCE_PERC=5;//percentage
+create variable string HEAP_ACRO_RAMP="[HEAP_RAMP]";
+
+@Name("com.prokosha.cep.heapramp.istream.1")
+insert into HeapUsage
+        select  heapMemoryUsage.used as HeapUsage,HostName as HostName,hostipaddress as HostAddress,CustomerID,resourceType,
+	resourceId from JVMStream;
+
+@Name("com.prokosha.cep.heapramp.istream.2")
+insert into HeapAverage
+        select HostName, HostAddress,avg(HeapUsage) as AvgHeapUsage,CustomerID,resourceType,resourceId
+        from HeapUsage.win:time(HEAP_RAMP_AVERAGING_TIME minutes)
+        group by HostName;
+
+@Name("com.prokosha.cep.heapramp.istream.3")
+insert into HeapDiffStream
+	select last(AvgHeapUsage) as currHeapAvg,last(HostName) as HostName,last(HostAddress) as HostAddress,
+	last(CustomerID) as CustomerID,last(resourceType) as resourceType,
+	last(resourceId) as resourceId,cast(last(AvgHeapUsage,1),float) as prevHeapAvg
+	from HeapAverage.win:time(HEAP_RAMP_AVERAGING_TIME minutes)
+        group by HostName;
+
+@Name("com.prokosha.cep.heapramp.istream.4")
+insert into HeapPSTFlagStream
+	select case when ((currHeapAvg-prevHeapAvg) >= (HEAP_RAMP_TOLERANCE_PERC*prevHeapAvg/100)) then 1 else 0 end as pstflag,
+	currHeapAvg,prevHeapAvg,HostName,HostAddress,CustomerID,resourceType,resourceId from HeapDiffStream;
+
+@Name("com.prokosha.cep.heapramp.istream.5")
+insert into HeapPSTRampStream
+	select min(pstflag) as minPstFlag,currHeapAvg,prevHeapAvg,HostName,HostAddress,CustomerID,resourceType,
+	resourceId from HeapPSTFlagStream.win:time(HEAP_RAMP_DETECTION_TIME minutes)
+        group by HostName;
+
+@Name("com.prokosha.cep.heapramp.dispatch.6")
+select "Server" as EventType,
+        (("ALERT - Heap Usage has been increasing continously in the past ").concat(cast(HEAP_RAMP_DETECTION_TIME,String)).concat(" minutes").concat(HEAP_ACRO_RAMP)) as EventDesc,
+        ("Heap Usage has been increasing continously in the past ").concat(cast(HEAP_RAMP_DETECTION_TIME,String)).concat(" minutes") as EventSymptoms,
+        HostName, HostAddress,CustomerID,
+        resourceType,resourceId,currHeapAvg as CurrentHeapAvg,prevHeapAvg as PreviousHeapAvg
+        from HeapPSTRampStream
+        where (minPstFlag >0)
+        group by HostName
+        output first every 30 minutes;
+
+//@Name("com.prokosha.cep.heapramp.istream.7")
+insert into HeapPNEGFlagStream
+	select case when ((prevHeapAvg-currHeapAvg) >= (HEAP_RAMP_TOLERANCE_PERC*prevHeapAvg/100)) then 1 else 0 end as negflag,
+	currHeapAvg,prevHeapAvg,HostName,HostAddress,CustomerID,resourceType,resourceId from HeapDiffStream;
+
+//@Name("com.prokosha.cep.heapramp.istream.8")
+insert into HeapPNEGRampStream
+	select min(negflag) as minNegFlag,currHeapAvg,prevHeapAvg,HostName,HostAddress,CustomerID,resourceType,
+	resourceId from HeapPNEGFlagStream.win:time(HEAP_RAMP_DETECTION_TIME minutes)
+        group by HostName;
+
+@Name("com.prokosha.cep.heapramp.dispatch.9")
+select "Server" as EventType,
+        (("ALERT - Heap Usage has been decreasing continously in the past ").concat(cast(HEAP_RAMP_DETECTION_TIME,String)).concat(" minutes").concat(HEAP_ACRO_RAMP)) as EventDesc,
+        (" Heap Usage has been decreasing continously in the past ").concat(cast(HEAP_RAMP_DETECTION_TIME,String)).concat(" minutes") as EventSymptoms,
+        HostName, HostAddress,CustomerID,
+        resourceType,resourceId,currHeapAvg as CurrentHeapAvg,prevHeapAvg as PreviousHeapAvg
+        from HeapPNEGRampStream
+        where (minNegFlag >0)
+        group by HostName
+        output first every 30 minutes;

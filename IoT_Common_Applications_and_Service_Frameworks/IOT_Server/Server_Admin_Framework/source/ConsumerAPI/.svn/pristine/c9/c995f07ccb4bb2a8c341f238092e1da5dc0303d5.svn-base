@@ -1,0 +1,53 @@
+
+
+/**
+ * CheckSession.java
+ *
+ * This file was auto-generated from WSDL
+ * by the Apache Axis2 version: 1.6.1  Built on : Aug 31, 2011 (12:22:40 CEST)
+ */
+
+    package checksession;
+
+    /*
+     *  CheckSession java interface
+     */
+
+    public interface CheckSession {
+          
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param checkSessionRequest0
+                
+         */
+
+         
+                     public checksession.CheckSessionResponse checkSession(
+
+                        checksession.CheckSessionRequest checkSessionRequest0)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param checkSessionRequest0
+            
+          */
+        public void startcheckSession(
+
+            checksession.CheckSessionRequest checkSessionRequest0,
+
+            final checksession.CheckSessionCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        
+       //
+       }
+    

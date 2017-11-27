@@ -1,0 +1,474 @@
+[Button Specifications]
+ Adv Footer = This is Adv footer = This is brought by GIFTask,refer http://giftask.com for details
+ State Label = This is state label = State
+ Users label = This is Users label = Users
+ Duration label = This is Duration label = Duration
+ Or label = This Or label = OR
+ Reports label = This is Reports label = Reports
+ Email client label = This is Email client label = Email Client
+ Title Label = This is Title label = Title
+ Chat label = This is Chat label = Chat
+ Create Button = This is button for Create = Create
+ City Label = This is city label = City
+ Summary Label = This is summary label = Summary
+ Product label = This is product label = Product
+ Add script = This is add script = Added
+ Login User Text = This is login user label = User
+ Size label = This is size label = Size
+ FAQ Id label = This is FAQ label = FAQ Id
+ Profile label = This is Profile label = Profile
+ Precedence label = This is Precedence label = Precedence
+ Upto Date Label = This is upto date = Upto Date
+ Name Label = This is Name label = Name
+ Email Heading label = This is Email label = Email
+ Email label = This is email label = Email
+ OK Button = This is generic OK button = Ok
+ Mark Label = This is mark label = Mark
+ Select Articles title = This is Select articles title = Select Articles
+ Export to GIFTask Button = This is export to giftask button = Export to GIFTask
+ Edit Attachments Button = This is edit attachments button = Edit Attachments
+ Reply All Button = This is reply all button = Reply All
+ Forward Button = This is forward button = Forward
+ Load Button = This is load button = Load
+ Upload Button = This is upload button = Upload
+ Update Button = This is update button = Update
+ Close Button = This is close button = Close
+ Feedback Button = This is feedback button = FeedBack
+ Preference Button = This is preference button = Preference
+ Attachfile Button = This is Attachfile button = Attach Files
+ Article Button = This is Article button = Article
+ Task created Message = This is created message = A task has been created with the information you entered.
+ Task created Message1 = This is created message1 = Your FIN id is
+ Compose title = This is Compose title = Compose
+ Task created Message2 = This is created message1 = You can use this FIN id to check the progress later on using Track Task
+ Attribute Name label = This is Attribute Name label = Attribute Name
+ Forgot Password Message = This is Forgot Password message = Login access Password :
+ Display Forgot Password Message = This is Display Forgot Password message = Your request for password has been processed.
+ Forgot Password Title Message = This is Forgot Password Title message = Forgot Password
+ List of query Heading = This is list query heading = List of saved queries
+ Edit attachments Heading = This is edit attachment heading = Edit Attachments
+ Admin Tasks Heading = This is admin tasks heading = Admin Tasks
+ FAQ Heading = This is Faq heading = Frequently Asked Questions
+ Configure Task Filter heading = This is Configure Task Filter heading = Configure Task Filter
+ Action Menu = This is Action Menu = Action
+ Configure Task Query heading = This is Configure Task Query Heading = Configure Task Query
+ Home Menu = This is Home Menu = Home
+ Add Activity Report Attribute heading = This is Add Activity Report Attribute Heading = Add Activity Report Attribute
+ Login password Text = This is password text = Password
+ Welcome screen text = This is Welcome label text = Welcome
+ Logged in text = This is logged in as text = You are logged in as
+ Get Id Button = This is get id button = Get Id
+ Not Registered text = This is not registred text = Not a registered user
+ Empty message text = This is empty message text = Selected folder is empty
+ Failed message text = This is failed message text = Mail exported failed
+ Session Label = This is session label = Session
+ Record Label = This is record label = record
+ Related article Label = This is Related article label = Related Articles
+ Status Change1 Label = This is status change1 label = Updated by
+ Status Change2 Label = This is status change2 label = status changed to
+ Status Change3 Label = This is status change3 label = priority changed to
+ Faq label = This is Faq label = FAQ
+ Check Task Label = This is Check Task Label = Sorry Still tasks are not created by you
+ Task Label = This is Tasks label = Task
+ List Label = This is List label = List
+ FAQs Label = This is FAQs label = FAQs
+ Sequence Label = This is Sequence label = Sequence
+ Rearrange Label = This is Rearrange label = Rearrange
+ Question Label = This is Question label = Question
+ Result Label = This is Result label = Results
+ Start date Label = This is start date = Start Date
+ End date Label = This is end date = End Date
+ Subject Label = This is subject label = Subject
+ Message Label = This is message label = Message
+ FAQ Button = This is FAQ button = FAQ
+ Select Task Id Label = This is select task id label = Select FIN Id
+ Search User label = This is Search user label = Search User
+ History label = This is History label = History
+ Keywords Label = This is generic Keyword = Keywords
+ Help Button = This is general Help button = Help
+ Reset Button = This is general Reset Button = Reset
+ Track Button = This is button for Track = Track
+ Logout Button = This is general Logout button = Logout
+ Admin Tasks Button = This administrator task button = Admin
+ Profile Button = This is profile button = Profile
+ eMail check Button = This is email check button = eMail check
+ Chat Button = This is general chat button = Chat
+ Discussion Forum Button = This is general discussionforum button = Discussion Forum
+ Knowledge Base Button = This is knowledge base button = KnowledgeBase
+ Search Criteria Button = This search creteria button = Search Criteria
+ New discussion Button = This is new discussion button = New Discussion
+ Add button = This is generic Add button = Add
+ Delete Button = This is generic delete button = Delete
+ Modify Button = This is generic modify button = Modify
+ Save Button = This is generic save button = Save
+ Previous Message Button = This is previous message = Prev Msg
+ Next Message Button = This is next message button = Next Msg
+ Search Button = This is generic search button = Search
+ previous Button = This is generic previous button = Previous
+ Next Button = This is generic next button = Next
+ Cancel Button = This is generic cancel button = Cancel
+ Back Button = This is generic Back button = Back
+ Previous In thread Button = This is Prev in Thread = Prev In Thread
+ Next In Thread Button = This is next in thread button = Next In Thread
+ Reply Button = This is reply button = Reply
+ Submit Button = This is generic submit button = Submit
+ Yes Button = This is generic Yes button = Yes
+ No Button = This is generic No button = No
+ Retry Button = This is generic Retry button = Retry
+ Continue Button = This is generic Continue button = Continue
+ Send Button = This is generic Send button = Send
+ Browse Public Chat Session Button = This is Browse Public chat = Browse Public Chat Session
+ Browse Operator Chat Session Button = This is Browse Opreator chat = Browse Operator Chat Session
+ Select Folder Button = This is select folder button = Select Folder
+ Move To Button = This is Move to button = Move To
+ Select File Button = This is select file button = Select File
+ Remove Button = This is remove button = Remove
+ Done Button = This is done button = Done
+ New Folder Button = This is new folder button = New Folder
+ User Name Label = This is user name label = User Name
+ Manager Label = This is manager label = Manager
+ Security Level Label = This is security level label = Security Level
+ Allow Public Chat Label = This is allow public chat label = Allow Public chat
+ Allow Operator Chat Label = This is allow operator chat label = Allow Operator Chat
+ Allow Discussion Forum Label = This is allow discussion forum label = Allow Discussion Forum
+ Default Assignee Label = This is default assignee label = Assignee
+ Escalate e-Mail Label = This is escalate email label = Escalate e-Mail
+ Task Prefix Label = This is task prefix label = Task Prefix
+ Serial No Label = This is serial no label = Serial No
+ Mailbox Address Label = This is mailbox label = Mailbox Address
+ Pop Server Address Label = This is pop server label = Pop Server Address
+ No of Attributes Label = This is no. of attribute label = No Of Attributes
+ Mailbox Name Label = This is mailbox label = Mailbox Name
+ Assignment Type Label = This is assignment type label = Assignment Type
+ Change To allowed for Label = This is change to allowed for label = Change To allowed for
+ Change From allowed for Label = This is change from allowed for label = Change From allowed for
+ Send eMail Label = This is Send email label = Send eMail
+ Default on Create Label = This is default on create label = Default on Create
+ Indicate Task end Label = This is indicate task end label = Indicate Task end
+ Default Priority Label = This is default priority label = Default Priority
+ Display Color Label = This is display color label = Display color
+ Archive Sure Label = This is archive sure label = Archive Sure
+ Purge Label = This is purge label = Purge
+ Move to Archive Table Label = This is move to archive table label = Move to Archive table
+ Purge From Archive Table Label = This is purge from archive table = Purge From Archive Table
+ Mass Mail Label = This is mass mail label = Mass Mail
+ Configurable User Preferences Label = This is user preference label = Configurable user Preferences
+ Details Label = This is detaisl label = Details
+ Enter Task Id Label = This is enter task id label = Enter FIN Id
+ Track Task Label = This is Track Task label = Track Task
+ Created Label = This is Created label = Created
+ Managed Label = This is managed label = Managed
+ Task updated message = This is updated message = The requested Task
+ Task updated message1 = This is updated message1 = has been updated with the information entered.
+ Mandatory message = This is Mandatory message = Fields are Mandatory
+ Matching Record message = This is matching record message = no matching records found
+ Search note1 message = This is search note 1 = Enter any keyword to be searched
+ Search note2 message = This is search note 2 = Blank fields will not be used for search
+ Search note3 message = This is search note 3 = Field may be filled up fully or partially
+ Search note4 message = This is search note 4 = Fill up fields to be searched
+ Delete message1 = This is delete message1 = Task owned by
+ Delete message2 = This is delete message2 = to be transfered to
+ Delete alert message = This is delete alert message = Are you sure you want to delete this
+ Default comment message = This is default comment message = no comments added by
+ Registration Heading = This is Registration heading = Registration
+ upload step1 Heading = This upload step1 heading = Upload Files Step-1
+ upload step2 Heading = This upload step2 heading = Upload Files Step-2
+ upload step3 Heading = This upload step3 heading = Upload Files Step-3
+ Discussion Heading = This is discussion heading = Action Vector Forums
+ Add Heading = This is Add heading button = Add
+ Delete Heading = This is Delete heading button = Delete
+ Modify Heading = This is Modify heading button = Modify
+ Search Heading = This is Search heading button = Search Tasks using Keys
+ Archive Task Heading = This is archive task label = Archive Task
+ Select Task type Heading = This is select task heading = Select Task Type
+ Create task details Heading = This is task details heading = Create task details
+ User Profile Heading = This is user profile heading = User Profile
+ Mass Mail Heading = This is mass mail heading = Mass Mail
+ Detail Message Heading = This is detail message heading = Detail Message
+ Reply Message Heading = This is reply message heading = Reply Message
+ Maintenance Heading = This is maintaince heading = Maintenance
+ Select Chat Heading = This is select chat heading = Select Chat Type
+ Send mail Heading = This is send mail heading = Send Mail
+ Sent confirmation Heading = This is confirmation heading = Mail sent
+ Task created Heading = This is task creation heading = Task Created
+ Task updated Heading = This is task updation heading = Task Updated
+ Save query Heading = This is save query = Save Query
+ Task Id label = This is task id label = FIN Id
+ Chat Details label = This is chat details label = Chat Details
+ Current Folder label = This is current folder label = Current Folder
+ Empty Waste label = This is empty waste label = Empty Waste
+ Sender Label = This is sender label = Sender
+ Update GIFTask Task Id label = This is Update GIFTask Task ID label = Update Task
+ Check label = This is check label = check
+ File Name label = This is file name label = File Name
+ Enter folder name label = This is folder name label = Type folder name here
+ To Label = This is generic To label = To
+ CC Label = This is generic cc label = Cc
+ BCC Label = This is generic Bcc label = Bcc
+ From label = This is generic from label = From
+ Pending tasks Label = This is pending tasks label = List of pending tasks
+ Specify Other task label = This is specify other task label = Specify other Tasks
+ Mail export label = This is mail export label = Mail exported to GIFTask
+ eMail id label = This is email id label = email id
+ Select checkbox label = This is select checkbox label = Select the checkbox before exporting
+ Root Cause Label = This is root cause label = Root Cause
+ Work around label = This is work around label = Work around
+ Comment label = This is comment label = Add Comments
+ Selected query label = This is selected query label = Selected query is
+ Field Name label = This is field name label = Field Name
+ Condition label = This is condition label = Condition
+ Value label = This is value label = Value
+ Save query label = This is save query label = Save this query
+ Check queries label = This is check query label = Check earlier queries
+ Enter New File label = This is enter new file label = Enter new file name
+ Existing files label = This is existing files label are = Existing files are
+ Reason label = This is reason label = Reason
+ Attribute label = This is general attribute label = Attribute
+ Type label = This is general type label = Type
+ Recipient detail label = This is recipient detail send = Send the mail to all the recipients as
+ Current online users label = This is Current online users label = Current online users
+ Users on Date label = This is Users on Date label = Users on Date
+ Service label = This is service label = Service
+ Adhoc label = This is adhoc label = Adhoc
+ Sales label = This is sales label = Sales
+ Time label = This is Time label = Time
+ Date Label = This is generic Date = Date
+ New Label = This is generic New label = New
+ Assign Label = This is generic Assign label = Assign
+ Adding Label = This is generic Adding label = Adding
+ Description Label = This is generic Description label = Description
+ Home page Label = This is Home page label = Home
+ Password Label = This is password label = Password
+ Confirm Label = This is confirm label = Confirm
+ Phone No Label = This is phone no. label = Phone
+ Fax No Label = This is fax no. label = Fax No
+ eMail1 Label = This is email1 label = E-mail
+ eMail2 Label = This is email2 label = E-mail2
+ Supervisor Id Label = This is supervisor id label = Supervisor Id
+ Supervisor Password Label = This is supervisor password label = Supervisor Password
+ Max Users Label = This is max.user label = Max.Users
+ Address Label = This is address label = Address
+ Zipcode Label = This is zipcode label = Zip
+ Country Label = This is country label = Country
+ Remarks Label = This is remark label = Remarks
+ Customer Label = This is generic customer label = Customer
+ User Label = This is generic user label = User
+ Status Label = This is generic status label = Status
+ Priority Label = This is generic priority label = Priority
+ Assigntaskto Label = This is Assign task to label = Assign Task to
+ Escalate Label = This is Escalate label = Escalate
+ Deescalate Label = This is Deescalate label = DeEscalate
+ Viewlevel Label = This is viewlevel label = View Level
+ KB comment Label = This is Knowledgebase comment label = Add above comment to Knowledge base
+ Operator Label = This Operator label = Operator
+ Progress Record Label = This is Progress Record label = Progress Records
+ Task Type Label = This is generic tasktype label = TaskType
+ Archive Label = This is generic archive label = Archive
+ Options Label = This is generic option label = Options
+ Contact Person Label = This is contact person label = Contact Person
+ User Id Label = This is user id label = User Id
+ Task Priority Report label = This is task priority report label = Task Priority Report
+ Task Status Report label = This is task Status report label = Task Status Report
+ Task Category Report label = This is task Category report label = Task Category Report
+ Closed Task Report label = This is closed Task report label = Closed Task Report
+ Task Summary Report label = This is Task summary report label = Task Summary Report
+ Task Assignment Report label = This is Task Assignment report label = Task Assignment Report
+ Task Priority label = This is Task Priority label = Task Priority
+ Task Category label = This is Task Category label = Task Category
+ Task Summary label = This is Task summary label = Task Summary
+ Task Filter label = This is Task Filter label = Task Filter
+ Customize Filter label = This is customize filter = Customize Filter
+ Activity Report label = This is Activity Report label = Activity Report
+ Best Practices label = This is Best Practices label = Best Practices
+ Discussion Forum label = This is Discussion Forum label = Discussion Forum
+ KnowledgeBase label = This is Knowledge base label = KnowledgeBase
+ Email Options label = This is Email Options label = Email Options
+ Corporate Home label = This is Corporate Home label = Corporate Home
+ Advanced Options label = This is Advanced Options label = Advanced Options
+ Customer Contact label = This is Customer contact label = Customer Contact
+ Admin Tasks label = This is Admin Tasks label = Admin Tasks
+ Canned Response label = This is Canned Reponse label = Canned Response
+ Custom Mail label = This is Custom Mail label = Custom Mail
+ Add Feedback label = This is Add feedback label = Add Feedback
+ Quick Update label = This is Quick Update label = Quick Update
+ Attach Files label = This is Atttach Files label = Attach Files
+ Override Policy label = This is Override Policy label = Override Policy
+ Update label = This is Update label = Update
+ Add Task Filter label = This is Add task filter label = Add Task Filter
+ Search Customer label = This is Search customer label = Search Customer
+ Add Assignee label = This is Add assignee label = Add Assignee
+ Specify User label = This is Specify user label = Specify User
+ Specify Customer label = This is Specify Customer label = Specify Customer
+ Specify Owner label = This is Specify Owner label = Specify Owner
+ Last Update label = This is Last Update label = LastUpdate
+ Groupname label = This is Groupname label = Groupname
+ Task Updation History label = This is Task updation history label = Task Updation History
+ Associated Customer label = This is Associated Customer label = Customer
+ Assigned Label = This is assigned label = Assigned
+ Small to Label = This is to label = to
+ Limit Search Label = This is limit search label = Limit my search
+ Task Created by me label = This is task created by label = Task Created By me
+ Task Assigned To oper label = This is task assigneed to oper label = Task Assigned to operator
+ Task Assigned To me label = This is task assigned to me label = Task Assigned to me
+ Task Assigned To manager label = This is task assigned to manager label = Task Assigned to manager
+ View Comment Label = This is comment label = Above comment not viewable to
+ Modify Profile Label = This is modify profile label = Modify Profile
+ Back to Home Page Label = This is back to home page label = Home
+ Forum Name Label = This is forum name label = Forum
+ Parent Forum Label = This is parent forum label = Parent Forum
+ Previous Article Label = This is prev article label = Prev Article
+ Next Article label = This is next article label = Next Article
+ New Article label = This is new article label = New Article
+ Article label = This is article label = Article Detail
+ Table of Contents label = This is Table of Contents label = Table Contents
+ Category Name label = This is category name label = Category
+ Parent Category Label = This is parent category label = Parent Category
+ Answer label = This is Answer label = Answer
+ Next Question label = This is Next Question label = Next Question
+ Previous Question label = This is prev question label = Prev Question
+ Operator Chat label = This is operator chat label = Operator Chat
+ Public Chat label = This is public chat label = Public Chat
+ Monitor Mode label = This is monitor mode label = Monitor Mode
+ Session Name label = This is session name label = Session Name
+ Chat User label = This is chat user label = Chat User
+ Chat Operator label = This is chat operator label = Chat Operator
+ Query Status label = This is Query Status label = Query Status
+ Generate Report In label = This is Generate Report In label = Generate Report In
+ Home Summary label = This is Home Summary label = Job Summary
+ Width label = This is Width label = Width
+ Link Table label = This is Link Table label = Link Table
+ Link Column label = This is Link Column label = LinkColumn
+ Link Required label = This is Link Required label = Link Required
+ Enter address script = This is enter to address script = Enter the To Address
+ No subject script = This is no subject script = No subject
+ Mail sent script = This is mail sent script = Mail sent
+ Confirmation script = Confirmation = Mails in the folder will be permanently deleted. Are your sure
+ Folder message script = Folder script = Folder test holds folders.press ok to hold folders & cancel to hold messages
+ Last record script = This is last record script = Already at Last record
+ First record script = This is first record script = Already at First record
+ Modify script = This is modify script = Modified
+ Delete script = This is delete script = Deleted
+ Exist script = This is already exist script = Already exist
+ Message send script = This is message sent script = Message has been sent
+ Not null script = This is not null script = Cannot Be Null
+ Article add script = This is article add script = Article has been saved
+ FAQ sequence arrangemant script = This is FAQ rearranged script = FAQ Rearranged
+ Last Message in thread script = This is last message script = Last Message in the Thread
+ first Message in thread script = This is first message script = First Message in the Thread
+ Mass Mail script = This is mass mail script = No users are selected for sending email
+ Folder script = This is folder script = No Folders created
+ Task Creation Message = Task Creation Message = This task will be responded within 2 hours.
+ Action Vector title = This is Action Vector title = proChara
+ Add New Article title = This is Add new artile title = Add New Article
+ Add New Faq title = This is Add New faq title = Add New Faq
+ View Rule Architecture title = This is View Rule architecture title = View Rule Architecture
+ Delete Task title = This is Delete Task title = Delete Task
+ Command Center title = This is command center title = Command Center
+ Delete Command Center Records title = This is delete command center records title = Delete Command Center Records
+ File Attached title = This is File Attached title = File Attached
+ Attachments Window title = This is Attachments Window title = Attachments Window
+ Task History title = This is Task History title = Task History
+ Quick Update title = This is Quick Update title = Quick Update
+ Attach File title = This is Attach File title = Attach File
+ Update Task title = This is Update Task title = Update Task
+ Task Contents title = This is Task Contents title = Task Contents
+ Customer Details title = This is Customer Details title = Customer Details
+ Purchase Details title = This is Purchase Details title = Purchase Details
+ Update Chat title = This is Update Chat title = Update Chat
+ Search User title = This is Search User title = Search User
+ Action taken label = This is Action taken label = Action taken
+ Command Center label = This is Command Center label = Command Center
+ Created By label = This is created by label = Created By
+ Next Action by label = This is next actioon by label = Next Action By
+ Ticket Home label = This is ticket home label = Ticket Home
+ Create Ticket label = This is create ticket label = Create Ticket
+ Track Ticket label = This is track tickte label = Track Ticket
+ Task Contents label = This is task contents label = Task Contents
+ Detailed History label = This is detailed history label = Detailed History
+ Short History label = This is short history label = Short History
+ Assignees label = This is assignees label = Assignees
+ Edit Assignees label = This is edit assignees label = Edit Assignee
+ Task Assignees label = This is task assignees label = Task Assignee
+ Action Assignees label = This is action assignees label = Action Assignee
+ Update Task label = This is update task label = Update Task
+ Total Tasks label = This is total tasks label = Total Tasks
+ Primary Action label = This is primary action label = Primary Action
+ Transient Home label = This is transient home label = Transient Home
+ Ticket Report label = This is Ticket report label = Ticket Report
+ Task Types label = This is Tasktypes label = Task Types
+ Delete Tasks label = This is delete tasks label = Delete Tasks
+ Add Product Types label = This is add product types label = Add product types
+ Task Created Report label = This is task created report label = Task Created Report
+ Chat Client label = This is Chat client label = Chat Client
+ Assignees title = This is Assignees title = Assignees
+ Task Owner label = This is Task Owner label = Task Owner
+ Search Customer title = This is Search Customer title = Search Customer
+ Show File title = This is Show File title = Show File
+ Command Center History title = This is Command Center History title = Command Center History
+ Search title = This is Search title = Search
+ Create Task title = This is Create Task title = Create Task
+ Details of Product title = This is Details of Product title = Details of Product
+ Previous Feedback Details title = This is Previous of Product title = Previous Feedback Details
+ Chat title = This is Chat title = Chat
+ Daily or Periodic Activity Report title = This is Daily or Periodic Activity Report title = Daily or Periodic Activity Report
+ Login Button = This is general Login button = Login
+ Customer List title = This is Customer List title = Customer List
+ Admin Tasks title = This is Admin Tasks title = Admin Tasks
+ Edit Attachments title = This is Edit Attachments title = Edit Attachments
+ Search For title = This is Search For title = Search For
+ Task Owner Details title = This is Task Owner Details title = Task Owner Details
+ Security Policies title = This is Security policies title = Security Policies
+ Comment Details title = This is Comment Details title = Comment Details
+ Task Navigator title = This is Task navigator title = Task Navigator
+ Attach To user or Customer title = This is Attch to user or Customer title = Attach To User or Customer
+ Best Practice Guidelines title = This is Best Practice Guidelines title = Best Practice Guidelines
+ Discussion Forums title = This is Discussion Forums title = Discussion Forums
+ Directory Configuration title = This is Directory Configuration title = Directory Configuration
+ List of users title = This is list of users title = List of Users
+ Add Activity Report Attribute title = This is Add Activity Report Attribute title = Add Activity Report Attribute
+ User/Customer Information title = This is user or customer information title = User/Customer Information
+ Groups tree = This is Groups tree = Groups
+ Business Units tree = This is Business Units tree = Business Units
+ Business Processes tree = This is Business Processes tree = Business Processes
+ View Menu = This is View Menu = View
+ Options Menu = This is Options Menu = Options
+ Tools Menu = This is Tools menu = Tools
+ Logout Menu = This is Logout Menu = Logout
+ SelfHelp Menu = This is SelfHelp Menu = SelfHelp
+ Reports Menu = This is Reports Menu = Reports
+ Mobile Number label = This is Mobile Number label = Mobile Number
+ And label = This and And label = AND
+ Associate To Parent TaskType label = This is Associate To Parent TaskType label = Associate To Parent TaskType
+ Associate To Parent Taskid label = This is Associate To Parent Taskid label = Associate To Parent Taskid
+ Child Task label = This is Child Task label = Child Tasks
+ Parent Task label = This is Parent Task label = Parent Task
+ Peer Task label = This is Peer Task label = Peer Tasks
+ Create Related Ticket label = This is Create Related Ticket label = Create Related Task
+ Associated User label = This is Associated User label = Associated User
+ Customize Task Query label = This is customize query label = Customize Query
+ Add Task Query label = This is add task query label = Add Task Query
+ Modify Task Query label = This is modify task query label = Modify Task Query
+ Task Parameters label = This is Task parameters label = Task Parameters
+ Task viewed History label = This is Task viewerd History label = Task Viewed History
+ Events List label = This is Events list label = Events List
+ Copy To Button = This is copy to button = Copy To
+ Mailboxes label = This is Mailboxes label = Mailboxes
+ Contact Management label = This is Contact Management label = Contact Management
+ Customer Name label = This is Customer Name label = Customer Name
+ Contact Person label = This is Contact Person label = Contact Person
+ Attachments label = This is Attachments label = Attachments
+ Purchase History label = This is Purchase History label = Purchase History
+ Filter Name label = This is Filter Name label = Filter Name
+ Filter Description label = This is Filter Description label = Filter Description
+ Filter Status label = This is Filter Statuslabel = Filter Status
+ Query Name label = This is Query Name label = Query Name
+ Query Description label = This is Query Description label = Query Description
+ Field Label = This is Field label = Field
+ My Queries tree = This is My Queries tree = Custom Queries
+ By Label = This is By label = by
+ Report title = This is Report title = Report
+ Related Tasks label = This will show relatedTask or peertasks = Related Tasks
+ Search Page Header = This will show header for page header = Job Tracker
+ Task Created Comment = This will be added for task creation comment= Task Created
+View Absentism Menu  = This will be added in the absentism menu = Absentism
+

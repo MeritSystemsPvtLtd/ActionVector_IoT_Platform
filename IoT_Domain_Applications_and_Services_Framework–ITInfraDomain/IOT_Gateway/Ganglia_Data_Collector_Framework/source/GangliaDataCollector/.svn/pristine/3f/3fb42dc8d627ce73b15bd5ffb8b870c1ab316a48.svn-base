@@ -1,0 +1,98 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.adapter.ganglia;
+
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import java.io.IOException;
+
+/**
+ *
+ * @author Abraham
+ */
+public class GangliaXmlCollector {
+
+    private static final Logger log = Logger.getLogger(GangliaXmlCollector.class.getName());
+    private BufferedReader fromGmond;
+    private java.net.Socket gmondSocket;
+    private String gHost;
+    private int gPort;
+
+    public GangliaXmlCollector(String host, int port) {
+        log.debug("Constructing  GangliaXmlCollector...");
+        gHost = host;
+        gPort = port;
+    }
+//for watchdog
+    public String getgHost() {
+        return gHost;
+    }
+
+    public int getgPort() {
+        return gPort;
+    }
+//end
+    private boolean gmondConnect() {
+
+        log.debug("Connecting to gmond socket port: " + gPort + " on host: " + gHost);
+        try {
+            gmondSocket = new Socket(gHost, gPort);
+            fromGmond = new BufferedReader(new InputStreamReader(gmondSocket.getInputStream()));
+            return true;
+        } catch (Exception ex) {
+            log.error("*** ERROR *** Cannot connect to gmond (" + gHost + ":" + gPort + ")!!\n" + ex);
+            return false;
+        }
+    }
+
+    private boolean gmondDisconnect() {
+        //connect to the gmond socket
+        log.debug("Disconnecting gmond (" + gHost + ":" + gPort + ").");
+        try {
+            gmondSocket.close();
+            return true;
+        } catch (Exception ex) {
+            log.error("*** ERROR *** Cannot disconnect from gmond (" + gHost + ":" + gPort + ")!!\n" + ex);
+            return false;
+        }
+    }
+
+    public boolean download(StringBuffer xmlBuff) {
+
+        //connect to gmond
+        if (!gmondConnect()) {
+            log.error("*** ERROR *** Connecting to gmond (" + gHost + ":" + gPort + ") failed. Terminating download!!");
+            return false;
+        }
+
+        //read full XML doc from gmond
+        boolean more = true;
+        String data;
+        log.debug("Reading XML document from gmond (" + gHost + ":" + gPort + ")...");
+        while (more) {//read the full ganglia XML doc
+            try {
+                data = fromGmond.readLine();
+                if (data == null) {
+                    more = false;
+                } else {
+                    xmlBuff.append(data);
+                }
+            } catch (Exception ex) {
+                log.error("*** ERROR *** Reading from gmond (" + gHost + ":" + gPort + ") failed. Terminating download!!" + ex);
+                gmondDisconnect();
+                return false;
+            }
+        }
+
+        //disconnect gmond and return
+        return gmondDisconnect();
+    }
+}

@@ -1,0 +1,167 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package AV_Action;
+import Model.*;
+
+import addassignees.*;
+import controller.LogWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.log4j.Logger;
+import java.util.*;
+import javax.servlet.http.HttpSession;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_AssigneeServlet extends AV_Model {
+     static Logger log = Logger.getLogger(AV_AssigneeServlet.class);
+public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+
+  response.setContentType("text/xml;charset=UTF-8");
+       
+        String szopration = "addassignee";
+        String szrespStr=null;
+        String taskkind = null;
+        String szUsername = null;
+        String szPassword = null;
+        String szTaskID = null;
+        String szSessionId = null;
+        String szGrpName = null;
+        String szAssignType = null;
+        String szAssignee = null;
+        String szRoleBased = null;
+        String hiddenstatus = null;
+        String status = null;
+        String comment = null;
+        boolean checkparam = false;
+        String customerid = "";
+        boolean checksession = false;
+
+        AddRoleAssigneeOut ObjResponse = null;
+
+        try
+        {
+            customerid = request.getParameter("customerid");
+            taskkind = request.getParameter("tasktype");
+            szUsername = (String) request.getParameter("szusername");
+            szPassword = (String) request.getParameter("szpassword");
+            szTaskID = (String) request.getParameter("taskid");
+            szSessionId = (String) request.getParameter("szsessionid");
+            szGrpName = request.getParameter("grouptype");
+            szAssignType = request.getParameter("assigneetype");
+            szAssignee = request.getParameter("assignee");
+            szRoleBased = request.getParameter("roletype");
+            if ((taskkind != null && !taskkind.equals("")) && (szUsername != null && !szUsername.equals("")) && (szPassword != null && !szPassword.equals("")) && (szTaskID != null && !szTaskID.equals("")) && (szSessionId != null && !szSessionId.equals("")) && (szGrpName != null && !szGrpName.equals("")) && (szAssignType != null && !szAssignType.equals("")) && (szAssignee != null && !szAssignee.equals("")) && (szRoleBased != null && !szRoleBased.equals("")))
+            {
+                checkparam = true;
+            } else
+            {
+                checkparam = false;
+            }
+
+            log.info("$############################" + szAssignee);
+            System.out.println(taskkind + szUsername + szPassword + szTaskID + szSessionId + szGrpName + szAssignType + szAssignee + szRoleBased);
+            log.info(taskkind + szUsername + szPassword + szTaskID + szSessionId + szGrpName + szAssignType + szAssignee);
+        } catch (Exception e)
+        {
+            checkparam = false;
+            e.printStackTrace();
+            log.error("error while reading inputs", e);
+
+        }
+        if (checkparam)
+        {
+              try
+                {
+                    if (szAssignee != null)
+                    {
+                        if (!szAssignee.equals("select"))
+                        {
+                            System.out.println("------------I m in START of calling Role Based Assignment service from Client----------------");
+                            log.info("------------I m in START of calling Role Based Assignment service from Client----------------");
+                            
+                            String sztarget = TargetEndpoint.getTargetEndpoint(request);
+                            
+                            String targetEndpoint = sztarget + "/proChara/services/Assignees";
+                            System.out.println("Target End Point " + targetEndpoint);
+                            log.info("Target End Point " + targetEndpoint);
+                            
+                            AssigneesStub assignStub = new AssigneesStub(targetEndpoint);
+                            AssigneeRoleDetails addAGN = new AssigneeRoleDetails();
+                            addassignees.GroupMember groupName = new addassignees.GroupMember();
+                            groupName.setGroupname(szGrpName);
+                            log.info("szAssignType " + szAssignType);
+                            if (szAssignType.equalsIgnoreCase("orole"))
+                            {
+                                groupName.setName(szRoleBased);
+                            } else
+                            {
+                                groupName.setName(szAssignee);
+                            }
+                            groupName.setActionassignee("1");
+                            addassignees.GroupMember[] group = new addassignees.GroupMember[1];
+                            group[0] = groupName;
+                            addAGN.setGroupMember(group);
+                            addAGN.setUserName(szUsername);
+                            addAGN.setPassword(szPassword);
+                            addAGN.setSzTaskid(szTaskID);
+                            addAGN.setSzTasktype(taskkind);
+                            addAGN.setSzAssignType(szAssignType);
+                            log.info(group + szUsername + szPassword + szTaskID + taskkind + szAssignType + "&&&&&&&&&");
+                            ObjResponse = assignStub.addRoleOrAssignee(addAGN);
+                            System.out.println("------------I m in END of calling Role Based Assignment service from Client----------------");
+                            log.info("------------I m in END of calling Role Based Assignment service from Client----------------");
+                            AV_Constants.opStatus=AV_Constants.SUCCESS;
+                        } else
+                        {
+                            
+                            AV_Constants.opStatus=AV_Constants.FAILURE;
+                        }
+                    } else
+                    {
+                        AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+                    }
+
+                } catch (Exception e)
+                {
+                    AV_Constants.opStatus=AV_Constants.FAILURE;
+                    System.out.println("========= ERROR ===============");
+                    log.info("========= ERROR ===============");
+                    e.printStackTrace();
+                }
+            
+        } else
+        {
+            AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+            
+        }
+        try
+        {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                szrespStr = null;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error while deleting objects");
+            }
+        }
+}
+}

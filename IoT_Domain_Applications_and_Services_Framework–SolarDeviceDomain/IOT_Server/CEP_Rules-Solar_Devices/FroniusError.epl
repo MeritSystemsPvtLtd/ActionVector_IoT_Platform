@@ -1,0 +1,12 @@
+module com.prokosha.cep.froniuserror.v1;
+
+create variable string ACRO_ERR="[FRO_ERROR]";
+
+@Name("com.prokosha.cep.froniuserror.dispatch.1")
+select  "Inverter" as EventType,CustomerID,cCustomer,
+    ("Fronius Error").concat(ACRO_ERR) as EventDesc,
+    (Error.concat(":").concat(Cause)) as EventSymptoms,
+    HostName, HostAddress, resourceType, resourceId
+    from FroniusErrorStream
+    group by resourceId
+    output first every 15 minutes;

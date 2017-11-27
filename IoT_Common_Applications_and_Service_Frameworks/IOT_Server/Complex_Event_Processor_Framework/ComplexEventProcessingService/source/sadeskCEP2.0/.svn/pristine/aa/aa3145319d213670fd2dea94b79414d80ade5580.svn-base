@@ -1,0 +1,61 @@
+module com.prokosha.cep.cpudiskmem.v1;
+
+/**
+** Rule set: Detect when the CPU util exceeds 80%, Memory usage is above 80% and Disk util is above 80%.
+** Alert once every 2 minutes for every distinct server
+**/
+
+/*** CPU UTILIZATION > 80% ****/
+//compute the CpuUtil = CpuUser+CpuSystem
+//@Name("com.prokosha.cep.cpudiskmem.istream.2")
+insert into CpuUtilMon
+        select (CpuUser+CpuSystem) as CpuUtil, HostName, HostAddress
+        from ServerStateStream;
+
+@Name("com.prokosha.cep.cpudiskmem.dispatch.1")
+select "Correlated Event" as EventType,
+        "ALERT - Cpu Utilisation Rising" as EventDesc,
+        "Cpu Utilisation has exceeded 80%" as EventSymptoms,
+        HostName, HostAddress, CpuUtil
+        from CpuUtilMon
+        where (CpuUtil > 80.0f)
+        group by HostName
+        output first every 2 minute;
+	
+/*** MEMORY MONITOR > 80% ****/
+//MemUsed (%) = (MemFree/MemTotal)*100 where,
+// MemTotal - total amount of memory available
+// MemFree - total free memory available
+
+insert into MemoryMon
+        select ((MemFree/MemTotal)*100) as MemoryUtilisation, MemFree as FreeMemory, MemTotal as TotalMemory, HostName, HostAddress
+        from ServerStateStream;
+
+@Name("com.prokosha.cep.cpudiskmem.dispatch.2")
+select "Correlated Event" as EventType,
+        "ALERT - Memory Utilisation Rising" as EventDesc,
+        "Memory Utilisation has exceeded 80%" as EventSymptoms,
+        HostName, HostAddress, MemoryUtilisation, TotalMemory, FreeMemory
+        from MemoryMon
+        where (MemoryUtilisation > 80.0f)
+        group by HostName
+        output first every 2 minute;
+
+/*** DISK USAGE MONITOR > 80% ****/
+//DiskUsed (%) = (DiskFree/DiskTotal)*100 where,
+// DiskTotal - total amount of disk space available
+// DiskFree - total free disk space unused
+
+insert into DiskMon
+        select ((DiskFree/DiskTotal)*100) as DiskSpaceUtilisation, DiskFree as FreeDiskSpace, DiskTotal as TotalDiskSpace, HostName, HostAddress
+        from ServerStateStream;
+
+@Name("com.prokosha.cep.cpudiskmem.dispatch.3")
+select "Correlated Event" as EventType,
+        "ALERT - Disk Utilisation Rising" as EventDesc,
+        "Disk Space Utilisation has exceeded 80%" as EventSymptoms,
+        HostName, HostAddress, DiskSpaceUtilisation, FreeDiskSpace, TotalDiskSpace
+        from DiskMon
+        where (DiskSpaceUtilisation > 80.0)
+        group by HostName
+        output first every 2 minute;

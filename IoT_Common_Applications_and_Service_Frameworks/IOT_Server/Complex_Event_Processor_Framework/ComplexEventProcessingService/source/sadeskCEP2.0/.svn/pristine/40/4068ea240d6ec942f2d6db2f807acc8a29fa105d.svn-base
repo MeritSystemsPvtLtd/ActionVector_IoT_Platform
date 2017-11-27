@@ -1,0 +1,59 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package com.prokosha.sadeskCeP;
+
+import java.util.Properties;
+
+
+public class QtartContextGenerator
+{
+    private static String szsourceEvent=null;
+    private static String  filterName=null;
+    private static String szService="";
+    private static String szSubservice=null;
+    private static String szHost=null;
+
+
+
+    public QtartContextGenerator(String sourceEvent,String FilterName,Properties props)
+    {
+        this.szsourceEvent=sourceEvent;
+        this.filterName=FilterName;
+        initilize(props);
+    }
+    public void initilize(Properties properties)
+    {
+       String keyValue=properties.getProperty(filterName);
+       String val[]=keyValue.split(",");
+       szService=val[0];
+       szHost=szsourceEvent;
+       szSubservice=val[1];
+
+
+    }
+
+    public static String getContextName() {
+        return szsourceEvent;
+    }
+
+    public static String getFilterName() {
+        return filterName;
+    }
+
+    public static String getSzService() {
+        return szService;
+    }
+
+    public static String getSzSubservice() {
+        return szSubservice;
+    }
+
+   public static String getSzHost() {
+        return szHost;
+    }
+
+
+}

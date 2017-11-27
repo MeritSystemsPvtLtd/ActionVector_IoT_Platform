@@ -1,0 +1,167 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package Model;
+
+import java.util.HashMap;
+
+/**
+ *
+ * @author raghu
+ */
+public class TaskShow {
+         String taskid = null;
+        String description = null;
+        String category = null;
+        String datetime = null;
+        String taskstatus = null;
+        String createdby = null;
+        String Taskpriority = null;
+        String Taskhost = null;
+        String SLAImage = null;
+        String tempattr = null;
+        String taskkind = null;
+        String assignee = null;
+        String SLA = null;
+        String service=null;
+        String subservice=null;
+        String host=null;
+        HashMap<String,String> attributeValues=new HashMap<String,String>();
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public String getSLA() {
+        return SLA;
+    }
+
+    public void setSLA(String SLA) {
+        this.SLA = SLA;
+    }
+
+    public String getSLAImage() {
+        return SLAImage;
+    }
+
+    public void setSLAImage(String SLAImage) {
+        this.SLAImage = SLAImage;
+    }
+
+    public String getTaskhost() {
+        return Taskhost;
+    }
+
+    public void setTaskhost(String Taskhost) {
+        this.Taskhost = Taskhost;
+    }
+
+    public String getTaskpriority() {
+        return Taskpriority;
+    }
+
+    public void setTaskpriority(String Taskpriority) {
+        this.Taskpriority = Taskpriority;
+    }
+
+    public String getAssignee() {
+        return assignee;
+    }
+
+    public void setAssignee(String assignee) {
+        this.assignee = assignee;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getCreatedby() {
+        return createdby;
+    }
+
+    public void setCreatedby(String createdby) {
+        this.createdby = createdby;
+    }
+
+    public String getDatetime() {
+        return datetime;
+    }
+
+    public void setDatetime(String datetime) {
+        this.datetime = datetime;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getTaskid() {
+        return taskid;
+    }
+
+    public void setTaskid(String taskid) {
+        this.taskid = taskid;
+    }
+
+    public String getTaskkind() {
+        return taskkind;
+    }
+
+    public void setTaskkind(String taskkind) {
+        this.taskkind = taskkind;
+    }
+
+    public String getTaskstatus() {
+        return taskstatus;
+    }
+
+    public void setTaskstatus(String taskstatus) {
+        this.taskstatus = taskstatus;
+    }
+
+    public String getTempattr() {
+        return tempattr;
+    }
+
+    public void setTempattr(String tempattr) {
+        this.tempattr = tempattr;
+    }
+     public String getService() {
+        return service;
+    }
+
+    public void setService(String service) {
+        this.service = service;
+    }
+
+    public String getSubservice() {
+        return subservice;
+    }
+
+    public void setSubservice(String subservice) {
+        this.subservice = subservice;
+    }
+
+    public HashMap<String, String> getAttributeValues() {
+        return attributeValues;
+    }
+
+    public void setAttributeValues(HashMap<String, String> attributeValues) {
+        this.attributeValues = attributeValues;
+    }
+    
+}

@@ -1,0 +1,17 @@
+com.dashboard.linechart.moving
+com.merit.connection
+com.merit.dashboard
+com.merit.dashboard.Availability
+com.merit.dashboard.DAO.metrics
+com.merit.dashboard.DBUtil
+com.merit.dashboard.bizlogic
+com.merit.dashboard.constants
+com.merit.dashboard.controller
+com.merit.dashboard.file
+com.merit.dashboard.model
+com.merit.dashboard.queryexecuter
+com.merit.dashboard.reports
+com.merit.dashboard.service
+com.merit.dashboard.updatethresholds
+com.merit.dashboard.util
+custmDBCon

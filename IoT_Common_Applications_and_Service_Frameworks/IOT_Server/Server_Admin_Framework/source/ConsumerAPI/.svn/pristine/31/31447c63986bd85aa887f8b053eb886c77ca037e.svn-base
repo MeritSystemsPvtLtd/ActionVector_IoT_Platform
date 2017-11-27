@@ -1,0 +1,85 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/* -------------------------------------------------------------------------
+ *
+ *                           Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *              #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8th Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *         THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ * --------------------------------------------------------------------------
+ */
+package controller;
+
+import checksession.*;
+import Model.*;
+//import checksession.CheckSessionStub;
+
+/**
+ *
+ * @author gopal
+ * Created on Aug 20, 2012, 3:58:40 PM
+ */
+public class CheckSession
+{
+
+    public static boolean checkSession(javax.servlet.http.HttpServletRequest request, String sessionId)
+    {
+        boolean fcheck = false;
+        CheckSessionStub checkstub = null;
+        CheckSessionRequest checkObj = null;
+        try
+        {
+            CheckSessionResponse resp = null;
+            String szMessage = "";
+            System.out.println("------------I m in START of calling CheckSession service from Client----------------");
+            System.out.println("Session Id Before calling web service " + sessionId);
+            int szPortNum = request.getServerPort();
+            String szServerName = request.getServerName();
+            String szContextPath = request.getContextPath();
+            String sztarget = TargetEndpoint.getTargetEndpoint(request);
+            //String targetEndpoint = "http://" + szServerName + ":" + szPortNum + "/proChara/services/AddComments";
+            String targetEndpoint = sztarget + "/proChara/services/CheckSession";
+            System.out.println("Target End Point " + targetEndpoint);
+            //String targetEndpoint = "http://192.168.1.24:8080/ActionVector25Src/services/AddComments";
+            checkstub = new CheckSessionStub(targetEndpoint);
+            checkObj = new CheckSessionRequest();
+            checkObj.setSzSessionId(sessionId);
+            resp = checkstub.checkSession(checkObj);
+            szMessage = resp.getMessage();
+            //System.out.println(szMessage + "in AddCommentsOnly servlet ");
+            System.out.println("------------I m in END of calling Checksession service from Client----------------" + szMessage);
+
+            if (szMessage.equalsIgnoreCase("Valid Session"))
+            {
+                fcheck = true;
+            } else
+            {
+                fcheck = false;
+            }
+
+        } catch (Exception e)
+        {
+            System.out.println("========= ERROR ===============");
+            e.printStackTrace();
+        }
+        return fcheck;
+    }
+}

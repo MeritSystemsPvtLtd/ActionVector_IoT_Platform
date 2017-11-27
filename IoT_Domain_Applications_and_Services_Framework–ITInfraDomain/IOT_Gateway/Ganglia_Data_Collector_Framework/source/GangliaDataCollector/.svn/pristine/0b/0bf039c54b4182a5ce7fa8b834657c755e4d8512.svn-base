@@ -1,0 +1,74 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.adapter.ganglia;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Random;
+
+/**
+ *
+ * @author rekha
+ */
+public class GangliaSimulator {
+
+    /**
+     * @param args the command line arguments
+     */
+
+    public static void main(String[] args) {
+        Socket socket;
+        int port;
+        String host = "";
+        try {
+        	port = Integer.parseInt(args[1].trim());
+        	host = args[0].trim();
+            ServerSocket listener = new ServerSocket(port);
+
+            while (true) {
+                System.out.println("listening");
+                socket = listener.accept();
+                Random szRandom = new Random();
+                File dir = new File("./config/data/"+host+"/"+port);
+                String szFiles[] = dir.list();
+                int noOfFiles = dir.list().length;
+                int randomNo = szRandom.nextInt(noOfFiles);
+                File szFile = new File("./config/data/"+host+"/"+port+"/"+szFiles[randomNo]);
+                InputStream is = new FileInputStream(szFile);
+                long length = szFile.length();
+                if (length > Integer.MAX_VALUE) {
+                    System.out.println("File is too large to process");
+                    return;
+                }
+                byte[] bytes = new byte[(int) length];
+                int offset = 0;
+                int numRead = 0;
+                while ((offset < bytes.length)
+                        && ((numRead = is.read(bytes, offset, bytes.length - offset)) >= 0)) {
+
+                    offset += numRead;
+
+                }
+                if (offset < bytes.length) {
+                    throw new IOException("Could not completely read file " + szFile.getName());
+                }
+
+                is.close();
+                OutputStream os = socket.getOutputStream();
+                os.write(bytes);
+                os.flush();
+                os.close();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+    }
+}

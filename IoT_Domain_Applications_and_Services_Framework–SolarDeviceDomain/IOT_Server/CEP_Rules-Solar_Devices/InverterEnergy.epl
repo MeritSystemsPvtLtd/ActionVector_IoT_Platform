@@ -1,0 +1,14 @@
+module com.prokosha.cep.inverterenergy.v1;
+create variable float INV_ENG_THR=10000;
+create variable string INV_ACRO_ENG="[INV_ENG]";
+
+@Name("com.prokosha.cep.inverterenergy.istream.1")
+	select * from InverterRealTimeStream;
+
+@Name("com.prokosha.cep.inverterenergy.dispatch.2")
+      select  "Inverter" as EventType,   ("Low DayEnergy ").concat((DayEnergy).toString().concat(INV_ACRO_ENG)) as EventDesc,
+    "DayEnergy is Low" as EventSymptoms,"InverterAlert" as AlertType,
+    HostName,resourceType,resourceId,CustomerID,cCustomer
+    from InverterRealTimeStream where (DayEnergy < INV_ENG_THR)
+    group by HostName
+    output first every 12 hours;

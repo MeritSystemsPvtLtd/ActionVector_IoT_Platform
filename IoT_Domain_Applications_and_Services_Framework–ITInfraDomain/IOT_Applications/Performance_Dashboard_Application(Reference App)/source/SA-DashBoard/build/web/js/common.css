@@ -1,0 +1,193 @@
+
+.k-combobox {
+  width:40%;
+    float:right;
+
+}
+#tabstrip-1,#tabstrip-2,#tabstrip-3,#tabstrip-4,#tabstrip-5,#tabstrip-6,#tabstrip-7{
+padding-left:0px;
+padding-right:0px;
+}
+
+#diagram0,#diagram1,#diagram2,#diagram3,#diagram4,#businessdiagram
+{
+float:right;
+}
+#tabstrip
+{
+  background:white;
+}
+k-tabstrip-items
+{
+   padding :0.1em 0.3em 0;
+}
+#dskinput,#dskinput2,#dskinput3,#dskinput4,#input,#input2,#input3,#input4,#DBinput,#DBinput2,#DBinput3,#DBinput4,#ntinput,#ntinput2,#ntinput3,#ntinput4,#jvminput,#jvminput2,#jvminput3,#jvminput4,#inverterinput,#inverterinput2,#inverterinput3,#inverterinput4,#businessinput,#businessinput2,#businessinput3,#businessinput4
+{
+width: 100%;border-color: #EEEEEE; font-size: 8pt;
+}
+#dskchartname,#dskchartname2,#dskchartname3,#dskchartname4,#srvchartname,#srvchartname2,#srvchartname3,#srvchartname4,#dbchartname,#dbchartname2,#dbchartname3,#dbchartname4,#ntchartname,#ntchartname2,#ntchartname3,#ntchartname4,#jvmchartname,#jvmchartname2,#jvmchartname3,#jvmchartname4,#inverterchartname,#inverterchartname2,#inverterchartname3,#inverterchartname4
+{
+	width:80%;color:blue;border:0;text-align:center;font-size:8pt;background-color: #EEEEEE;
+}
+#businesschartname,#businesschartname2,#businesschartname3,#businesschartname4
+{
+	width:100%;color:blue;border:0;text-align:center;font-size:8pt;background-color: #EEEEEE;
+}
+
+#dskcharthead,#dskcharthead3,#charthead,#charthead3,#dbcharthead,#dbcharthead3,#ntcharthead,#ntcharthead3,#jvmcharthead,#jvmcharthead3,#invertercharthead,#invertercharthead3,#businesscharthead,#businesscharthead3
+{
+float:left;
+background-color: #EEEEEE;
+border-style:none;
+border-color:white;
+border-radius: 5px;
+
+}
+#dskcharthead2,#dskcharthead4,#charthead2,#charthead4,#dbcharthead2,#dbcharthead4,#ntcharthead2,#ntcharthead4,#jvmcharthead2,#jvmcharthead4,#invertercharthead2,#invertercharthead4,#businesscharthead2,#businesscharthead4
+{
+float:right;
+background-color: #EEEEEE;
+border-color:white;
+border-style:none;
+border-radius: 5px;
+}
+#dskchart,#dskchart3,#chart,#chart3,#DBchart,#DBchart3,#ntchart,#ntchart3,#jvmchart,#jvmchart3,#inverterchart,#inverterchart3,#businesschart,#businesschart3
+{
+float:left;
+/*background:url(images/images.gif) no-repeat center center;*/
+border-style:solid;
+border-radius: 5px;
+}
+
+#dskcharthead ul,#dskcharthead2 ul,#dskcharthead3 ul,#dskcharthead4 ul,#charthead ul,#charthead2 ul,#charthead3 ul,#charthead4 ul,#dbcharthead ul,#dbcharthead2 ul,#dbcharthead3 ul,#dbcharthead4 ul,#ntcharthead ul,#ntcharthead2 ul,#ntcharthead3 ul,#ntcharthead4 ul,#jvmcharthead ul,#jvmcharthead2 ul,#jvmcharthead3 ul,#jvmcharthead4 ul,#invertercharthead ul,#invertercharthead2 ul,#invertercharthead3 ul,#invertercharthead4 ul,#businesscharthead ul,#businesscharthead2 ul,#businesscharthead3 ul,#businesscharthead4 ul{
+border:none;
+}
+
+#dskcharthead div ul li,#dskcharthead3 div ul li,#dskcharthead2 div ul li,#dskcharthead4 div ul li,#charthead div ul li,#charthead3 div ul li,#charthead2 div ul li,#charthead4 div ul li,#dbcharthead div ul li,#dbcharthead3 div ul li,#dbcharthead2 div ul li,#dbcharthead4 div ul li,#ntcharthead div ul li,#ntcharthead3 div ul li,#ntcharthead2 div ul li,#ntcharthead4 div ul li,#jvmcharthead div ul li,#jvmcharthead3 div ul li,#jvmcharthead2 div ul li,#jvmcharthead4 div ul li,#invertercharthead div ul li,#invertercharthead3 div ul li,#invertercharthead2 div ul li,#invertercharthead4 div ul li,#businesscharthead div ul li,#businesscharthead3 div ul li,#businesscharthead2 div ul li,#businesscharthead4 div ul li{
+border-top:1px solid lightgrey;
+border-bottom:1px solid lightgrey;
+width:100%;
+}
+
+
+#dskchart2,#dskchart4,#chart2,#chart4,#DBchart2,#DBchart4,#ntchart2,#ntchart4,#jvmchart2,#jvmchart4,#inverterchart2,#inverterchart4,#businesschart2,#businesschart4,#TimeLineChart
+{
+float:right;
+/*background:url(images/images.gif) no-repeat center center;*/
+border-style:solid;
+border-radius: 5px;
+}
+#dsklistView,#listView,#DBlistView,#ntlistView,#jvmlistView,#inverterlistView,#businessgrid,#TimeLineGrid
+{
+float:left;
+font-size:12px;
+border-style:solid;
+border-radius: 5px;
+}
+table, td
+{
+    font: 10px Arial, Helvetica, sans-serif;
+    border-radius: 5px;
+}
+
+
+
+#TimeLineDiagrams
+{
+border-width:5px;
+border-color:black;
+float:right;
+}
+
+#TimeLineSlider
+{
+float:right;
+height:35px;
+border-style:solid;
+padding-top:5px;
+border-radius:5px;
+
+postion:center;
+
+}
+#TimeLineCombo
+{
+float:left;
+height:35px;
+border-style:solid;
+
+border-radius:5px;
+
+
+}
+ #category
+ {
+ vertical-align: middle;
+ }
+ .toolbar
+{
+float: right;
+margin-right: .8em;
+}
+
+.k-grid{
+	overflow: hidden;
+}
+#tabstrip ul a{
+
+}
+.FilesLinks {
+	background: white;
+	overflow: auto;
+	max-height: 150px;
+}
+	#DownloadXLSFiles {
+	width: 380px;
+	height: 285px;
+	padding: 20px 20px 0 10px;
+	margin-left: 0;
+	font-size: 12px;
+}
+#xlsattach li {
+	list-style: none;
+	padding-top: 2px;
+}
+
+#xlsattach li img {
+	cursor: pointer;
+}
+
+h2 {
+    border-bottom-color: #999999;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    font-weight: normal;
+    padding-bottom: 5px;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 5px;
+}
+html, body, h1, h2 {
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+}
+
+
+ .k-state-selected { background-color:rgba(220, 200, 250, 2);background-image:none;color:rgba(0, 0, 0, 1);}
+   .k-alt.k-state-selected  { background-color:rgba(220, 200, 250, 2);background-image:none;color:rgba(0, 0, 0, 1);}
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,192 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/* -------------------------------------------------------------------------
+ *
+ *                           Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *              #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *         THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ * --------------------------------------------------------------------------
+ */
+package businessmodel;
+
+import Model.*;
+import controller.*;
+import java.sql.*;
+import java.util.*;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jul 16, 2012, 3:11:13 PM
+ */
+public class StatusPermissions
+{
+
+    static Logger log = Logger.getLogger(StatusPermissions.class);
+
+    public static boolean setStatusPermissions(String szcustomerid, Connection con, String sztasktype, String szstatus, HttpServletRequest request)
+    {
+        ResultSet rs = null;
+        //Connection con = null;
+        Object OUser;
+        String szUserId;
+        Integer ISecurityUsers;
+        //Statement statement1 = null;
+        HttpSession sessions;
+        String str=null;
+        String szPermit = null;
+        String szTemp = null;
+        String szTemp1 =null;
+        boolean fpermission=false;
+        String str_type = sztasktype;
+        try
+        {
+            Properties config = Configuration.initialize();
+
+           str=config.getProperty(szstatus);
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        if (str != null)
+        {
+            try
+            {
+               szTemp=szstatus;
+                /*if (szcustomerid != null && !szcustomerid.equalsIgnoreCase(""))
+                {
+                con = DatabaseConnection.getDbConnection(request, szcustomerid);
+                } else
+                {
+                con = DatabaseConnection.getDatabaseConnection(request);
+                }*/
+                log.info("database connected");
+                PreparedStatement statement1 = con.prepareStatement("insert into gastatusstatemachine values(?,?)");
+                PreparedStatement statement2 = con.prepareStatement("update gastatusstatemachine set validstatus=? where statusid=?");	//System.out.println("Selectecd Status is ->");
+                PreparedStatement statement3 = con.prepareStatement("select statusid from gastatusstatemachine where statusid=?");
+                
+                
+                szPermit=str;
+                System.out.println("destination statuses::"+szPermit);
+                //for (int j = 0; j < str.length; j++)
+               // {
+
+                    //szPermit=str.toString();
+                    /*String szStatus = str[j];
+                    String szSplit[] = szStatus.split(",");
+                    //String szSplit[]=str[j];
+                    if (szTemp.equalsIgnoreCase(szSplit[0]))
+                    {
+                    } else
+                    {
+                        szTemp = szSplit[0];
+                        szPermit = "";
+                    }
+
+                    if (j == 0 || szPermit.equalsIgnoreCase(""))
+                    {
+                        szPermit = szSplit[1];
+                    } else
+                    {
+                        szPermit = szPermit + "," + szSplit[1];
+                        //szPermit=str[j]
+                    }*/
+                    System.out.println("After Concat szPermit is-->" + szPermit);
+
+                    if (szPermit != null || szPermit.equalsIgnoreCase(""))
+                    {
+                       szTemp1= str_type + szTemp;
+                        statement3.setString(1, szTemp1);
+                        rs = statement3.executeQuery();
+                        if (rs.next())
+                        {
+                            statement2.setString(2, szTemp1);
+                            statement2.setString(1, szPermit);
+                            System.out.println("Update query is -->" + statement2);
+                            log.info("Update query is -->" + statement2);
+                            int f = statement2.executeUpdate();
+                            if (f == 0)
+                            {
+                                //System.out.println("Query not executed..");
+                            } else
+                            {
+                                //System.out.println("Query executed..");
+                            }
+                        } else
+                        {
+                            statement1.setString(1, szTemp1);
+                            statement1.setString(2, szPermit);
+                            System.out.println("Insert query is -->" + statement1);
+                            log.info("Insert query is -->" + statement1);
+                            int f1 = statement1.executeUpdate();
+                            if (f1 == 0)
+                            {
+                                System.out.println("Query not executed..");
+                                log.info("Query not executed..");
+                            } else
+                            {
+                                System.out.println("Query executed..");
+                                log.info("Query executed..");
+                            }
+                        }
+                    }
+                //}
+                //}
+                rs.close();
+                statement1.close();
+                statement2.close();
+                statement3.close();
+                szPermit=null;
+                szTemp =null;
+                szTemp1=null;
+                fpermission=true;
+                str_type=null;
+            } catch (Exception ex)
+            {
+                ex.printStackTrace();
+                fpermission=false;
+            } /*finally
+        {
+        try
+        {
+        if (con != null)
+        {
+        con.close();
+        }
+        } catch (Exception e)
+        {
+        //e.printStackTrace();
+        log.debug("error while closing connecton::", e);
+        }
+        }*/
+
+        }
+        return fpermission;
+    }
+}

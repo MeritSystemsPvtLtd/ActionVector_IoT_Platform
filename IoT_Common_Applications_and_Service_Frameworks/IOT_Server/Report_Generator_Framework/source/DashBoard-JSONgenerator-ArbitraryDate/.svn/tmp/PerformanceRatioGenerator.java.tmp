@@ -1,0 +1,1040 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.merit.dashboard.jsongenerator;
+
+import com.merit.connection.ConnectionDAO;
+import com.merit.dashboard.DBUtil.DBUtilHelper;
+import com.merit.dashboard.util.ResourceConfiguration;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.sql.ResultSet;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author rekhas
+ */
+public class PerformanceRatioGenerator {
+
+    static Logger log = Logger.getLogger(PerformanceRatioGenerator.class);
+
+    public static String generateJSON(String resType, String cCustomer, String service, String resType2, String metricType, String configuredMetricType,
+            long sMilli, long eMilli, String timeStampSelection, String customer) {
+        String resultJson = "[]";
+<<<<<<< .mine
+        String[] headingNamesMetric1 = null;
+        String szQuery = "";
+=======
+        String[] headingNamesMetric1 = null;
+        String szQuery;
+>>>>>>> .r59
+        try {
+            metricType = metricType.replaceFirst("XXX", timeStampSelection);
+            //configuredMetricType = configuredMetricType.replaceFirst("XXX", timeStampSelection);
+            log.info("metricType==>>" + metricType);
+            log.info("configuredMetricType==>>" + configuredMetricType);
+            log.info("resType==>>" + resType);
+            log.info("resType2==>>" + resType2);
+            log.debug("In PerformanceRatioGenerator.generateJSON==>>smilli:" + sMilli + "::emilli:" + eMilli);
+            if (service == null) {//ccustomer level json
+               /* szQuery = "select w1.energy as ActualEnergy, w1.energy as PerformanceRatio,w1.energy as EnergyPerRatedPower, w1.ServiceName as ServiceName,"
+                 + "w1.resourcetype as ResourceType  from (select t.service as ServiceName, t.resourcetype as ResourceType,t.metricvalue as energy,"
+                 + " t.metrictype from(select customerid,service,resourcetype,metrictype, max(timestamp1) as MaxTime from servicemetrics t1 "
+                 + "where t1.resourcetype=service and t1.metrictype = '" + metricType + "' and t1.customerid=(select id from customerinfo "
+                 + "where customername='" + cCustomer + "') and t1.timestamp1 between " + sMilli + " and " + eMilli
+                 + " group by t1.customerid,t1.service,t1.metrictype,t1.resourcetype) r inner join servicemetrics t on t.service=r.service and "
+                 + "t.resourcetype=r.resourcetype and t.timestamp1 = r.MaxTime and t.metrictype=r.metrictype and t.customerid=r.customerid "
+                 + "group by t.customerid,t.service,t.resourcetype,t.metrictype,t.metricvalue,t.resourceid) w1";
+                 headingNamesMetric1 = new String[]{"ServiceName", "ResourceType", "PerformanceRatio", "EnergyPerRatedPower", "ActualEnergy", "TargetEnergy"};
+                 log.info("PerformanceRatioGenerator query==>>" + szQuery);
+                 */
+                // resultJson=customerJSON("Inverter", "SriGroup", null, "", "Energy", " ",
+                // 1421173800000L, 1421260199000L, "year", "merit.actionvector.com");
+                resultJson = getJSONFromAggregatedMetrics(resType, cCustomer, service, resType2, metricType, configuredMetricType, sMilli, eMilli, timeStampSelection, customer);
+                log.debug("resultJson at service level==>>" + resultJson);
+
+            } else if (resType2.equals("")) {//service level json
+                if(timeStampSelection.equalsIgnoreCase("Hour") || timeStampSelection.equalsIgnoreCase("Day")){
+                    if(timeStampSelection.equalsIgnoreCase("Hour")){
+                    timeStampSelection="Day";
+                    }
+                     szQuery = "select ServiceName,ResourceID,Yield,PerformanceRatio,EnergyPerRatedPower,ResourceType,TimeStamps from "
+                        + "(SELECT service as ServiceName, resourceid as ResourceID, array_to_string(array_agg(metricvalue order by timestamp1),',') as Yield"
+                        + ", array_to_string(array_agg(metricvalue order by timestamp1),',') as PerformanceRatio, array_to_string(array_agg(metricvalue order by timestamp1),',') as EnergyPerRatedPower, resourcetype as ResourceType, "
+                        + "array_to_string(array_agg(concat('\"',to_char(to_timestamp(timestamp1), 'yyyy/MM/dd HH24:mi:SS'),'\"') order by timestamp1),',') as TimeStamps "
+                        + "from servicemetrics where resourcetype='" + service + "' and customerid=(select id from customerinfo where "
+                        + "customername='" + cCustomer + "') and service='" + service + "' and metrictype='" + metricType + "' and timestamp1 between "
+                        + sMilli + " and " + eMilli + " and resourceid='" + service + "' group by service,resourcetype,resourceid) w1";
+                headingNamesMetric1 = new String[]{"ServiceName", "ResourceType", "ResourceID", "TimeStamps", "PerformanceRatio", "EnergyPerRatedPower", "Yield"};
+                log.info("PerformanceRatioGeneratorDirectDB query==>>" + szQuery);
+                resultJson = generateDerivedJsonFromGivenQueryForService(szQuery, headingNamesMetric1, customer, cCustomer, resType2, configuredMetricType,
+<<<<<<< .mine
+                        timeStampSelection, 3);
+                log.debug("resultjson before modifyJson is==>>"+resultJson);
+                if (!(resultJson.equals("[]"))) {
+                    resultJson = modifyJson(resultJson);
+                }
+            
+                }else{
+                
+                resultJson = getJSONFromAggregatedMetrics(resType, cCustomer, service, resType2, metricType, configuredMetricType, sMilli, eMilli, timeStampSelection, customer);
+=======
+                        timeStampSelection, 3);
+>>>>>>> .r59
+                log.debug("resultJson at service level==>>" + resultJson);
+ 
+                }
+               
+            } else if (resType2.equals(resType)) {//device level json
+                if(timeStampSelection.equalsIgnoreCase("Hour") || timeStampSelection.equalsIgnoreCase("Day")){
+                    if(timeStampSelection.equalsIgnoreCase("Hour")){
+                    timeStampSelection="Day";
+                    }
+                    szQuery = "SELECT service as ServiceName, resourceid as ResourceID, array_to_string(array_agg(metricvalue  order by timestamp1),',') as PerformanceRatio, "
+                        + "array_to_string(array_agg(metricvalue  order by timestamp1),',') as EnergyPerRatedPower, resourcetype as ResourceType, "
+                        + "array_to_string(array_agg(concat('\"',to_char(to_timestamp(timestamp1), 'yyyy/MM/dd HH24:mi:SS'),'\"') order by timestamp1),',') as TimeStamps from "
+                        + "servicemetrics "
+                        + "where resourcetype='" + resType + "' and customerid=(select id from customerinfo where customername='"
+                        + cCustomer + "') and service='" + service + "' and metrictype='" + metricType + "' and timestamp1 between "
+                        + sMilli + " and " + eMilli + " group by service,resourcetype,resourceid";
+                headingNamesMetric1 = new String[]{"ServiceName", "ResourceType", "ResourceID", "TimeStamps", "PerformanceRatio", "EnergyPerRatedPower"};
+                log.info("PerformanceRatioGeneratorDirectDB query==>>" + szQuery);
+                resultJson = generateDerivedJsonFromGivenQueryForService(szQuery, headingNamesMetric1, customer, cCustomer, resType2, configuredMetricType,
+<<<<<<< .mine
+                        timeStampSelection, 2);
+                log.debug("resultjson before modifyJson is==>>"+resultJson);
+=======
+                        timeStampSelection, 2);
+                log.debug("resultJson at device level==>>" + resultJson);
+            }
+            if (service != null) {//dont modify json for cCustomer level
+                //log.debug("resultjson before modifyJson is==>>"+resultJson);
+>>>>>>> .r59
+                if (!(resultJson.equals("[]"))) {
+                    resultJson = modifyJson(resultJson);
+                }
+            
+                }else{
+                
+                resultJson = getJSONFromAggregatedMetrics(resType, cCustomer, service, resType2, metricType, configuredMetricType, sMilli, eMilli, timeStampSelection, customer);
+                log.debug("resultJson at device level==>>" + resultJson);
+            
+                }
+                }
+            /*if (service != null) {//dont modify json for cCustomer level
+             //log.debug("resultjson before modifyJson is==>>"+resultJson);
+             if (!(resultJson.equals("[]"))) {
+             resultJson = modifyJson(resultJson);
+             }
+             }*/
+
+            return resultJson;
+        } catch (Exception e) {
+            log.error("Error in generateJSON==>>" + e.toString());
+            e.printStackTrace();
+        } finally {
+            szQuery = null;
+            headingNamesMetric1 = null;
+        }
+        return null;
+    }
+
+<<<<<<< .mine
+    
+    
+        public static String generateDerivedJsonFromGivenQueryForService(String szQuery, String[] headingNames, String customer, String cCustomer,
+            String resType, String configuredMetricType, String timeStampSelection, int noOfMetrics) {
+=======
+    public static String generateDerivedJsonFromGivenQueryForService(String szQuery, String[] headingNames, String customer, String cCustomer,
+            String resType, String configuredMetricType, String timeStampSelection, int noOfMetrics) {
+>>>>>>> .r59
+        String perfJSON = "";
+        ResultSet rs4 = null;
+        String DCXXXEnergy, InstalledCapacity;
+        String szDCEnergyMetricName = "DCXXXEnergy";
+            String szConcatColumn;//
+        try {
+            String szMetricTypeValueJson = "";
+            perfJSON = "[";
+            rs4 = ConnectionDAO.executerQuery(szQuery, customer);
+            String szPmaxName;
+            if (resType.equals("")) {
+                szPmaxName = "InstalledCapacity";
+            } else {
+                szPmaxName = "Pmax";
+            }
+            log.info("generateDerivedJsonFromGivenQuery resType==>>" + resType);
+            log.debug("szPmaxName==>>" + szPmaxName);
+<<<<<<< .mine
+            String szResID;//
+            String service;//
+            String derivedVal;//
+            String[] szEnergyArray;//
+            Double val;//
+            DecimalFormat df = new DecimalFormat("#.#");
+=======
+            String szConcatColumn;//
+            String szResID;//
+            String service;//
+            String derivedVal;//
+            String[] szEnergyArray;//
+            Double val;//
+            DecimalFormat df;//
+>>>>>>> .r59
+            while (rs4.next()) {
+                szConcatColumn = "";
+                szMetricTypeValueJson = "";
+                szResID = null;
+
+                service = null;
+                service = rs4.getString("ServiceName");
+                if (resType.equals("")) {
+                    log.info("in service");
+                    DCXXXEnergy = ResourceConfiguration.getConfValue(customer, cCustomer, service,
+                            null, szDCEnergyMetricName.replaceFirst("XXX", timeStampSelection));
+                    InstalledCapacity = ResourceConfiguration.getConfValue(customer, cCustomer, service,
+                            null, szPmaxName);
+                } else {
+                    log.info("in device");
+                    szResID = rs4.getString("ResourceID");
+                    DCXXXEnergy = ResourceConfiguration.getConfValue(customer, cCustomer, rs4.getString("ServiceName"),
+                            szResID, szDCEnergyMetricName.replaceFirst("XXX", timeStampSelection));
+                    InstalledCapacity = ResourceConfiguration.getConfValue(customer, cCustomer, rs4.getString("ServiceName"),
+                            szResID, szPmaxName);
+                    if (szResID.equals(service)) {
+                        continue;
+                    }
+                }
+                log.info("szResID==>>" + szResID);
+                derivedVal = "";
+
+                for (int i = 0; i < headingNames.length - 1; i++) {
+                    if (rs4.getString(headingNames[i]) != null) {
+                        derivedVal = "";
+                        if (headingNames[i].equals("PerformanceRatio")) {
+                            if (DCXXXEnergy != null) {
+<<<<<<< .mine
+                                log.info("not nullddd dc");
+                                szEnergyArray = rs4.getString(headingNames[i]).split(",");
+=======
+                                szEnergyArray = rs4.getString(headingNames[i]).split(",");
+>>>>>>> .r59
+                                log.debug("No. of energy data points==>>" + szEnergyArray.length);
+                                for (int count = 0; count < szEnergyArray.length; count++) {
+<<<<<<< .mine
+                                    val = (Double.parseDouble(szEnergyArray[count])) / (Double.parseDouble(DCXXXEnergy));
+=======
+                                    val = (Double.parseDouble(szEnergyArray[count])) / (Double.parseDouble(DCXXXEnergy));
+                                    df = new DecimalFormat("#.##");
+>>>>>>> .r59
+                                    derivedVal = derivedVal + df.format(val) + ",";
+                                    log.info("val"+val);
+                                }
+                                if (derivedVal.length() > 1) {
+                                    derivedVal = derivedVal.substring(0, derivedVal.length() - 1);
+                                    log.info("val"+derivedVal);
+                                }
+                            } else {
+                                derivedVal = "";
+                            }
+                            szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":\"" + derivedVal + "\"";
+                        } else if (headingNames[i].equals("EnergyPerRatedPower")) {
+                            if (InstalledCapacity != null) {
+                                derivedVal = "";
+<<<<<<< .mine
+                                log.info("not nullddd IC");
+                                szEnergyArray = rs4.getString(headingNames[i]).split(",");
+=======
+                                szEnergyArray = rs4.getString(headingNames[i]).split(",");
+>>>>>>> .r59
+                                for (int count = 0; count < szEnergyArray.length; count++) {
+<<<<<<< .mine
+                                    val = (Double.parseDouble(szEnergyArray[count])) / (Double.parseDouble(InstalledCapacity));
+=======
+                                    val = (Double.parseDouble(szEnergyArray[count])) / (Double.parseDouble(InstalledCapacity));
+                                    df = new DecimalFormat("#.##");
+>>>>>>> .r59
+                                    derivedVal = derivedVal + df.format(val) + ",";
+                                    log.info("val"+derivedVal);
+                                }
+                                if (derivedVal.length() > 1) {
+                                    derivedVal = derivedVal.substring(0, derivedVal.length() - 1);
+                                }
+                            } else {
+                                derivedVal = "";
+                            }
+                            szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":\"" + derivedVal + "\"";
+                        } else if (headingNames[i].equals("TimeStamps")) {
+                            /*szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":[[" + rs4.getString(headingNames[i]) + "],["
+                             + rs4.getString(headingNames[i]) + "]]";*/
+                            szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":[";
+                            for (int p = 0; p < noOfMetrics; p++) {
+                                szConcatColumn += "[" + rs4.getString(headingNames[i]) + "],";
+                            }
+                            szConcatColumn = szConcatColumn.substring(0, szConcatColumn.length() - 1);
+                            szConcatColumn += "]";
+                        } else {
+                            szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":\"" + rs4.getString(headingNames[i]) + "\"";
+                        }
+                    }
+                    szMetricTypeValueJson = szMetricTypeValueJson + "," + rs4.getString(headingNames[i]);
+                }
+                if (headingNames[headingNames.length - 1].equals("PerformanceRatio")) {
+                    derivedVal = "";
+                    if (DCXXXEnergy != null) {
+<<<<<<< .mine
+                        log.info("not nullddd dcp");
+                        szEnergyArray = rs4.getString(headingNames[headingNames.length - 1]).split(",");
+=======
+                        szEnergyArray = rs4.getString(headingNames[headingNames.length - 1]).split(",");
+>>>>>>> .r59
+                        for (int count = 0; count < szEnergyArray.length; count++) {
+<<<<<<< .mine
+                            val = (Double.parseDouble(szEnergyArray[count])) / (Double.parseDouble(DCXXXEnergy));
+=======
+                            val = (Double.parseDouble(szEnergyArray[count])) / (Double.parseDouble(DCXXXEnergy));
+                            df = new DecimalFormat("#.##");
+>>>>>>> .r59
+                            derivedVal = derivedVal + df.format(val) + ",";
+                            log.info("val"+derivedVal);
+                        }
+                        if (derivedVal.length() > 1) {
+                            derivedVal = derivedVal.substring(0, derivedVal.length() - 1);
+                        }
+                    } else {
+                        derivedVal = "";
+                    }
+                } else if (headingNames[headingNames.length - 1].equals("EnergyPerRatedPower")) {
+                    derivedVal = "";
+                    log.info("not nullddd Ep");
+                    if (InstalledCapacity != null) {
+                        szEnergyArray = rs4.getString(headingNames[headingNames.length - 1]).split(",");
+                        for (int count = 0; count < szEnergyArray.length; count++) {
+<<<<<<< .mine
+                            val = (Double.parseDouble(szEnergyArray[count])) / (Double.parseDouble(InstalledCapacity));
+=======
+                            val = (Double.parseDouble(szEnergyArray[count])) / (Double.parseDouble(InstalledCapacity));
+                            df = new DecimalFormat("#.##");
+>>>>>>> .r59
+                            derivedVal = derivedVal + df.format(val) + ",";
+                            log.info("val"+derivedVal);
+                        }
+                        if (derivedVal.length() > 1) {
+                            derivedVal = derivedVal.substring(0, derivedVal.length() - 1);
+                        }
+                    } else {
+                        derivedVal = "";
+                    }
+                } else {
+                    derivedVal = rs4.getString(headingNames[headingNames.length - 1]);
+                }
+                szConcatColumn = szConcatColumn + ",\"" + headingNames[headingNames.length - 1] + "\":\"" + derivedVal + "\"";
+                perfJSON += "{" + szConcatColumn.substring(1) + "},";
+                szConcatColumn = null;
+            }
+            if (perfJSON.length() > 1) {
+                perfJSON = perfJSON.substring(0, perfJSON.length() - 1);
+            }
+            perfJSON += "]";
+            return perfJSON;
+        } catch (Exception e) {
+            log.error("Error in generateDerivedJsonFromGivenQuery" + e.toString());
+            e.printStackTrace();
+        } finally {
+            ConnectionDAO.closeStatement();
+<<<<<<< .mine
+            szConcatColumn = null;
+            if (rs4 != null) {
+                try {
+                    rs4.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+=======
+            rs4 = null;
+        }
+        return null;
+    }
+
+    public static String generateDerivedJsonFromGivenQueryForCustomer(String szQuery, String[] headingNames, String customer, String cCustomer,
+            String resType, String configuredMetricType, String timeStampSelection) {
+        String perfJSON = "";
+        ResultSet rs4;
+        try {
+            String szMetricTypeValueJson = "";
+            perfJSON = "[";
+            rs4 = ConnectionDAO.executerQuery(szQuery, customer);
+            String szConcatColumn;//
+            String szResID;//
+            String service;//
+            String derivedVal;//
+            String szDCEnergyMetricName;//
+            String DCXXXEnergy;//
+            String InstalledCapacity;//
+            String szEnergy;//
+            Double val;//
+            DecimalFormat df;//
+            while (rs4.next()) {
+                szConcatColumn = "";
+                szMetricTypeValueJson = "";
+                szResID = null;
+
+                service = null;
+                log.info("generateDerivedJsonFromGivenQuery resType==>>" + resType);
+                service = rs4.getString("ServiceName");
+                if (resType.equals("")) {
+                } else {
+                    szResID = rs4.getString("ResourceID");
+                    if (szResID.equals(service)) {
+                        continue;
+                    }
+                }
+                log.info("szResID==>>" + szResID);
+                derivedVal = null;
+                szDCEnergyMetricName = "DCXXXEnergy";
+                DCXXXEnergy = ResourceConfiguration.getConfValue(customer, cCustomer, rs4.getString("ServiceName"),
+                        null, szDCEnergyMetricName.replaceFirst("XXX", timeStampSelection));
+                InstalledCapacity = ResourceConfiguration.getConfValue(customer, cCustomer, rs4.getString("ServiceName"),
+                        null, "InstalledCapacity");
+
+                for (int i = 0; i < headingNames.length - 1; i++) {
+                    if (rs4.getString(headingNames[i]) != null) {
+                        if (headingNames[i].equals("PerformanceRatio")) {
+                            if (DCXXXEnergy != null) {
+                                szEnergy = rs4.getString(headingNames[i]);
+                                log.debug("cust level::szEnergy==>>" + szEnergy);
+                                val = (Double.parseDouble(szEnergy)) / (Double.parseDouble(DCXXXEnergy));
+                                log.debug("cust level::val==>>" + val);
+                                df = new DecimalFormat("#.##");
+                                derivedVal = df.format(val);
+                            } else {
+                                derivedVal = "";
+                            }
+                            szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":\"" + derivedVal + "\"";
+                        } else if (headingNames[i].equals("TargetEnergy")) {
+                            if (DCXXXEnergy != null) {
+                                val = Double.parseDouble(DCXXXEnergy);
+                                df = new DecimalFormat("#.##");
+                                derivedVal = df.format(val);
+                            } else {
+                                derivedVal = "";
+                            }
+                            szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":\"" + derivedVal + "\"";
+                        } else if (headingNames[i].equals("EnergyPerRatedPower")) {
+                            if (InstalledCapacity != null) {
+                                szEnergy = rs4.getString(headingNames[i]);
+                                val = (Double.parseDouble(szEnergy)) / (Double.parseDouble(InstalledCapacity));
+                                df = new DecimalFormat("#.##");
+                                derivedVal = df.format(val);
+                            } else {
+                                derivedVal = "";
+                            }
+                            szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":\"" + derivedVal + "\"";
+                        } else if (headingNames[i].equals("TimeStamps")) {
+                            szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":[[" + rs4.getString(headingNames[i]) + "],["
+                                    + rs4.getString(headingNames[i]) + "]]";
+                        } else {
+                            szConcatColumn = szConcatColumn + ",\"" + headingNames[i] + "\":\"" + rs4.getString(headingNames[i]) + "\"";
+                        }
+                    }
+                    szMetricTypeValueJson = szMetricTypeValueJson + "," + rs4.getString(headingNames[i]);
+>>>>>>> .r59
+                }
+<<<<<<< .mine
+                rs4 = null;
+=======
+                if (headingNames[headingNames.length - 1].equals("PerformanceRatio")) {
+                    if (DCXXXEnergy != null) {
+                        szEnergy = rs4.getString(headingNames[headingNames.length - 1]);
+                        val = (Double.parseDouble(szEnergy)) / (Double.parseDouble(DCXXXEnergy));
+                        df = new DecimalFormat("#.##");
+                        derivedVal = df.format(val);
+                    } else {
+                        derivedVal = "";
+                    }
+                } else if (headingNames[headingNames.length - 1].equals("TargetEnergy")) {
+                    if (DCXXXEnergy != null) {
+                        val = Double.parseDouble(DCXXXEnergy);
+                        df = new DecimalFormat("#.##");
+                        derivedVal = df.format(val);
+                    } else {
+                        derivedVal = "";
+                    }
+                } else if (headingNames[headingNames.length - 1].equals("EnergyPerRatedPower")) {
+                    derivedVal = "";
+                    if (InstalledCapacity != null) {
+                        szEnergy = rs4.getString(headingNames[headingNames.length - 1]);
+                        val = (Double.parseDouble(szEnergy)) / (Double.parseDouble(InstalledCapacity));
+                        df = new DecimalFormat("#.##");
+                        derivedVal = df.format(val);
+                    } else {
+                        derivedVal = "";
+                    }
+                } else {
+                    derivedVal = rs4.getString(headingNames[headingNames.length - 1]);
+                }
+                szConcatColumn = szConcatColumn + ",\"" + headingNames[headingNames.length - 1] + "\":\"" + derivedVal + "\"";
+                perfJSON += "{" + szConcatColumn.substring(1) + "},";
+
+>>>>>>> .r59
+            }
+        }
+        return null;
+    }
+
+
+    private static String modifyJson(String input) {
+        String output = "";
+        boolean altered = false;
+        try {
+            String[] arrayEles = input.split("},");
+            log.info("arrayEles length==>>" + arrayEles.length);
+            int startIndex;//
+            int endIndex;//
+            String perfRatioStr;//
+            String energyPerRatedPowerStr;//
+            String yieldStr;//
+            String actualMTypes;//
+            String resNames;//
+            String yields;//
+            String resValues;//
+            String acVals;//
+            String exVals;//
+            for (String arrayE : arrayEles) {
+<<<<<<< .mine
+                altered = true;
+                startIndex = arrayE.indexOf("\"PerformanceRatio\":\"");
+                endIndex = arrayE.indexOf("\"", startIndex + new String("\"PerformanceRatio\":\"").length());
+                perfRatioStr = arrayE.substring(startIndex, endIndex);
+=======
+                startIndex = arrayE.indexOf("\"PerformanceRatio\":\"");
+                endIndex = arrayE.indexOf("\"", startIndex + new String("\"PerformanceRatio\":\"").length());
+                perfRatioStr = arrayE.substring(startIndex, endIndex);
+>>>>>>> .r59
+                arrayE = arrayE.replace(perfRatioStr + "\",", "");
+                startIndex = arrayE.indexOf("\"EnergyPerRatedPower\":\"");
+                endIndex = arrayE.indexOf("\"", startIndex + new String("\"EnergyPerRatedPower\":\"").length());
+                energyPerRatedPowerStr = arrayE.substring(startIndex, endIndex);
+                startIndex = arrayE.indexOf("\"Yield\":\"");
+
+                //arrayE += actualMTypes;
+
+                acVals = perfRatioStr.replace("\"PerformanceRatio\":\"", "");
+                exVals = energyPerRatedPowerStr.replace("\"EnergyPerRatedPower\":\"", "");
+                if (startIndex != -1) {
+                    endIndex = arrayE.indexOf("\"", startIndex + new String("\"Yield\":\"").length());
+                    yieldStr = arrayE.substring(startIndex, endIndex);
+                    actualMTypes = "\"ActualMetricTypes\":[\"PerformanceRatio\",\"EnergyPerRatedPower\",\"Yield\"]";
+                    //arrayE += actualMTypes;
+                    resNames = ",\"ResourceNames\":[\"PerformanceRatio\",\"EnergyPerRatedPower\",\"Yield\"]";
+                    arrayE = arrayE.replace(energyPerRatedPowerStr + "\"", "");
+                    yields = yieldStr.replace("\"Yield\":\"", "");
+                    resValues = ",\"ResourceValues\":[[" + acVals + "],[" + exVals + "],[" + yields + "]]";
+                    arrayE = arrayE.replace(yieldStr + "\"", actualMTypes + resNames + resValues);
+                } else {
+                    actualMTypes = "\"ActualMetricTypes\":[\"PerformanceRatio\",\"EnergyPerRatedPower\"]";
+                    //arrayE += actualMTypes;
+                    resNames = ",\"ResourceNames\":[\"PerformanceRatio\",\"EnergyPerRatedPower\"]";
+                    resValues = ",\"ResourceValues\":[[" + acVals + "],[" + exVals + "]]";
+                    arrayE = arrayE.replace(energyPerRatedPowerStr + "\"", actualMTypes + resNames + resValues);
+                }
+                //arrayE += resNames;
+                //arrayE = arrayE.replace(energyPerRatedPowerStr + "\"", actualMTypes + resNames);
+                output += arrayE + "},";
+            }
+            if (altered) {
+                output = output.substring(0, output.length() - 2);
+                //output += "]";
+            }
+            return output;
+        } catch (Exception e) {
+            log.error("Error in modifyJson" + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    } 
+    
+    
+    
+    public static String getJSONFromAggregatedMetrics(String resType, String cCustomer, String service, String resType2, String metricType, String configuredMetricType,
+            long sMilli, long eMilli, String timeStampSelection, String customer) {
+
+        String resultJson = "[";
+        String szQuery = null;
+        Calendar cal1 = Calendar.getInstance();
+        DateFormat formate = new SimpleDateFormat("yyyy\\/MM\\/dd HH:mm:ss");
+       DecimalFormat df = new DecimalFormat("#.#");
+        String response = null;
+        String[] splite = null;
+        String sztimestamp = null;
+        String[] dSplite = null;
+        URL url = null;
+        HttpURLConnection conn = null;
+        ResultSet rs = null;
+        BufferedReader br = null;
+        String szDCEnergyMetricName;
+        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+        metricType="Energy";
+        String[] spliteca;
+        String[] spliteco;
+         Date date=null;  
+         ArrayList szServiceList=null;
+         InputStreamReader isReader=null;
+        try {
+            
+            date = new Date(eMilli*1000);
+            cal1.setTime(date);
+            log.info("Date>> " + date);
+            System.out.println(cal1.getTime());
+            int day = cal1.get(Calendar.DAY_OF_MONTH);
+            int year = cal1.get(Calendar.YEAR);
+            int month = cal1.get(Calendar.MONTH);
+            int week = cal1.get(Calendar.WEEK_OF_MONTH);
+            log.info("Date>> " + day+month+year+week);
+            //configuredMetricType = configuredMetricType.replaceFirst("XXX", timeStampSelection);
+            log.info("metricType==>>" + metricType);
+            log.info("configuredMetricType==>>" + configuredMetricType);
+            log.info("resType==>>" + resType);
+            log.info("resType2==>>" + resType2 + service);
+            log.info("In PerformanceRatioGenerator.generateJSON==>>smilli:" + sMilli + "::emilli:" + eMilli);
+
+            String DCXXXEnergy;
+            String szEnergy = "";
+            String timestamp = null;
+            String prVal = "", eprpVal ="", teVal = "", aeVal = "";
+            String InstalledCapacity;
+            String slot = null;
+            if(service == null){
+            if (timeStampSelection.equalsIgnoreCase("year")) {
+                slot = "Year";
+            } else if (timeStampSelection.equalsIgnoreCase("month")) {
+                slot = "Month";
+            } else if (timeStampSelection.equalsIgnoreCase("Week")) {
+                slot = "Week";
+            } else if (timeStampSelection.equalsIgnoreCase("Day")) {
+                slot = "Day";
+            }
+            
+            }else{
+            if (timeStampSelection.equalsIgnoreCase("year")) {
+                slot = "Month";
+            } else if (timeStampSelection.equalsIgnoreCase("month")) {
+                slot = "Day";
+            } else if (timeStampSelection.equalsIgnoreCase("Week")) {
+                slot = "Day";
+            } else if (timeStampSelection.equalsIgnoreCase("Day")) {
+                slot = "Day";
+            }
+            }
+            String rsValuesPR = null, rsValuesEPRP = null, rsValuesTE = null, rsValuesAE = null;
+            String ts = null;
+            String szPmaxName;
+            if (resType.equals("")) {
+                szPmaxName = "InstalledCapacity";
+            } else {
+                szPmaxName = "Pmax";
+            }
+            szServiceList = new ArrayList();
+            String szService;
+            if (service == null) {
+                szQuery = "select distinct service from hostinfo where customerid=(select id from customerinfo where customername='" + cCustomer + "')";
+                rs = ConnectionDAO.executerQuery(szQuery, customer);
+
+                while (rs.next()) {
+                    szServiceList.add(rs.getString(1));
+                }
+                log.info("customermap==> "+szServiceList);
+                log.info("metricType==>>" + metricType);
+            log.info("configuredMetricType==>>" + configuredMetricType);
+            log.info("resType==>>" + resType);
+            log.info("resType2==>>" + resType2 + service);
+            log.info("resType2==>>" +timeStampSelection);
+            } else if (resType2.equals("")) {
+                szServiceList.add(service);
+                log.info("servicemap==> "+szServiceList);
+                log.info("metricType==>>" + metricType);
+            log.info("configuredMetricType==>>" + configuredMetricType);
+            log.info("resType==>>" + resType);
+            log.info("resType2==>>" + resType2 );
+            log.info("resType2==>>" +timeStampSelection);
+            } else {
+                szQuery = "select distinct resourceid from hostinfo where customerid=(select id from customerinfo where customername='" + cCustomer + "') and "
+                        + "service='" + service + "' and resourceid not like 'FroniusAdapter%'and resourceid !='"+service+"'";
+                rs = ConnectionDAO.executerQuery(szQuery, customer);
+                while (rs.next()) {
+                    szServiceList.add(rs.getString(1));
+                }
+                rs=null;
+                log.info("devicemap==> "+szServiceList);
+                log.info("metricType==>>" + metricType);
+            log.info("configuredMetricType==>>" + configuredMetricType);
+            log.info("resType==>>" + resType);
+            log.info("resType2==>>" + resType2);
+            log.info("resType2==>>" +timeStampSelection);
+            }
+            for (int k = 0; k < szServiceList.size(); k++) {
+                szService = (String) szServiceList.get(k);
+                log.info("for loop==>  "+szService);
+                log.info("for length==>  "+szServiceList.size() +" "+k);
+                log.info(szServiceList);
+                
+                if (resType2.equals(resType)) {
+                   
+                    url = new URL(DBUtilHelper.MetricValueURL +"?customer=" + cCustomer
+                            + "&metrictype=" + metricType + "&service=" + service + "&timeperiod=" + timeStampSelection
+                            + "&resourcetype=" + resType + "&slot=" + slot + "&resourceid=" + szService + "&date=" + day + "&week=" + week + "&month=" + months[month]
+                            + "&year=" + year);
+                   
+                } else {
+                    //customer level 
+                    url = new URL(DBUtilHelper.MetricValueURL+"?customer=" + cCustomer
+                            + "&metrictype=" + metricType + "&service=" + szService + "&timeperiod=" + timeStampSelection
+                            + "&resourcetype=" + szService + "&slot=" + slot + "&date=" + day + "&week=" + week + "&month=" + months[month]
+                            + "&year=" + year);
+
+                }
+                log.info("url>>> "+url);
+
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setDoOutput(true);
+                isReader= new InputStreamReader(conn.getInputStream());
+                br = new BufferedReader(isReader);
+                // resultJson = "[]";
+                szDCEnergyMetricName = "DCXXXEnergy";
+                
+                if(service == null || resType2.equals("")){
+                    
+                DCXXXEnergy = ResourceConfiguration.getConfValue(customer, cCustomer, szService,
+                        null, szDCEnergyMetricName.replaceFirst("XXX", timeStampSelection));
+                InstalledCapacity = ResourceConfiguration.getConfValue(customer, cCustomer, szService,
+                        null, "InstalledCapacity");
+                }else{
+                     DCXXXEnergy = ResourceConfiguration.getConfValue(customer, cCustomer, service,
+                        szService, szDCEnergyMetricName.replaceFirst("XXX", timeStampSelection));
+                InstalledCapacity = ResourceConfiguration.getConfValue(customer, cCustomer, service,
+                        szService, szPmaxName);
+                }
+                log.info("DCXXXEnergy "+DCXXXEnergy);
+                log.info("InstalledCapacity "+InstalledCapacity);
+                while ((response = br.readLine()) != null) {
+                    log.info("Response from getMetricValue API::"+response);
+
+                    /*if (response.length() > 35) {
+
+                        splite = response.split(",");
+
+                    } else {
+                        response.concat(",)");
+                        splite = response.split(",");
+                        log.info(splite[0]);
+                        log.info(splite.length);
+
+                    }*/
+                    if(response.contains(":")){
+                     splite = response.split("}");
+
+                    rsValuesPR = "[]";
+                    rsValuesEPRP = "[]";
+                    rsValuesTE = "[]";
+                    rsValuesAE = "[]";
+                    ts = "[]";
+                    for (int i = 0; i < splite.length; i++) {
+
+                        log.info("sp[i]==>"+i+splite[i]);
+                        if(splite[i].contains(",") && splite[i].contains(":")){
+                        spliteca=splite[i].split(",");
+                        if(spliteca[1].contains(":")){
+                        spliteco=spliteca[1].split(":");
+                        }else{
+                        spliteco=spliteca[2].split(":");
+                        }
+                        log.info("spca==>"+spliteca[1]);
+                        log.info("spco==>"+spliteco[0]);
+                        log.info("spco==>"+spliteco[1]);
+                        log.info("ts "+spliteco[0].substring(0,spliteco[0].length()-1));
+                         sztimestamp=spliteco[0].substring(0,spliteco[0].length()-1);
+                        if(timeStampSelection.equalsIgnoreCase("month") && slot.equalsIgnoreCase("Week")){
+                          sztimestamp=spliteco[0].substring(2,spliteco[0].length()-1);
+                        }else if(timeStampSelection.equalsIgnoreCase("Year") && slot.equalsIgnoreCase("Month")){
+                          sztimestamp=spliteco[0].substring(2,spliteco[0].length()-1);
+                        }
+                        log.info("eval "+spliteco[1].substring(1,spliteco[1].length()-1));
+                        szEnergy=spliteco[1].substring(1,spliteco[1].length()-1);
+                        }else if(splite[i].contains(":")){
+                            log.info("else bb");
+                        spliteco=splite[i].split(":");
+                        if(spliteco[0].contains("'")){
+                            String[] splitess=spliteco[0].split("'");
+                            log.info("spss==>"+splitess[0]);
+                            log.info("spss==>"+splitess[1]);
+                        
+                        sztimestamp=splitess[1].substring(4,splitess[1].length()-1);
+                        if(timeStampSelection.equalsIgnoreCase("month") && slot.equalsIgnoreCase("Week")){
+                        sztimestamp=splitess[1].substring(2,splitess[1].length()-1);
+                        }else if(timeStampSelection.equalsIgnoreCase("Year") && slot.equalsIgnoreCase("Month")){
+                        sztimestamp=splitess[1].substring(2,splitess[1].length()-1);
+                        }
+                        }else{
+                        sztimestamp=spliteco[0].substring(0,spliteco[0].length()-1);
+                        if(timeStampSelection.equalsIgnoreCase("month") && slot.equalsIgnoreCase("Week")){
+                          sztimestamp=spliteco[0].substring(2,spliteco[0].length()-1);
+                        }else if(timeStampSelection.equalsIgnoreCase("Year") && slot.equalsIgnoreCase("Month")){
+                          sztimestamp=spliteco[0].substring(2,spliteco[0].length()-1);
+                        }
+                        }
+                        szEnergy=spliteco[1].substring(1,spliteco[1].length()-1);
+                        }
+                        /*if (slot.equalsIgnoreCase("Day")) {
+                            sztimestamp = splite[i].substring(4, splite[i].indexOf(":") - 1);
+                            log.info("sztimestamp "+sztimestamp);
+
+                        } else {
+                            sztimestamp = splite[i].substring(splite[i].indexOf("{") + 2, splite[i].indexOf(":") - 1);
+                            log.info("sztimestamp "+sztimestamp);
+                        }
+
+                        szEnergy = splite[i].substring(splite[i].indexOf(":") + 2, splite[i].indexOf("}") - 1);
+                        */
+                        if(splite[i].contains(":")){
+                        log.info("length " + splite.length);
+                        log.info("timestampval "+sztimestamp);
+                        log.info("timestampval "+sztimestamp.length());
+                       
+                        log.info("energyval "+szEnergy);
+                        
+                        dSplite = sztimestamp.split("/");
+                       log.info("timestampval "+dSplite.length);
+                    
+                        if ((slot.equalsIgnoreCase("Month") || slot.equalsIgnoreCase("Week")) || slot.equalsIgnoreCase("Day")) {
+                            if (dSplite.length>2) {
+                                timestamp = dSplite[2]+"/"+dSplite[1]+"/"+dSplite[0];
+                                log.info("Full date=  " +dSplite[2]+"/"+dSplite[1]+"/"+dSplite[0]);
+                            } else if(dSplite.length>1){
+                             timestamp = dSplite[1]+"/"+dSplite[0];
+                                log.info("only month=  " + dSplite[1]+"/"+dSplite[0]);
+                               
+                            }else {
+                                timestamp = "";
+                                  log.info("only Date=  " + dSplite[0]);
+                            }
+
+                        }
+                        prVal="";
+                        eprpVal ="";
+                        teVal ="";
+                        aeVal ="";
+                        if (DCXXXEnergy != null) {
+
+                            log.info("cust level::szEnergy to get performanceratio==>>" + szEnergy);
+                            log.info("df==>"+df.format((Double.parseDouble((String)szEnergy)) / (Double.parseDouble(DCXXXEnergy))));
+                            prVal = df.format((Double.parseDouble((String)szEnergy)) / (Double.parseDouble(DCXXXEnergy)));
+                            log.info("cust level::performanceratio val==>>" + prVal);
+
+                        } else {
+                            prVal ="";
+                        }
+                        if (InstalledCapacity != null) {
+                            log.info("cust level::szEnergy to get EnergyPerRatedPower==>>" + szEnergy);
+                            log.info("df==>"+df.format((Double.parseDouble((String)szEnergy)) / (Double.parseDouble(InstalledCapacity))));
+                            eprpVal = df.format((Double.parseDouble((String)szEnergy)) / (Double.parseDouble(InstalledCapacity)));
+                            log.info("cust level:: EnergyPerRatedPower val==>>" + eprpVal);
+
+                        } else {
+                            eprpVal ="";
+                        }
+                        if (DCXXXEnergy != null) {
+                            log.info("cust level::szEnergy to get target energy ==>>" + szEnergy);
+                            log.info("df==>"+df.format((Double.parseDouble(DCXXXEnergy))));
+                            teVal = df.format((Double.parseDouble(DCXXXEnergy)));
+                            log.info("cust level::target energy val==>>" + teVal);
+
+                        } else {
+                            teVal ="";
+                        }
+                        if (szEnergy != null) {
+                            log.info("cust level::szEnergy to get actual energy ==>>" + szEnergy);
+                            log.info("df==>"+df.format((Double.parseDouble((String)szEnergy))));
+                            aeVal = df.format((Double.parseDouble((String)szEnergy)));
+                            log.info("cust level::actual energy val==>>" + aeVal);
+
+                        } else {
+                            aeVal ="";
+                        }
+
+                        log.info("rsValuesPR " + rsValuesPR.length());
+
+                        if (rsValuesPR.length() == 2) {
+                            if(service==null){
+                            rsValuesPR = prVal;
+                            rsValuesEPRP =  eprpVal;
+                            rsValuesTE = teVal;
+                            rsValuesAE = aeVal;
+                            
+                            }else{
+                            rsValuesPR = "[\"" + prVal + "\"]";
+                            rsValuesEPRP = "[\"" + eprpVal + "\"]";
+                            rsValuesTE = "[\"" + teVal + "\"]";
+                            rsValuesAE = "[\"" + aeVal + "\"]";
+                            ts = "[\"" + timestamp + "\"]";
+                            log.info(rsValuesPR + rsValuesEPRP + rsValuesTE + rsValuesAE);
+                            log.info(ts);
+                            }
+                        } else {
+
+                            log.info(rsValuesPR);
+                            rsValuesPR = rsValuesPR.substring(0, rsValuesPR.length() - 1) + ",\"" +  prVal + "\"]";
+                            log.info("rsValuesPR "+rsValuesPR);
+
+                            rsValuesEPRP = rsValuesEPRP.substring(0, rsValuesEPRP.length() - 1) + ",\"" +  eprpVal + "\"]";
+                            log.info("rsValuesEPRP "+rsValuesEPRP);
+
+                            rsValuesTE = rsValuesTE.substring(0, rsValuesTE.length() - 1) + ",\"" +  teVal + "\"]";
+                            log.info("rsValuesTE "+rsValuesTE);
+
+                            rsValuesAE = rsValuesAE.substring(0, rsValuesAE.length() - 1) + ",\"" +  aeVal + "\"]";
+                            log.info("rsValuesPR "+rsValuesAE);
+
+                            ts = ts.substring(0, ts.length() - 1) + ",\"" + timestamp + "\"]";
+                            log.info(ts);
+
+                        }
+                      } 
+                    }
+                }else{
+                        if(service==null){
+                        rsValuesPR = "";
+                        rsValuesEPRP = "";
+                        rsValuesTE = "";
+                        rsValuesAE = "";
+                        ts = "";
+                        }else{
+                        rsValuesPR = "[]";
+                        rsValuesEPRP = "[]";
+                        rsValuesTE = "[]";
+                        rsValuesAE = "[]";
+                        ts = "[]";
+                        }
+                        
+                        
+                    }
+                    log.info("[" + rsValuesPR + "," + rsValuesEPRP + "," + rsValuesAE + "," + rsValuesTE + "]");
+                    log.info(resultJson.length());
+                    if (resultJson.length() == 1) {
+                        if (service == null) {
+                            
+                            resultJson = "[{\"ResourceType \":\""+ szService+ "\",\"ServiceName\":\"" + szService+ "\",\"EnergyPerRatedPower\":\"" + rsValuesEPRP + "\",\"ActualEnergy\":\""+ rsValuesAE+ "\",\"PerformanceRatio\":\""+rsValuesPR + "\",\"TargetEnergy\":\"" + rsValuesTE+"\"}";
+                        } else {
+                            resultJson = "[{\"ActualMetricTypes\":[\"PerformanceRatio\",\"EnergyPerRatedPower\",\"Yield\",\"TargetEnergy\"],\"ResourceType \":\""
+                                    + resType + "\",\"ServiceName\":\"" + service + "\","
+                                    + "\"ResourceID\":\"" + szService + "\",\"ResourceValues\":[" + rsValuesPR + "," + rsValuesEPRP + "," + rsValuesAE 
+                                    + "," + rsValuesTE + "]"
+                                    + ",\"ResourceNames\":[\"PerformanceRatio\",\"EnergyPerRatedPower\",\"Yield\",\"TargetEnergy\"],\"TimeStamps\":[" + ts + "," + ts + "," + ts + "," + ts + "]}";
+                        }
+                        log.info(resultJson.length());
+                        log.info(resultJson);
+                        log.info(resultJson.length());
+                    } else {
+                        if (service == null) {
+                            
+                           resultJson +=",{\"ResourceType \":\""+ szService+ "\",\"ServiceName\":\"" + szService+ "\",\"EnergyPerRatedPower\":\"" + rsValuesEPRP + "\",\"ActualEnergy\":\""+ rsValuesAE+ "\",\"PerformanceRatio\":\""+rsValuesPR + "\",\"TargetEnergy\":\"" + rsValuesTE+"\"}";
+                        } else {
+                            resultJson += ",{\"ActualMetricTypes\":[\"PerformanceRatio\","
+                                    + "\"EnergyPerRatedPower\",\"Yield\",\"TargetEnergy\"],\"ResourceType \":\"" + resType + "\",\"ServiceName\":\""
+                                    + service + "\","
+                                    + "\"ResourceID\":\"" + szService + "\",\"ResourceValues\":[" + rsValuesPR + "," + rsValuesEPRP + ","
+                                    + rsValuesAE + "," + rsValuesTE + "]"
+                                    + ",\"ResourceNames\":[\"PerformanceRatio\",\"EnergyPerRatedPower\",\"Yield\",\"TargetEnergy\"],"
+                                    + "\"TimeStamps\":[" + ts + "," + ts + "," + ts + "," + ts + "]}";
+
+
+                        }
+                        log.info("else  " + resultJson);
+
+                    }
+                }
+                br.close();
+                log.info("final json " + resultJson + "]");
+            }
+
+        } catch (Exception e) {
+            log.error("Error in generateJSON==>>" + e.toString());
+            e.printStackTrace();
+        } finally {
+            try {
+                if (szQuery != null) {
+                    szQuery = null;
+                } else if (cal1 != null) {
+                    cal1.clear();
+                    cal1 = null;
+                } else if (formate != null) {
+                    formate = null;
+                } else if (response != null) {
+                    response = null;
+                } else if (splite != null) {
+                    splite = null;
+                } else if (sztimestamp != null) {
+                    sztimestamp = null;
+                } else if (dSplite != null) {
+                    dSplite = null;
+                } else if (url != null) {
+                    url = null;
+                } else if (conn != null) {
+                    conn.disconnect();
+                    conn = null;
+                } else if (rs != null) {
+                    rs.close();
+                    rs = null;
+                } else if (br != null) {
+                    br.close();
+                    br = null;
+                }else if(date!=null){
+                date=null;
+                }else if(szServiceList!=null){
+                 szServiceList.clear();
+                 szServiceList=null;
+                }else if(isReader!=null){
+                isReader.close();
+                isReader=null;
+                }else if(df!=null){
+                df=null;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return resultJson + "]";
+    }
+
+    public static void main(String args[]) throws ParseException {
+        String derivedVal = "";
+    jj();
+        try {
+            DecimalFormat df = new DecimalFormat("#.##");
+            //df.format(val);
+            derivedVal = derivedVal + df.format(0.067814278) + ",";
+            log.info("derivedVal1==>>" + derivedVal);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    
+    
+    }
+    public static void jj() throws ParseException{
+        System.out.println("jj");
+            String ts="[{\"Yield\":\""+154+"\",\"ResourceType\":\""+1+"\",\"ServiceName\":\""+-3+"\",\"EnergyPerRatedPower\":\""+0.01+"\",\"ResourceID\":\""+-3+"\",\"PerformanceRatio\":\""+0+"\"}";
+            System.out.println(ts);
+            System.exit(0);
+  
+    }
+}

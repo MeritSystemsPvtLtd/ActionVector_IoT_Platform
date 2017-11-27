@@ -1,0 +1,18 @@
+<!DOCTYPE struts PUBLIC
+"-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+"http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>
+    <include file="example.xml"/>
+    <!-- Configuration for the default package. -->
+    <package name="OrderDetails" namespace="/" extends="struts-default">
+        <action name="Get_Customers" class="OrderDetails.JsonGetCustomers" method="JsonCustomers"></action>
+        <action name="User_Services" class="OrderDetails.JsonGetServices" method="JsonServices"></action>
+        <action name="User_Resources" class="OrderDetails.JsonGetResources" method="JsonResources"></action>
+        <action name="Customer_Update" class="OrderDetails.ResourceConfigCustomer" method="JsonCustomerUpdate"></action>
+        <action name="Service_Update" class="OrderDetails.ResourceConfigService" method="JsonServiceUpdate"></action>
+        <action name="Resource_Update" class="OrderDetails.ResourceConfigResource" method="JsonResourceUpdate"></action>
+        <action name="Update_ResourceConfig" class="OrderDetails.UpdateResourceConfig" method="resourceConfigUpdate"></action>
+
+    </package>
+</struts>

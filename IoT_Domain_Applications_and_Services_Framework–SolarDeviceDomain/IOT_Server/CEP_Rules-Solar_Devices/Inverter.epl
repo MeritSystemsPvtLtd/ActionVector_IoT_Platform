@@ -1,0 +1,23 @@
+module com.prokosha.cep.inverter.v1;
+create variable string INV_ACRO_ERR="[INV_ERR]";
+
+@Name("com.prokosha.cep.inverter.dispatch.1")
+      select  "Inverter" as EventType,   (("Inverter ERROR").concat(INV_ACRO_ERR)) as EventDesc,
+    "Inverter ERROR" as EventSymptoms,"InverterAlert" as AlertType,
+    HostName,resourceType,resourceId,CustomerID,cCustomer
+    from InverterRealTimeStream where (DeviceStatus = 10)
+    group by HostName;
+
+@Name("com.prokosha.cep.inverter.dispatch.2")
+      select  "Inverter" as EventType,   (("Inverter WARNING").concat(INV_ACRO_ERR)) as EventDesc,
+    "Inverter WARNING" as EventSymptoms,"InverterAlert" as AlertType,
+    HostName,resourceType,resourceId,CustomerID,cCustomer
+    from InverterRealTimeStream where (DeviceStatus = 8) or (DeviceStatus = 9) or ((DeviceStatus > -1 ) and (DeviceStatus < 7))
+    group by HostName;
+
+@Name("com.prokosha.cep.inverter.autoclose.1")
+      select  "Inverter" as EventType,   (("Inverter WARNING").concat(INV_ACRO_ERR)) as EventDesc,
+    "Inverter WARNING" as EventSymptoms,"InverterAlert" as AlertType,
+    HostName,resourceType,resourceId,CustomerID,cCustomer
+    from InverterRealTimeStream where (DeviceStatus = 7)
+    group by HostName;

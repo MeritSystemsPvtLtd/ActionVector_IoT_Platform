@@ -1,0 +1,26 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.FilterNode.v1;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.1")
+select * from MemoryStatsEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.4")
+select * from HTTPResponseTimeEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.5")
+select * from ConcurrentProcessesEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.2")
+insert into LAE
+	select Load1 as ServerLoad1, Load5 as ServerLoad5, Load15 as ServerLoad15
+	from LoadAverageEvent(HostName='MoneyMemcache' or HostName='MoneyMemcache-1');
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.3")
+insert into MRLE
+	select HostName as MemcClient, MemcacheServer as MemcServer, MemcachePort as MemcPort, ElapsedTime as MemcLatency
+	from MemcacheReadLatencyEvent(MemcacheServer='10.50.11.18' and MemcachePort='11211');
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.6")
+insert into SSE
+	select SwapUsage as ServerSwapUsed, MaxSwaps as ServerSwapMax
+	from SwapStatsEvent(HostName='MoneyMemcache' or HostName='MoneyMemcache-1');

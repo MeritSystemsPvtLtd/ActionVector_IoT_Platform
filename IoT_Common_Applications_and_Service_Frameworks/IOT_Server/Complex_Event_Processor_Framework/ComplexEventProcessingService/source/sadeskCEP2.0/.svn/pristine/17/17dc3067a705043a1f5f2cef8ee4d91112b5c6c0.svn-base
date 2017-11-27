@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+        Defaullt (empty) configuration file.
+-->
+<esper-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xmlns="http://www.espertech.com/schema/esper"
+                     xsi:noNamespaceSchemaLocation="esper-configuration-4-0.xsd">
+
+    <event-type name="HostMonitorEvent">
+        <java-util-map>
+            <map-property name="host" class="string"/>
+            <map-property name="resource" class="string"/>
+            <map-property name="time" class="long"/>
+            <map-property name="bytes" class="long"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="HttpMonitorEvent">
+        <java-util-map>
+            <map-property name="host" class="string"/>
+            <map-property name="resource" class="string"/>
+            <map-property name="time" class="long"/>
+            <map-property name="kbytes" class="long"/>
+            <map-property name="Type20X" class="long"/>
+            <map-property name="Type30X" class="long"/>
+            <map-property name="Type403" class="long"/>
+            <map-property name="Type404" class="long"/>
+            <map-property name="Type40X" class="long"/>
+            <map-property name="Type500" class="long"/>
+            <map-property name="Type503" class="long"/>
+            <map-property name="Type50X" class="long"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="MemoryStatsEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="RealUsage" class="float"/>
+            <map-property name="MemUsed" class="float"/>
+            <map-property name="MemMax" class="float"/>
+            <map-property name="Cache" class="float"/>
+            <map-property name="Swap" class="float"/>
+            <map-property name="SwapUsed" class="float"/>
+            <map-property name="SwapMax" class="float"/>
+            <map-property name="Buffer" class="float"/>
+            <map-property name="Utilization" class="float"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="LoadAverageEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="Load1" class="float"/>
+            <map-property name="Load5" class="float"/>
+            <map-property name="Load15" class="float"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="MemcacheReadLatencyEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="ElapsedTime" class="float"/>
+            <map-property name="MemcacheServer" class="string"/>
+            <map-property name="MemcachePort" class="string"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="HTTPResponseTimeEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="ResponseTime" class="float"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="ConcurrentProcessesEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="ConcurrentProcesses" class="int"/>
+        </java-util-map>
+    </event-type>
+    <event-type name="SwapStatsEvent">
+        <java-util-map>
+            <map-property name="TimeStamp" class="string"/>
+            <map-property name="HostName" class="string"/>
+            <map-property name="ResourceID" class="string"/>
+            <map-property name="SwapUsage" class="float"/>
+            <map-property name="MaxSwaps" class="float"/>
+        </java-util-map>
+    </event-type>
+</esper-configuration>

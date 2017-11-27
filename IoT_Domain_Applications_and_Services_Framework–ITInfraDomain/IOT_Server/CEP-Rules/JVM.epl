@@ -1,0 +1,52 @@
+module com.prokosha.cep.jvm.v1;
+create variable string HMEM_EX="[HMEMEXC]";
+create variable string JVMTHE_EX="[JVMTHEEXC]";
+create variable string UNLOCLA_EX="[UNLODCLASSEXC]";
+create variable string JVM_DOWN="[JVM_HSTDWN]";
+
+@Name("com.prokosha.sadeskCeP.jvm.istream.1")
+insert into jvmStream
+	select stream,loadedClassCount, totalLoadedClassCount, heapMemoryUsage.used, availableProcessors,unloadedClassCount, systemLoadAverage, peakThreadCount, threadCount, totalStartedThreadCount, alive, HostName as HostName, hostipaddress as HostAddress, availability,resourceType,resourceId,CustomerID,time from JVMStream;
+
+
+@Name("com.prokosha.cep.jvm.etl.1")
+select * from JVMStream;
+
+@Name("com.prokosha.cep.jvm.dispatch.1")
+      select  "JVM" as EventType, ("Heap Memory usage exceeds the Range limit ").concat((heapMemoryUsage.used).toString().concat(HMEM_EX)) as EventDesc,
+    "Threads have been Exceeded" as EventSymptoms,"JVMAlert" as AlertType,
+    HostName, HostAddress,resourceType,resourceId,CustomerID
+
+    from jvmStream where (heapMemoryUsage.used >= 1832160)
+    group by HostName,resourceId
+    output first every 60 minutes;
+
+@Name("com.prokosha.cep.jvm.dispatch.2")
+      select  "JVM" as EventType, ("Number Of UnoadedClass Count exceeds the Range limit ").concat((unloadedClassCount).toString().concat(UNLOCLA_EX)) as EventDesc,
+    "UnloadedClasses have been Exceeded" as EventSymptoms,"JVMAlert" as AlertType,
+    HostName, HostAddress,resourceType,resourceId,CustomerID
+    
+    from jvmStream where (unloadedClassCount>= 5)
+    group by HostName,resourceId
+    output first every 60 minutes;
+
+
+@Name("com.prokosha.cep.jvm.dispatch.3")
+      select  "JVM" as EventType, ("JVM Thread Count exceeds the  limit ").concat((threadCount).toString().concat(JVMTHE_EX)) as EventDesc,
+    "JVM ThreadCount have been Exceeded" as EventSymptoms,"JVMAlert" as AlertType,
+    HostName, HostAddress,resourceType,resourceId,CustomerID
+
+    from jvmStream where (threadCount>= 5)
+    group by HostName,resourceId
+    output first every 60 minutes;
+
+
+
+@Name("com.prokosha.cep.jvm.dispatch.4")
+      select  "JVM" as EventType, ("JVM instance not Running/Down ").toString().concat(JVM_DOWN) as EventDesc,
+    "JVM instance not Running/Down " as EventSymptoms,"JVMAlert" as AlertType,
+    HostName, HostAddress,resourceType,resourceId,CustomerID
+
+    from jvmStream where (availability= 0)
+    group by HostName,resourceId
+    output first every 60 minutes;

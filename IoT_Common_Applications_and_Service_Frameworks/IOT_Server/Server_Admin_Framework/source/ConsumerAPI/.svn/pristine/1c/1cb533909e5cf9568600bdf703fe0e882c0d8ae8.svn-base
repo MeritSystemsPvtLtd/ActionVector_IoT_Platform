@@ -1,0 +1,100 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/***************************************************************************
+
+                             Software Developed by
+                            Merit Systems Pvt. Ltd.,
+               #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+                           Bangalore - 560 070, India
+                 Work Created for Merit Systems Private Limited
+                              All rights reserved
+
+           THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+                               LAWS AND TREATIES
+        NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+              DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+                                   CONDENSED,
+         EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+                                    ADAPTED
+                       WITHOUT THE PRIOR WRITTEN CONSENT
+           ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+                                 COULD SUBJECT
+                THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+
+
+***************************************************************************/
+
+package businessmodel;
+import java.io.*;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jul 11, 2012, 3:14:00 PM
+ */
+public class UserBean implements Serializable {
+   static Logger log = Logger.getLogger(UserBean.class);
+     protected String name="";
+    protected String email="";
+    protected String group="";
+    protected String mobile="";
+    protected String role="";
+
+    public String getEmail()
+    {
+        return email;
+    }
+
+    public void setEmail(String email)
+    {
+        this.email = email;
+    }
+
+    public String getMobile()
+    {
+        return mobile;
+    }
+
+    public void setMobile(String mobile)
+    {
+        this.mobile = mobile;
+    }
+
+    public String getGroup()
+    {
+        return group;
+    }
+
+    public void setGroup(String group)
+    {
+        this.group = group;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public String getRole()
+    {
+        return role;
+    }
+
+    public void setRole(String role)
+    {
+        this.role = role;
+    }
+
+
+
+
+
+}

@@ -1,0 +1,151 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/* -------------------------------------------------------------------------
+ *
+ *                           Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *       #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *         THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ * --------------------------------------------------------------------------
+ */
+package businessmodel;
+
+import Model.*;
+import java.sql.*;
+
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jul 12, 2012, 11:02:22 AM
+ */
+public class UserGroupRoleConfig
+{
+
+    static Logger log = Logger.getLogger(UserGroupRoleConfig.class);
+
+    public static boolean configUserGroupRole(String szcustomerid, String szuserId, String szgroupName, String szroleName, HttpServletRequest request)
+    {
+        Connection con = null;
+        String customerid = null;
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+        HttpSession sessions;
+        String szRole = null;
+        String szGroup = null;
+        int iGroupLen = 0;
+        String szUserString = "";
+        String szPrimaryRole = "";
+        java.util.Vector VStatusVector = new java.util.Vector();
+        String username = null;
+        String sessionid = null;
+        boolean fflag=false;
+
+
+        try
+        {
+            szGroup = szgroupName;
+            szUserString = szuserId;
+            szPrimaryRole = szroleName;
+            szRole=szroleName;
+            //customerid = szcustomerid;
+            log.info("User group role parameters: group:"+szGroup+"szUser:"+szUserString+"Role:"+szPrimaryRole);
+            System.out.println("User group role parameters: group:"+szGroup+"szUser:"+szUserString+"Role:"+szPrimaryRole);
+            if (szcustomerid != null && !szcustomerid.equalsIgnoreCase(""))
+            {
+                con = DatabaseConnection.getDbConnection(request, szcustomerid);
+            } else
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+            }
+            log.info("database connected");
+            if (con != null)
+            {
+                /*  for (int i = 0; i < iGroupLen; i++)
+                {
+                boolean bRole = false;
+                szRole = request.getParameter("roles" + i);
+                System.out.println("Selected role is -->" + szRole);
+                if (szGroup[i].equalsIgnoreCase(szPrimaryRole))
+                {
+                bRole = true;
+                } else
+                {
+                bRole = false;
+                }
+                if (szRole != null)
+                {
+                if (bRole)
+                {*/
+                //szPrimary = szRole;
+                statement2 = con.prepareStatement("update gaoperator set security_level='" + szRole + "' where user_id ='" + szUserString + "'");
+                statement2.executeUpdate();
+                statement2.close();
+                System.out.println("Query to modify operator is--> " + statement2);
+                // }
+                statement1 = con.prepareStatement("update gaagentgroup set role='" + szRole + "' where userid ='" + szUserString + "'and groupname ='" + szGroup + "' ");
+                statement1.executeUpdate();
+                System.out.println("Query to check is--> " + statement1);
+                //} else
+                // {
+                // }
+                statement1.close();
+                //}
+
+                log.info("usergrouproles configured");
+                fflag=true;
+            }
+            szGroup = null;
+            szUserString = null;
+            szPrimaryRole =null;
+            szRole=null;
+            
+        } catch (Exception ex)
+        {
+
+            ex.printStackTrace();
+            log.error("error processing database action", ex);
+        } finally
+        {
+            try
+            {
+                if (con != null)
+                {
+                    con.close();
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error closing connection");
+            }
+        }
+        return fflag;
+    }
+}

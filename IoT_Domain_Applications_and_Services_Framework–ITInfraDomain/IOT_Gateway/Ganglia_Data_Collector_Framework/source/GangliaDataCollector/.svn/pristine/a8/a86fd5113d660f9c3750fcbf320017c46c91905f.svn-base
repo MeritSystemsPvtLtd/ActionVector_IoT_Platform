@@ -1,0 +1,103 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.adapter.ganglia;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import org.apache.log4j.Logger;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+/**
+ *
+ * @author Abraham
+ */
+public class CepEngineConnector {
+
+    private static final Logger log = Logger.getLogger(CepEngineConnector.class.getName());
+    private static java.net.Socket requestSocket;
+    private static BufferedWriter toCep;
+    private static boolean cepReady;
+    private static String cepHost;
+    private static int cepPort;
+    private static String newline;
+
+    private CepEngineConnector() {
+    }
+
+    public static void initialize() {
+
+        cepReady = false;
+        cepHost = AdapterProperties.getCepHost();
+        cepPort = AdapterProperties.getCepPort();
+        newline = AdapterProperties.getNewline();
+
+        if (connectToCepEngine()) {
+            log.debug("Connected to the CEP engine at host:" + cepHost + " and port: " + cepPort + "...");
+        } else {
+            log.error("*** ERROR **** Could not connect to CEP engine at host:" + cepHost + " and port: " + cepPort + ". Will try again later...");
+        }
+
+    }
+
+    private static boolean connectToCepEngine() {
+        //connect to the CEP engine socket
+        log.debug("Connecting to CEP engine at host:" + cepHost + " and port: " + cepPort);
+        try {
+            if (!cepReady) {
+                if (AdapterProperties.getLoopControl().toUpperCase().contains("CEP")) {
+                    if (cepHost == null) {
+                        log.debug("*** FATAL ERROR *** CEP host not specified in properties file. Will not send to CEP...");
+                        cepReady = false;
+                    } else {
+                        requestSocket = new Socket(cepHost, cepPort);
+                        toCep = new BufferedWriter(new OutputStreamWriter(requestSocket.getOutputStream()));
+                        cepReady = true;
+                    }
+                } else {
+                    cepReady = true; // if loopControl is not Pipe-CEP-Log don't send to CEP engine - just fake it!!!
+                }
+            }
+        } catch (UnknownHostException ex) {
+            log.fatal("** CRITICAL ERROR ** Cannot connect to CEP engine : unknown host exception\n" + ex);
+            cepReady = false;
+        } catch (IOException ex) {
+            log.fatal("** CRITICAL ERROR ** Cannot connect to CEP engine : IO exception\n" + ex);
+            cepReady = false;
+        }
+        return cepReady;
+    }
+
+    public static boolean isCepReady() {
+        return cepReady;
+    }
+
+    public static boolean sendMessage(String message) {
+        log.info("Sending this message to CEP: " + message);
+        try {
+            if (isCepReady()) {
+                if (AdapterProperties.getLoopControl().toUpperCase().contains("CEP")) {
+                    toCep.write(message + newline);
+                    toCep.flush();
+                }
+                log.info("Message sent successfully!!");
+                return true;
+            } else {
+                log.error("*** ERROR *** No connection to CEP engine...attempting to reconnect...this CEP event discarded!!");
+                if (connectToCepEngine()) {
+                    log.debug("Re-connected to the CEP engine at host:" + cepHost + " and port: " + cepPort + "...");
+                } else {
+                    log.error("*** ERROR **** Still could not connect to CEP engine at host:" + cepHost + " and port: " + cepPort + ". Will try again later...");
+                }
+                return false; //in both cases false because we have not sent this CEP message
+            }
+        } catch (IOException ex) {
+            log.fatal("** CRITICAL ERROR ** Connection to CEP engine broken : IO exception\n" + ex);
+            cepReady = false;
+            return false;
+        }
+    }
+}

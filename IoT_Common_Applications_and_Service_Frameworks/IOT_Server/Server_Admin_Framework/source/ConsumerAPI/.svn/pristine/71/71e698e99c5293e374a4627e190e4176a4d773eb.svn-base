@@ -1,0 +1,372 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/* -------------------------------------------------------------------------
+ *
+ *                           Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *      #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *         THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ * --------------------------------------------------------------------------
+ */
+package businessmodel;
+
+import java.util.*;
+import Model.*;
+import controller.CommandTask;
+import controller.DBConstants;
+import controller.LogWriter;
+import java.util.ArrayList;
+import java.sql.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jun 25, 2012, 6:43:53 PM
+ */
+public class AddStatuses
+{
+
+    public static Logger log = Logger.getLogger("AddStatuses");
+
+    public static boolean addNewStatus(String customerid, HashMap<String, String> taskgroups, javax.servlet.http.HttpServletRequest request)
+    {
+        ResultSet rs = null;
+        Connection con = null;
+        boolean bFLAG = false;
+        boolean bExceptionFlag = false;
+        Integer ISecurityUsers = 1;
+        PreparedStatement statement = null;
+        PreparedStatement statement2 = null;
+        PreparedStatement statement4 = null;
+        String szStatusName = "";
+        String szStatusId = "";
+        String szDescription = "";
+        String szDefaultCreate = "";
+        String szConsiderForSLA = "";
+        String szHigherThreshold = "";
+        String szLowerThreshold = "";
+        String szPercentage = "";
+        //String customerid="";
+        String sALinkGroupArray[] = new String[250];
+        String sAGroupArray[] = new String[250];
+        String szFeedbackFlag = "";
+        String szCheckListFlag = "";
+        int iGroupCount = 0;
+        int iHigherThreshold = 0;
+        int iLowerThreshold = 0;
+        int iDefaultCreate = 0;
+        String szDefaultClose = "";
+        int iDefaultClose = 0;
+        String szTaskType = "";
+        boolean bCreateFlag = false;
+        boolean bCloseFlag = false;
+        boolean fpermission = false;
+        boolean fsendMailTo = false;
+        //String szLinkGroups[]=null;
+        String szGroup_Name = "";
+        String szGroups = null;
+        String szStatuses[] = null;
+        String statuses = null;
+        String sASendMailArray[] = null;
+        int j = 0;
+        try
+        {
+            if (customerid != null && !customerid.equalsIgnoreCase(""))
+            {
+                con = DatabaseConnection.getDbConnection(request, customerid);
+            } else
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+            }
+            System.out.println("connection get successfully");
+            log.info("Connection got successfully");
+            if (con != null)
+            {
+                Properties config = Configuration.initialize();
+
+                Set set = taskgroups.entrySet();
+
+                Iterator it = set.iterator();
+
+                while (it.hasNext())
+                {
+                    Map.Entry me = (Map.Entry) it.next();
+                    szTaskType = (String) me.getKey();
+                    szGroups = (String) me.getValue();
+                    System.out.print(szTaskType + ": ");
+                    System.out.println(szGroups);
+                    sALinkGroupArray = szGroups.split(",");
+                    szGroups = null;
+                    statuses = config.getProperty(szTaskType + "status");
+                    System.out.println(szTaskType + "-status::" + statuses);
+                    szConsiderForSLA = "Yes";
+                    iHigherThreshold = Integer.parseInt(config.getProperty("statushighthreshold"));
+                    iLowerThreshold = Integer.parseInt(config.getProperty("statuslowthreshold"));
+                    szStatuses = statuses.split(",");
+                    for (j = 0; j < szStatuses.length; j++)
+                    {
+
+                        if (szStatuses[j].equalsIgnoreCase("Accepted"));
+                        {
+                            szDefaultCreate = "Yes";
+                        }
+                        if (szStatuses[j].equalsIgnoreCase("Closed"));
+                        {
+                            szDefaultClose = "Yes";
+                        }
+
+                        //bFLAG = true;
+                        szStatusName = szStatuses[j];
+                        szStatusId = szTaskType + szStatusName;
+                        log.info("setting status permissions");
+                        System.out.println("statusId:::" + szStatusId);
+                        try
+                        {
+                            if ("Yes".equalsIgnoreCase(szDefaultCreate))
+                            {
+                                try
+                                {
+                                    PreparedStatement statement1 = con.prepareStatement("Select default_on_create from " + DBConstants.STATUS_TABLE + " where task_type = ? and default_on_create = ?");
+                                    statement1.setString(1, szTaskType);
+                                    statement1.setInt(2, 1);
+                                    ResultSet rs1 = statement1.executeQuery();
+                                    while (rs1.next())
+                                    {
+                                        bCreateFlag = true;
+                                    }
+                                    rs1.close();
+                                    statement1.close();
+                                } catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                    log.error("error while request processing");
+                                }
+                            }
+                            try
+                            {
+                                statement2 = con.prepareStatement("INSERT into " + DBConstants.STATUS_TABLE + " (statusid,task_type,status,description,default_on_create,default_on_close,higherthreshold,lowerthreshold,percentage_complete,considerforsla,feedback,checklist) values (?,?,?,?,?,?,?,?,?,?,?,?)");
+                                statement2.setString(1, szStatusId);
+                                statement2.setString(2, szTaskType);
+                                statement2.setString(3, szStatusName);
+                                statement2.setString(4, szDescription);
+                                if ("Yes".equalsIgnoreCase(szDefaultCreate))
+                                {
+                                    if (!bCreateFlag)
+                                    {
+                                        statement2.setInt(5, 1);
+                                        bCloseFlag = true;
+                                    } else
+                                    {
+                                        statement2.setInt(5, 0);
+                                    }
+                                } else
+                                {
+                                    statement2.setInt(5, 0);
+                                }
+                                if(szStatusName.equalsIgnoreCase("Closed")){
+                                    statement2.setInt(6, 1);
+                                }
+                               /*if ("Yes".equalsIgnoreCase(szDefaultClose))
+                                {
+                                    System.out.println("Default on Close is true");
+                                    if()
+                                    if (!bCloseFlag)
+                                    {
+                                        System.out.println("Default on Close is true::"+bCloseFlag);
+                                        statement2.setInt(6, 1);
+                                    } else
+                                    {
+                                        statement2.setInt(6, 0);
+                                    }
+                                }*/ else
+                                {
+                                    statement2.setInt(6, 0);
+                                }
+                                if ("Yes".equalsIgnoreCase(szFeedbackFlag))
+                                {
+                                    statement2.setInt(11, 1);
+                                } else
+                                {
+                                    statement2.setInt(11, 0);
+                                }
+                                if ("Yes".equalsIgnoreCase(szCheckListFlag))
+                                {
+                                    statement2.setInt(12, 1);
+                                } else
+                                {
+                                    statement2.setInt(12, 0);
+                                }
+
+                                //statement2.setInt(7,szFeedbackFlag);
+                                statement2.setInt(7, iHigherThreshold);
+                                statement2.setInt(8, iLowerThreshold);
+                                statement2.setString(9, szPercentage);
+                                if ("Yes".equalsIgnoreCase(szConsiderForSLA))
+                                {
+                                    statement2.setInt(10, 1);
+                                } else
+                                {
+                                    statement2.setInt(10, 0);
+                                }
+                                statement2.executeUpdate();
+
+                            } catch (Exception e)
+                            {
+                                e.printStackTrace();
+
+                                log.error("EXCEPTION : Inserting values to GAStatus	");
+                            } finally
+                            {
+                                statement2.close();
+                            }
+                            if (!szStatusName.equalsIgnoreCase("Closed"))
+                            {
+                                fpermission = StatusPermissions.setStatusPermissions(customerid, con, szTaskType, szStatusName, request);
+                            }
+                            System.out.println("Status permissions ::" + fpermission);
+                            try
+                            {
+                                if (sALinkGroupArray != null)
+                                {
+                                    for (int i = 0; i < sALinkGroupArray.length; i++)
+                                    {
+                                        statement = con.prepareStatement("INSERT INTO " + DBConstants.STATUS_GROUP_TABLE + " VALUES(?,?,?)");
+                                        statement.setString(1, szTaskType);
+                                        statement.setString(2, szStatusName);
+                                        statement.setString(3, sALinkGroupArray[i]);
+                                        statement.executeUpdate();
+                                    }
+                                    statement.close();
+                                }
+                            } catch (Exception e)
+                            {
+                                log.error("error while inserting");
+                                e.printStackTrace();
+                            }
+                            try
+                            {
+                                PreparedStatement statement3 = con.prepareStatement("Select groupname from " + DBConstants.TASKTYPE_GROUP_TABLE + " where tasktype = ?");
+                                statement3.setString(1, szTaskType);
+                                ResultSet rs3 = statement3.executeQuery();
+                                while (rs3.next())
+                                {
+                                    sAGroupArray[iGroupCount] = rs3.getString("groupname");
+                                    iGroupCount++;
+                                }
+                                rs3.close();
+                                statement3.close();
+                            } catch (Exception e)
+                            {
+                                e.printStackTrace();
+                                log.error("EXCEPTION : Getting groupname from gatasktypegroup");
+                            }
+                            for (int i = 0; i < iGroupCount; i++)
+                            {
+
+                                szGroup_Name = sAGroupArray[i];
+                                try
+                                {
+                                    statement4 = con.prepareStatement("INSERT INTO " + DBConstants.STATUS_PERMISSIONS_TABLE + " values(?,?,?,?,?)");
+                                    statement4.setString(1, szStatusId);
+                                    statement4.setString(2, szGroup_Name);
+                                    statement4.setInt(3, 0);
+                                    statement4.setInt(4, 0);
+                                    statement4.setInt(5, 0);
+                                    statement4.executeUpdate();
+                                    bExceptionFlag = true;
+                                } catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                    log.error("EXCEPTION : INSERTING GAStatusPermissions");
+                                } finally
+                                {
+                                    statement4.close();
+                                }
+                            }
+
+                            log.info("operation successful");
+
+                        } catch (Exception e)
+                        {
+                            log.error("EXCEPTION : Performing the database OPERATION" + e.getMessage());
+                            bExceptionFlag = false;
+                        }
+                        sASendMailArray = config.getProperty("sendMailTo").split(",");
+
+                        fsendMailTo = AddStatuses1.sendMailTo(con, szStatusId, szTaskType, sASendMailArray);
+                        
+                        System.out.println("sendMailTo set::" + fsendMailTo);
+
+                        sASendMailArray = null;
+                        iGroupCount = 0;
+                        szStatusId = null;
+                        szStatusName = null;
+                        szDefaultCreate = null;
+                        szDefaultClose=null;
+                        bCreateFlag = false;
+                        bCloseFlag= false;
+
+                    }//for
+                    log.info(szTaskType + " Status added successfully");
+                    System.out.println(szTaskType + " Status added successfully");
+                    szConsiderForSLA = null;
+                    iHigherThreshold = 0;
+                    iLowerThreshold = 0;
+                    szStatuses = null;
+                    sALinkGroupArray = null;
+                    szTaskType = null;
+                }//while
+                config = null;
+                it = null;
+                set = null;
+                System.out.println("All Statuses created successfully");
+                log.info("All Statuses created successfully");
+                if (fpermission && fsendMailTo)
+                {
+                    bFLAG = true;
+                }
+                /*if (!bExceptionFlag)
+                {
+                //<jsp:include page="GA_AddStatus.jsp" flush="true">
+                }
+                if (!bFLAG)
+                {
+
+                //System.out.println("security level failed");
+                log.info("security level failed");
+                }*/
+            } else
+            {
+                log.info("Database Connection failure");
+                System.out.println("Database Connection failure");
+            }
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            log.error("Unable to add Status:: ", e);
+        }
+        return bFLAG;
+    }
+}

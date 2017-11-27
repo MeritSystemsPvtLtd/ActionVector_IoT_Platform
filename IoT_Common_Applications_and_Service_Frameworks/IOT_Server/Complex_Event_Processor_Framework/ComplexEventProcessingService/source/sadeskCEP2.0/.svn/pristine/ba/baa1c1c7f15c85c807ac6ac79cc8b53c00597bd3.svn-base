@@ -1,0 +1,146 @@
+
+
+/**
+ * LoginService.java
+ *
+ * This file was auto-generated from WSDL
+ * by the Apache Axis2 version: 1.6.1  Built on : Aug 31, 2011 (12:22:40 CEST)
+ */
+
+    package loginservice;
+
+    /*
+     *  LoginService java interface
+     */
+
+    public interface LoginService {
+          
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param getGroupsRequest1
+                
+         */
+
+         
+                     public loginservice.GroupInput getGroups(
+
+                        loginservice.GetGroupsRequest getGroupsRequest1)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param getGroupsRequest1
+            
+          */
+        public void startgetGroups(
+
+            loginservice.GetGroupsRequest getGroupsRequest1,
+
+            final loginservice.LoginServiceCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param getTasktypesRequest3
+                
+         */
+
+         
+                     public loginservice.GetTasktypesResponse getTasktypes(
+
+                        loginservice.GetTasktypesRequest getTasktypesRequest3)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param getTasktypesRequest3
+            
+          */
+        public void startgetTasktypes(
+
+            loginservice.GetTasktypesRequest getTasktypesRequest3,
+
+            final loginservice.LoginServiceCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param chkUserRequest5
+                
+         */
+
+         
+                     public loginservice.ChkUserResponse chkUser(
+
+                        loginservice.ChkUserRequest chkUserRequest5)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param chkUserRequest5
+            
+          */
+        public void startchkUser(
+
+            loginservice.ChkUserRequest chkUserRequest5,
+
+            final loginservice.LoginServiceCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param groupInput7
+                
+         */
+
+         
+                     public loginservice.GetGroupMembersResponse getGroupMembers(
+
+                        loginservice.GroupInput groupInput7)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param groupInput7
+            
+          */
+        public void startgetGroupMembers(
+
+            loginservice.GroupInput groupInput7,
+
+            final loginservice.LoginServiceCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        
+       //
+       }
+    

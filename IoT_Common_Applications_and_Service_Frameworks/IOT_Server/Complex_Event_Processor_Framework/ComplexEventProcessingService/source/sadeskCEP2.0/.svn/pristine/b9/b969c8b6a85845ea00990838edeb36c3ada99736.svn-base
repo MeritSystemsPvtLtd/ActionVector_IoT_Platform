@@ -1,0 +1,32 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.FilterNode.v1;
+
+// *** Entry point for MemcachePerfMonitor ***
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.1")
+//insert into MemcacheMonitor
+//    select HostIP as MemcacheClient, MemcacheServer, MemcachePort, ElapsedTime as Latency
+//    from MemcacheReadLatencyEvent(MemcacheServer='10.10.10.10', MemcachePort='1121');
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.2")
+//insert into LoadAvgMonitor
+//    select LoadAverage1 as Load1, LoadAverage5 as Load5, LoadAverage15 as Load15
+//    from LoadAverageEvent(HostIP='10.10.10.10');
+
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.1")
+select * from MemoryStatsEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.2")
+select * from LoadAverageEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.3")
+select * from MemcacheReadLatencyEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.4")
+select * from HTTPResponseTimeEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.5")
+select * from ConcurrentProcessesEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.istream.6")
+select * from SwapStatsEvent;

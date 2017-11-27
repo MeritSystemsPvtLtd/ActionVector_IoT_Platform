@@ -1,0 +1,25 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package businessmodel;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ *
+ * @author gopal
+ * Created on Jun 14, 2012, 10:49:53 AM
+ */
+public class AddNewRole
+{
+
+    public String addNewRole(HttpServletRequest request)
+    {
+
+
+
+
+        return null;
+    }
+}

@@ -1,0 +1,77 @@
+package com.meritsystems.monitor;
+
+import com.meritsystems.core.ApplicationException;
+import com.meritsystems.core.configuration.Configuration;
+import com.meritsystems.core.configuration.ConfigurationReader;
+import com.meritsystems.core.log.Logger;
+import com.meritsystems.core.log.LoggerFactory;
+import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class JVMMonitor extends TimerTask {
+
+    static Logger logger = LoggerFactory.getLogger(Engine.class);
+    public static boolean sendToETLOption = false;
+    public static String customerID = null;
+
+    /**
+     *
+     */
+    public JVMMonitor() {
+        super();
+    }
+
+    @Override
+    public void run() {
+
+        logger.entering("run");
+        Engine engine = new Engine();
+
+        try {
+            Configuration config = ConfigurationReader.getConfiguration();
+            engine.init();
+            List<JMXContext> context = engine.process();
+            //ReportDispatcher.generateReports(context);
+
+        } catch (ApplicationException e) {
+            logger.severe(e, "run", e.getMessage());
+        } catch (Exception e) {
+            logger.severe(e, "run", e.getMessage());
+        }
+        logger.exiting("run");
+    }
+
+    /**
+     * @param args
+     */
+    public static void main(String[] args) {
+        logger.entering("main");
+        logger.info("Staring Monitor");
+        logger.info("Reading configuration file " + ConfigurationReader.FILE_NAME);
+
+        Configuration config = ConfigurationReader.getConfiguration();
+
+        logger.info("Reading of configuration file successful " + config);
+
+        int interval = config.getRefreshInterval();
+
+        logger.info("Refreshing intervals at " + interval + " seconds");
+        logger.info("Scheduling timer ");
+
+        sendToETLOption = config.sendtoETLAdapter();
+        customerID = config.getCustomerID();
+        if (sendToETLOption) {
+            logger.info("sendToETLOption = " + sendToETLOption + " :stream will be send to ETLAdapter");
+        } else {
+            logger.info("sendToETLOption = " + sendToETLOption + " :stream will not be send to ETLAdapter");
+        }
+        Timer timer = new Timer();
+        JVMMonitor jvm = new JVMMonitor();
+        timer.schedule(jvm, new Date(), interval * 1000);
+
+        logger.info("Timer started running");
+        logger.exiting("main");
+    }
+}

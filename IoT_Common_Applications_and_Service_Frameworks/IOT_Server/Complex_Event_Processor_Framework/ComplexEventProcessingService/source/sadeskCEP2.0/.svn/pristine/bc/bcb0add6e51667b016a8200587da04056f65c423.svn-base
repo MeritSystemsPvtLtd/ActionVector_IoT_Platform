@@ -1,0 +1,456 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.sadeskCeP;
+
+import addcomments.AddCommentsLoginRequest;
+import addcomments.AddCommentsResponse;
+import addcomments.AddCommentsStub;
+import changestatus.ChangeStatusRequest;
+import changestatus.ChangeStatusResponse;
+import changestatus.ChangeStatusStub;
+import com.espertech.esper.client.EventBean;
+import com.espertech.esper.client.UpdateListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.OutputStreamWriter;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import loginservice.ChkUserRequest;
+import loginservice.ChkUserResponse;
+import loginservice.LoginService;
+import loginservice.LoginServiceStub;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.MultipartPostMethod;
+import org.apache.log4j.Logger;
+import userlogout.LogoutUserRequest;
+import userlogout.UserLogoutStub;
+
+/**
+ *
+ * @author rekha
+ */
+public class AutoCloseNodeListener implements UpdateListener {
+
+    private static final Logger log = Logger.getLogger(AutoCloseNodeListener.class.getName());
+    private Properties properties = null;
+    private String szService = null;
+    private String szSubservice = null;
+    private String szTaskType = null;
+    private String szTaskId = null;
+    private static int counter = 0;
+    int thrIndx;
+
+    public AutoCloseNodeListener() throws Exception {
+        properties = new Properties();
+        try {
+            properties.load(new FileInputStream("config/sadeskCepTask.ini"));
+        } catch (IOException ex) {
+            log.debug("ERROR while loading properties file=======");
+            ex.printStackTrace();
+            throw ex;
+        }
+    }
+
+    public void update(EventBean[] corrEvent, EventBean[] oldData) {
+        try {
+            if (corrEvent == null) {
+                return;
+            }
+
+            for (int i = 0; i < corrEvent.length; i++) {
+                log.debug("[EventCount:" + (i + 1) + "]\nEventDump==> " + corrEvent[i].getUnderlying());
+                // pretty print the correlated event to the logs
+                prettyprint(corrEvent[i]);
+                dispatchEvents((HashMap) corrEvent[i].getUnderlying());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void prettyprint(EventBean corrEvent) {
+
+        StringBuffer sbuf = new StringBuffer();
+
+        HashMap ev = (HashMap) corrEvent.getUnderlying();
+        Set keys = ev.keySet();
+        Iterator index = keys.iterator();
+
+        String key;
+        while (index.hasNext()) {
+            key = (String) index.next();
+            sbuf.append("   ").append(key).append(" = ").append(ev.get(key)).append("   \n");
+        }
+        log.warn("\n\n-------- AutoClose Event ---------\n" + sbuf + "\n-------------------------------------\n\n");
+    }
+
+    public void dispatchEvents(HashMap theEvent) throws IOException {
+        String szComments;
+        String EventDesc = null;
+        String EventSymptoms = null;
+        String id = null;
+        StringBuffer context = new StringBuffer();
+        String contextualtext = null;
+        String HostName = null;
+        String HostGroup = null;
+        String Filter = null;
+        String szSourceEvent = null;
+        String AlertType = null;
+        String resourceType = null;
+        String AlertAcronym = null;
+        String szCustID = "merit";
+        String sadeskUrl = properties.getProperty("sadeskUrl");
+        String resourceId = null;
+        String eventID = null;
+        String EventType = null;
+
+        ObjectInputStream input = null;
+        String types = "";
+        String szEventSourceXml = null;
+        try {
+            thrIndx = counter;
+            log.info("CepSadeskDispatcher thread start::" + thrIndx);
+            counter++;
+            // Get a set of the entries
+            Set set = theEvent.entrySet();
+            // Get an iterator
+            Iterator i = set.iterator();
+            // Display/Assign elements
+
+            while (i.hasNext()) {
+                Map.Entry me = (Map.Entry) i.next();
+                log.info("me.getKey()::" + me.getKey());
+                if (me.getKey().equals("EventDesc")) {
+                    EventDesc = me.getValue().toString();
+                    AlertAcronym = EventDesc.substring(EventDesc.lastIndexOf("["));
+                    log.info("Acronym===:" + AlertAcronym);
+                } else if (me.getKey().equals("EventType")) {
+                    EventType = me.getValue().toString();
+                } else if (me.getKey().equals("EventSymptoms")) {
+                    EventSymptoms = me.getValue().toString();
+                } else if (me.getKey().equals("HostName")) {
+                    HostName = me.getValue().toString();
+                } else if (me.getKey().equals("AlertType")) {
+                    AlertType = me.getValue().toString();
+                } else if (me.getKey().equals("HostGroup")) {
+                    HostGroup = me.getValue().toString();
+                } else if (me.getKey().equals("Filter")) {
+                    Filter = me.getValue().toString();
+                } else if (me.getKey().equals("eventSource")) {
+                    szSourceEvent = me.getValue().toString();
+                } else if (me.getKey().equals("EventSourceXml")) {
+                    szEventSourceXml = me.getValue().toString();
+                } else if (me.getKey().equals("resourceType")) {
+                    resourceType = me.getValue().toString();
+                } else if (me.getKey().equals("resourceId")) {
+                    resourceId = me.getValue().toString();
+                } else if (me.getKey().equals("eventID")) {
+                    eventID = me.getValue().toString();
+                } else if (me.getKey().equals("CustomerID")) {
+                    szCustID = me.getValue().toString();
+                } else {
+                    contextualtext = (me.getKey() + " = "
+                            + me.getValue().toString() + " <br>");
+                    context.append(contextualtext);
+                }
+            }
+            contextualtext = context.toString();
+            log.info("contextualtext:::" + contextualtext);
+            log.info("HostName::::::::::::::::::" + HostName);
+            sadeskUrl = "http://" + szCustID  + sadeskUrl;
+            log.info("SA-Desk URL=" + sadeskUrl);
+
+            if (szCustID != null) {
+                try {
+                    log.info("Responce from type controller:::::::::::::1");
+                    String ContextClassName = properties.getProperty(AlertAcronym);
+                    if (ContextClassName != null) {
+                        QtartContextGenerator contextGenerator = new QtartContextGenerator(szSourceEvent, Filter, properties);
+                        types = QtartContextGenerator.getSzService() + ":" + QtartContextGenerator.getSzSubservice() + "::";
+                        HostName = QtartContextGenerator.getSzHost();
+                    } else {
+
+                        DefalutContextGenerator defaultGenerator = new DefalutContextGenerator();
+                        if (!(resourceType == null || resourceType.equalsIgnoreCase("") || resourceType.equalsIgnoreCase("null"))) {
+                            types = defaultGenerator.initilize(properties, HostName, resourceType, sadeskUrl);
+                        } else if (resourceType == null || resourceType.equalsIgnoreCase("") || resourceType.equalsIgnoreCase("null")) {
+                            types = defaultGenerator.initilize(properties, HostName, "default", sadeskUrl);
+                        }
+
+                        log.info("Responce from type controller" + types);
+
+                    }
+                    setTaskType(types, AlertType);
+                    log.info("SUBSERVICE:" + szSubservice);
+                    log.info("SERVICE:" + szService);
+                    log.info("Task type for service " + szService
+                            + " subservice " + szSubservice + " is "
+                            + szTaskType);
+                    if (szTaskType == null) {
+                        log.info("Task type not mapped. Setting to default.");
+                        szTaskType = properties.getProperty("Default");
+                    }
+                    log.info("Tasktype is ::" + szTaskType);
+                } catch (Exception e) {
+                    log.error("*********Error******** in CepTypeServlet Responce");
+                    log.error(e.getMessage());
+                } finally {
+                    if (input != null) {
+                        input.close();
+                    }
+                }
+                String szUserName = properties.getProperty("UserName");
+                String szPassword = properties.getProperty("Password");
+
+                szComments = "<strong><u>Event Symptoms::</u></strong> <br> "
+                        + EventSymptoms
+                        + "<br> <strong><u> Contextual Information:: </u></strong><br> "
+                        + contextualtext + "<br>";
+                szComments = URLEncoder.encode(szComments, "UTF-8");
+                log.info("Value Passed to Servlet is " + szComments);
+                String ticketTimeOut = "-1"; //timeout is not valid, updates always
+                if (!updateIfExists(sadeskUrl, szTaskType, HostName, ticketTimeOut, AlertAcronym, szComments, szCustID, szUserName, szPassword)) {
+                    log.info("Ignoring this event");
+                    return;
+                }
+                log.info("Added Comment to Existing task");
+                id = szTaskId;
+                if (szEventSourceXml != null) {
+                    try {
+
+                        String uploadFileUrl = new String(sadeskUrl + "/upLoadFile.srv?szUserName=" + szUserName + "&id=" + id + "&tasktype=" + szTaskType);
+                        HttpClient client = new HttpClient();
+                        MultipartPostMethod mPost = new MultipartPostMethod(uploadFileUrl);
+                        client.setConnectionTimeout(8000);
+
+                        // Send any XML file as the body of the POST request
+                        File f1 = new File(szEventSourceXml);
+
+                        System.out.println("File Length = " + f1.length());
+
+                        mPost.addParameter(f1.getName(), f1);
+
+                        int statusCode1 = client.executeMethod(mPost);
+
+                        System.out.println("statusLine>>>" + mPost.getStatusLine());
+                        mPost.releaseConnection();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        log.warn("Erroe while getting responce from UploadFile Servlet" + e.getStackTrace());
+
+                    }
+                }
+                log.info("Closing the task..."+szTaskId);
+                String szNewStatus = "Closed";
+                /*
+                 * Code to change status
+                 * login,changestatus,logout
+                 */
+                ChkUserRequest checkReq = new ChkUserRequest();
+                checkReq.setSzUserName(szUserName);
+                checkReq.setSzUserAddr(szPassword);
+                LoginServiceStub loginStub = new LoginServiceStub("http://"+szCustID+properties.getProperty("loginUrl"));
+                ChkUserResponse checkResp = loginStub.chkUser(checkReq);
+                String szSessionId = checkResp.getSzSession();
+                if(szSessionId == null){
+                    log.error("Error logging in to proChara");
+                    return;
+                }
+                ChangeStatusRequest changeReq = new ChangeStatusRequest();
+                changeReq.setSzComments(szComments);
+                changeReq.setSzTaskID(szTaskId);
+                changeReq.setSzNewStatus(szNewStatus);
+                changeReq.setSzUser(szUserName);
+                changeReq.setSzSessionId(szSessionId);
+                ChangeStatusStub changeReqStub = new ChangeStatusStub("http://"+szCustID+properties.getProperty("changeStatusUrl"));
+                ChangeStatusResponse changeRes = changeReqStub.changeTaskStatus(changeReq);
+                String szResponse = changeRes.getMessage();
+                log.info("ChangeStatus Response==="+szResponse);
+                LogoutUserRequest logoutReq = new LogoutUserRequest();
+                logoutReq.setSzSession(szSessionId);
+                logoutReq.setSzUserName(szUserName);
+                UserLogoutStub logoutStub = new UserLogoutStub("http://"+szCustID+properties.getProperty("logoutUrl"));
+                logoutStub.logoutUser(logoutReq);
+            }
+        } catch (Exception e) {
+            log.debug("========= ERROR ===============" + e.getStackTrace());
+            log.error(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void setTaskType(String serviceMapping, String alertType) {
+        String types[] = serviceMapping.split("::");
+
+        try {
+
+            for (int i = 0; i < types.length; i++) {
+                String mapping[] = types[i].split(":");
+                szService = mapping[0];
+                if (mapping.length > 1) {
+                    szSubservice = mapping[1];
+                }
+                szTaskType = properties.getProperty(szService + "-"
+                        + szSubservice + "-" + alertType);
+                if (szTaskType == null) {
+                    szTaskType = properties.getProperty(szService + "-"
+                            + szSubservice);
+                    log.info("Prop===" + szService + "-"
+                            + szSubservice);
+                }
+                if (szTaskType == null) {
+                    szTaskType = properties.getProperty(szService);
+
+                }
+                if (szTaskType == null) {
+                    szTaskType = properties.getProperty(alertType);
+
+                }
+                if (szTaskType != null) {
+                    break;
+                }
+
+                mapping = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (types != null) {
+                    types = null;
+                }
+
+            } catch (Exception e) {
+                System.out.println("***ERROR While Deinitilizing in final Block*******");
+            }
+
+        }
+    }
+
+    private boolean updateIfExists(String sadeskUrl, String szTaskType, String HostName, String ticketTimeOut,
+            String AlertAcronym, String EventSymptoms, String szCustID, String szUserName, String szPassword) {
+
+        ObjectInputStream input = null;
+        OutputStreamWriter writer = null;
+        URL url = null;
+        URLConnection conn = null;
+        Object object02 = null;
+        String szSession = null;
+
+        try {
+            url = new URL(sadeskUrl + "/CEPStateControllerServlet.srv");
+            conn = url.openConnection();
+
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            writer = new OutputStreamWriter(conn.getOutputStream());
+
+            //write parameters
+            writer.write("HostName=" + HostName + "&ticketTimeOut=" + ticketTimeOut + "&TaskType=" + szTaskType + "&AlertAcronym=" + AlertAcronym + "&EventSymptoms=" + EventSymptoms);
+            writer.flush();
+            conn.connect();
+            input = new ObjectInputStream(conn.getInputStream());
+            object02 = input.readObject();
+            String response = object02.toString();
+            String res_split[] = response.split(",");
+            log.info("Responce from CEPStateController" + res_split[0]);
+
+            if (Boolean.parseBoolean(res_split[0])) {
+                szTaskId = res_split[1].trim();
+                AddCommentsResponse resp = null;
+                AddCommentsStub commentStub = null;
+                AddCommentsLoginRequest attachObj = null;
+                commentStub = new AddCommentsStub(
+                        "http://" + szCustID + properties.getProperty("commentUrl"));
+                try {
+                    String szMessage = "";
+                    log.info("------------I m in START of calling Add Comments service from Client In StateController cepAddCommentServlet----------------");
+                    log.info("szSession::::" + szSession);
+
+                    attachObj = new AddCommentsLoginRequest();
+
+                    attachObj.setSzComments(EventSymptoms.toString());
+                    attachObj.setPassword(szPassword);
+                    attachObj.setSzUser(szUserName);
+                    attachObj.setUserName(szUserName);
+                    attachObj.setSzTaskID(szTaskId);
+                    resp = commentStub.addCommentsWithLogin(attachObj);
+                    szMessage = resp.getMessage();
+                    log.info("------------I m in END of calling AddComments service from Client In StateController- cepAddCommentServlet---------------"
+                            + szMessage);
+                    return Boolean.parseBoolean(res_split[0]);
+
+                } catch (Exception e) {
+                    log.warn("========= ERROR AddComment ===============cepAddCommentServlet");
+                    log.error(e.getMessage());
+                } finally {
+                    try {
+
+                        if (resp != null) {
+                            resp = null;
+                        }
+                        commentStub._getServiceClient().cleanup();
+                        commentStub.cleanup();
+                        if (commentStub != null) {
+                            commentStub = null;
+                        }
+                        if (attachObj != null) {
+                            attachObj = null;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("***ERROR While Deinitilizing in final Block*******");
+                    }
+                }
+            } else {
+                return Boolean.parseBoolean(res_split[0]);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("failed to add comment");
+        } finally {
+            try {
+                if (input != null) {
+                    input.close();
+                }
+
+                if (writer != null) {
+                    writer.close();
+                }
+
+                if (url != null) {
+                    url = null;
+                }
+
+                if (conn != null) {
+                    conn = null;
+                }
+
+                if (input != null) {
+                    input = null;
+                }
+
+                if (writer != null) {
+                    writer = null;
+                }
+
+                if (object02 != null) {
+                    object02 = null;
+                }
+            } catch (Exception e) {
+                System.out.println("***ERROR While Deinitilizing in final Block*******");
+            }
+        }
+        return false;
+    }
+}

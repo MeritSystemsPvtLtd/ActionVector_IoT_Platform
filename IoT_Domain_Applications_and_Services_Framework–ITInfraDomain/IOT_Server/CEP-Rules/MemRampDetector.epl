@@ -1,0 +1,48 @@
+module com.prokosha.cep.memramp.v1;
+
+create variable int MEM_RAMP_AVERAGING_TIME=5;//minutes
+create variable int MEM_RAMP_DETECTION_TIME=5;//minutes
+create variable int MEM_RAMP_TOLERANCE_PERC=10;//percentage
+create variable string MEM_ACRO_RAMP="[MEM_RAMP]";
+
+//@Name("com.prokosha.cep.memramp.istream.1")
+insert into MemUsage
+        select (((MemTotal-MemFree)/MemTotal)*100) as MemUsage,HostName,HostAddress,CustomerID,resourceType,
+	resourceId from ServerStateStream where ((MemTotal>=0) and (MemFree>=0) and (MemTotal>0));
+
+//@Name("com.prokosha.cep.memramp.istream.2")
+insert into MemAverage
+        select HostName, HostAddress,avg(MemUsage) as AvgMemUsage,CustomerID,resourceType,resourceId
+        from MemUsage.win:time(MEM_RAMP_AVERAGING_TIME minutes)
+        group by HostName;
+
+//@Name("com.prokosha.cep.memramp.istream.3")
+insert into MemDiffStream
+	select last(AvgMemUsage) as currMemAvg,last(HostName) as HostName,last(HostAddress) as HostAddress,
+	last(CustomerID) as CustomerID,last(resourceType) as resourceType,
+	last(resourceId) as resourceId,cast(last(AvgMemUsage,1),float) as prevMemAvg
+	from MemAverage.win:time(MEM_RAMP_AVERAGING_TIME minutes)
+        group by HostName;
+
+//@Name("com.prokosha.cep.memramp.istream.4")
+insert into MemPSTFlagStream
+	select case when ((currMemAvg-prevMemAvg) >= (MEM_RAMP_TOLERANCE_PERC*prevMemAvg/100)) then 1 else 0 end as flag,
+	currMemAvg,prevMemAvg,HostName,HostAddress,CustomerID,resourceType,resourceId from MemDiffStream;
+
+//@Name("com.prokosha.cep.memramp.istream.5")
+insert into MemPSTRampStream
+	select min(flag) as minFlag,currMemAvg,prevMemAvg,HostName,HostAddress,CustomerID,resourceType,
+	resourceId from MemPSTFlagStream.win:time(MEM_RAMP_DETECTION_TIME minutes)
+        group by HostName;
+
+@Name("com.prokosha.cep.memramp.dispatch.6")
+select "Server" as EventType,
+        (("ALERT - Mem Usage has been increasing continously in the past ").concat(cast(MEM_RAMP_DETECTION_TIME,String)).concat(" minutes").concat(MEM_ACRO_RAMP)) as EventDesc,
+        ("Mem Usage has been increasing continously in the past ").concat(cast(MEM_RAMP_DETECTION_TIME,String)).concat(" minutes") as EventSymptoms,
+        HostName, HostAddress,CustomerID,
+        resourceType,resourceId,currMemAvg as CurrentMemAvg,prevMemAvg as PreviousMemAvg
+        from MemPSTRampStream
+        where (minFlag >0)
+        group by HostName
+        output first every 30 minutes;
+

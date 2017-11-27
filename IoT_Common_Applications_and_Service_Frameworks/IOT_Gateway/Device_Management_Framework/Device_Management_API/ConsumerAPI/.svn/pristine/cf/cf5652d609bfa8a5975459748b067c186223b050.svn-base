@@ -1,0 +1,171 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package AV_Action;
+
+import java.sql.*;
+import java.util.*;
+import Model.*;
+import controller.LogWriter;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_TasktypeattributesAction extends AV_Model {
+
+    static Logger log = Logger.getLogger(AV_TasktypeattributesAction.class);
+
+    public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+        response.setContentType("text/xml;charset=UTF-8");
+        List attributesvalues = new ArrayList();
+        List attributesnames = new ArrayList();
+        String szopration = "tasktype-attributes";
+        String szrespStr=null;
+        StringBuffer result = null;
+        String customerid = "";
+        Connection con = null;
+        Statement stat = null;
+        ResultSet rs = null;
+        boolean paramcheck = false;
+        String szSession = null;
+        String szTaskID = null;
+              
+        try {
+            szSession = request.getParameter("szsessionid");
+            szTaskID = request.getParameter("taskid");
+            customerid = request.getParameter("customerid");
+            if (!szTaskID.equalsIgnoreCase("") && szTaskID != null) {
+                paramcheck = true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (paramcheck) {
+            
+            try {
+                con = DatabaseConnection.getAVSAConnection(request);
+            } catch (Exception e) {
+                System.out.println("Where is your PostgreSQL JDBC Driver? Include in your library path!");
+                e.printStackTrace();
+               
+                AV_Constants.opStatus=AV_Constants.DBERROR;
+            }
+            if (con != null) {
+                try {
+                    stat = con.createStatement();
+                    log.info("select * from gatask where task_id='" + szTaskID + "'");
+                    rs = stat.executeQuery("select * from gatask where task_id='" + szTaskID + "'");
+                    while (rs.next()) {
+                        String task_id = rs.getString("task_id");
+                        String task_type = rs.getString("task_type");
+                        String task_summary = rs.getString("task_summary");
+                        String status = rs.getString("status");
+                        String category = rs.getString("category");
+                        String priority = rs.getString("priority");
+                        attributesvalues.add(task_id);
+                        attributesvalues.add(task_type);
+                        attributesvalues.add(task_summary);
+                        attributesvalues.add(status);
+                        attributesvalues.add(category);
+                        attributesvalues.add(priority);
+                        for (int i = 7; i <= 37; i++) {
+                            attributesvalues.add(rs.getString(i));
+                        }
+                    }
+                    attributesnames.add("TaskID");
+                    attributesnames.add("Task type");
+                    attributesnames.add("Task Summary");
+                    attributesnames.add("Status");
+                    attributesnames.add("Category");
+                    attributesnames.add("Priority");
+                    rs=null;
+                    
+                    System.out.println("select attribute from gatasktypeattributes where tasktype in(select task_type from gatask where task_id='" + szTaskID + "') order by attributepos ");
+                    rs = stat.executeQuery("select attribute from gatasktypeattributes where tasktype in(select task_type from gatask where task_id='" + szTaskID + "') order by attributepos ");
+                    while (rs.next()) {
+
+                        String attribute = rs.getString("attribute");
+
+                        attributesnames.add(attribute);
+                    }
+                    if ((attributesnames != null && attributesnames.size() > 0) && (attributesvalues != null && attributesvalues.size() > 0)) {
+                        result = new StringBuffer("<attributes>");
+                        int s = attributesnames.size();
+                        for (int i = 0; i < s; i++) {
+                            String attributelegnth = (String) attributesvalues.get(i);
+                            if (!(attributesvalues.get(i).equals("null")) && !(attributesvalues.get(i).equals("None")) && !(attributelegnth.trim().equals(""))) {
+                                result.append("<attribute>");
+                                result.append("<name>");
+                                result.append(attributesnames.get(i));
+                                result.append("</name>");
+                                result.append("<value>");
+                                result.append(attributesvalues.get(i));
+                                result.append("</value>");
+                                result.append("</attribute>");
+                                AV_Constants.opStatus=AV_Constants.SUCCESS;
+
+                            }
+                        }
+                        result.append("</attributes>");
+                    } else {
+                        
+                        AV_Constants.opStatus=AV_Constants.NODATA_FOUND;
+                    }
+
+                } catch (Exception e) {
+              
+                    AV_Constants.opStatus=AV_Constants.FAILURE;
+                    e.printStackTrace();
+                    log.debug("Unable to process the request action");
+                    
+                } finally {
+                    
+                    try {
+                        con.close();
+                        stat.close();
+                        rs.close();
+                        attributesnames = null;
+                        attributesvalues = null;
+                        System.out.println("SUCCESSFULLY CLOSING CONNECTION");
+
+                    } catch (SQLException ex) {
+                        log.error("Error closing conneciton::" + ex);
+                        
+                    }
+                }
+
+            } else {
+                
+                AV_Constants.opStatus=AV_Constants.DBERROR;
+            }
+            
+        } else {
+           
+            AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+        }
+
+        try {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,result,szopration,sc);
+            
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogWriter.writeDebug("exception while writing output");
+        } finally {
+            try {
+                szrespStr = null;
+                szopration=null;
+                result = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
+}

@@ -1,0 +1,560 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package businessmodel;
+
+import javax.servlet.http.*;
+import java.util.*;
+import java.sql.*;
+import Model.*;
+import org.xml.sax.InputSource;
+import java.io.*;
+import java.util.*;
+//import java.io.StringReader;
+import java.io.File;
+import org.w3c.dom.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+
+/**
+ *
+ * @author gopal
+ * Created on Jun 25, 2012, 3:37:46 PM
+ */
+public class TestAPI
+{
+
+    private static HttpServletRequest HttpServletRequest;
+
+    public static void main(String... sr)
+    {
+        try
+        {
+            String szgroups = "";
+            String sztaskType = "";
+            String szgroup = "";
+            int ilength = 0;
+            String szRole = "";
+            String szGroupName = "";
+            String szuserGroups = "";
+            String szuserName = "";
+            String szuserGroup = "";
+            String szrole = "";
+            String szmobile = "";
+            String szemail = "";
+            String sztaskName = "";
+            String szpolicy = "";
+            String szuserRole = "";
+            String szusers = "";
+            String szprimaryGroup = "";
+            Set roleset = new HashSet();
+            HashMap<String, String> taskTypeGroups = new HashMap<String, String>();
+            HashMap groupRoles = new HashMap();
+            ArrayList<UserBean> users = new ArrayList<UserBean>();
+            ArrayList<String> tasktypes = new ArrayList<String>();
+            ArrayList<String> groups = new ArrayList<String>();
+            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+            String filestr = "<root><alert-categories><alertcategory><name>Server</name><group>L1-server-group</group>"+
+                    "</alertcategory><alertcategory><name>Database</name><group>L1-database-group</group></alertcategory>"+
+                    "<alertcategory><name>Network</name><group>L1-network-group</group></alertcategory><alertcategory>"+
+                    "<name>JVM</name><group>L1-jvm-group</group></alertcategory></alert-categories><group-roles>"+
+                    "<groups><name>L1-server-group</name><roles><role>Operations Head</role><reportrole>Operations Head</reportrole>"+
+                    "</roles><roles><role>Server ops manager</role><reportrole>Operations Head</reportrole></roles>"+
+                    "<roles><role>System Engineer</role><reportrole>Server ops manager</reportrole></roles><roles><role>System Analyst</role>"+
+                    "<reportrole>Server ops manager</reportrole></roles></groups><groups><name>L1-database-group</name><roles>"+
+                    "<role>Operations Head</role><reportrole>Operations Head</reportrole></roles><roles><role>Database ops manager</role>"+
+                    "<reportrole>Operations Head</reportrole></roles><roles><role>System Engineer</role><reportrole>Database ops manager</reportrole>"+
+                    "</roles><roles><role>System Analyst</role><reportrole>Database ops manager</reportrole></roles></groups>"+
+                    "<groups><name>L1-network-group</name><roles><role>Operations Head</role><reportrole>Operations Head</reportrole>"+
+                    "</roles><roles><role>Network ops manager</role><reportrole>Operations Head</reportrole></roles><roles>"+
+                    "<role>System Engineer</role><reportrole>Network ops manager</reportrole></roles><roles><role>System Analyst</role>"+
+                    "<reportrole>Network ops manager</reportrole></roles></groups><groups><name>L1-jvm-group</name><roles><role>Operations Head</role>"+
+                    "<reportrole>Operations Head</reportrole></roles><roles><role>JVM ops manager</role><reportrole>Operations Head</reportrole>"+
+                    "</roles><roles><role>System Engineer</role><reportrole>JVM ops manager</reportrole></roles><roles><role>System Analyst</role>"+
+                    "<reportrole>JVM ops manager</reportrole></roles></groups></group-roles><userconfig><user><name>John</name><email>mail@mail.com</email>"+
+                    "<mobile>8877665533</mobile><group>L1-server-group</group><role>System Analyst</role></user><user><name>Paul</name>"+
+                    "<email>mail@mail.com</email><mobile>8877665534</mobile><group>L1-database-group</group><role>Database Ops Manager</role>"+
+                    "</user><user><name>Alex</name><email>mail@mail.com</email><mobile>8877665534</mobile><group>L1-network-group</group><role>System Analyst</role>"+
+                    "</user><user><name>Peter</name><email>mail@mail.com</email><mobile>8877665536</mobile><group>L1-jvm-group</group>"+
+                    "<role>System Analyst</role></user><user><name>Sunil</name><email>usermail@mail.com</email><mobile>8877665536</mobile>"+
+                    "<group>L1-server-group</group><role>System Analyst</role></user></userconfig><alerttype><name>Server</name><primarygroup>L1-server-group</primarygroup>"+
+                    "<policy>Roundrobbin</policy><role>System Analyst</role><assignee>John</assignee><assignee>Sunil</assignee></alerttype>"+
+                    "<alerttype><name>Database</name><primarygroup>L1-database-group</primarygroup><policy>Default Assignment</policy>"+
+                    "<role>Database Ops Manager</role><assignee>Paul</assignee></alerttype><alerttype><name>Network</name><primarygroup>L1-network-group</primarygroup>"+
+                    "<policy>Task Creation Time</policy><role>System Analyst</role><assignee>Alex</assignee></alerttype><alerttype>"+
+                    "<name>JVM</name><primarygroup>L1-jvm-group</primarygroup><policy>Default Assignment</policy><role>System Analyst</role>"+
+                    "<assignee>Peter</assignee></alerttype></root>";
+            InputSource is = new InputSource(new StringReader(filestr));
+             
+            //Document doc = docBuilder.parse(new File("/home/mkrekha/savebook.xml"));
+            Document doc = docBuilder.parse(is);
+
+
+            doc.getDocumentElement().normalize();
+            System.out.println("Root element of the doc is " + doc.getDocumentElement().getNodeName());
+            //doc = docBuilder.parse(new File("/home/mkrekha/book.xml"));
+            //Document doc = docBuilder.parse(is);
+
+
+            NodeList listOfCategories = doc.getElementsByTagName("alertcategory");
+            int totalPersons = listOfCategories.getLength();
+            //System.out.println("Total no of alertcategories : " + totalPersons);
+
+            for (int s = 0; s < listOfCategories.getLength(); s++)
+            {
+                Node firstCategoryNode = listOfCategories.item(s);
+                if (firstCategoryNode.getNodeType() == Node.ELEMENT_NODE)
+                {
+                    Element firstPersonElement = (Element) firstCategoryNode;
+                    NodeList lastNameList = firstPersonElement.getElementsByTagName("name");
+                    Element lastNameElement = (Element) lastNameList.item(0);
+                    NodeList textLNList = lastNameElement.getChildNodes();
+                    sztaskType = ((Node) textLNList.item(0)).getNodeValue().trim();
+
+                    NodeList firstNameList = firstPersonElement.getElementsByTagName("group");
+                    for (int i = 0; i < firstNameList.getLength(); i++)
+                    {
+                        Element firstNameElement = (Element) firstNameList.item(i);
+                        //Element firstNameElement=(Element)firstNameList.item(1);
+                        NodeList textFNList = firstNameElement.getChildNodes();
+                        szgroups += ((Node) textFNList.item(0)).getNodeValue().trim() + ",";
+                    }
+
+
+                    tasktypes.add(sztaskType);
+                    taskTypeGroups.put(sztaskType, szgroups.substring(0, szgroups.length() - 1));
+                    //System.out.println("Task type groups::" + taskTypeGroups);
+                    //System.out.println(sztaskType + "=" + szgroups);
+                    szgroups = "";
+                    sztaskType = "";
+                }//end of if clause
+            }//end of for loop with s var
+            //System.out.println("Tasktypes::" + tasktypes);
+
+            NodeList ilistOfGroups = doc.getElementsByTagName("groups");
+            int itotalGroups = ilistOfGroups.getLength();
+            //System.out.println("Total no of groups : " + itotalGroups);
+            for (int s = 0; s < ilistOfGroups.getLength(); s++)
+            {
+                Node firstGroupNode = ilistOfGroups.item(s);
+
+                if (firstGroupNode.getNodeType() == Node.ELEMENT_NODE)
+                {
+                    Element firstPersonElement = (Element) firstGroupNode;
+                    NodeList lastNameList = firstPersonElement.getElementsByTagName("name");
+                    Element lastNameElement = (Element) lastNameList.item(0);
+                    NodeList textLNList = lastNameElement.getChildNodes();
+                    szGroupName = ((Node) textLNList.item(0)).getNodeValue().trim();
+                    NodeList ilistOfRoles = firstPersonElement.getElementsByTagName("roles");
+                    int itotalRoles = ilistOfRoles.getLength();
+                    //System.out.println("Total roles::"+itotalRoles);
+                    for (int r = 0; r < ilistOfRoles.getLength(); r++)
+                    {
+                        Node listRole = ilistOfRoles.item(r);
+                        if (listRole.getNodeType() == Node.ELEMENT_NODE)
+                        {
+                            Element roleName = (Element) listRole;
+                            NodeList nameOfRole = roleName.getElementsByTagName("role");
+                            Element role = (Element) nameOfRole.item(0);
+                            NodeList textRole = role.getChildNodes();
+                            szRole += ((Node) textRole.item(0)).getNodeValue().trim() + ",";
+                            roleset.add(((Node) textRole.item(0)).getNodeValue().trim());
+                        //System.out.println("Alert role Name : " + ((Node) textRole.item(0)).getNodeValue().trim());
+                        }
+                    }
+                    //System.out.println("Alert Group Roles : " + ((Node) textLNList.item(0)).getNodeValue().trim() + "=" + szRole.substring(0, szRole.length() - 1));
+                    groups.add(szGroupName);
+                    groupRoles.put(szGroupName, szRole.substring(0, szRole.length() - 1));
+                    szRole = "";
+
+                }//end of if clause
+
+            }//end of for loop with s var
+            //System.out.println("Groups::" + groups);
+            //System.out.println("Security Levels::" + roleset);
+            //System.out.println("#Users#");
+            NodeList listOfUsers = doc.getElementsByTagName("user");
+            int totalUsers = listOfUsers.getLength();
+            //System.out.println("Total no of users : " + totalUsers);
+
+            for (int s = 0; s < listOfUsers.getLength(); s++)
+            {
+                Node firstPersonNode = listOfUsers.item(s);
+
+                if (firstPersonNode.getNodeType() == Node.ELEMENT_NODE)
+                {
+                    Element userElement = (Element) firstPersonNode;
+                    NodeList userNameList = userElement.getElementsByTagName("name");
+                    Element userNameElement = (Element) userNameList.item(0);
+                    NodeList textNameList = userNameElement.getChildNodes();
+                    szuserName = ((Node) textNameList.item(0)).getNodeValue().trim();
+                    NodeList emailList = userElement.getElementsByTagName("email");
+                    Element emailElement = (Element) emailList.item(0);
+                    NodeList textEmailList = emailElement.getChildNodes();
+                    szemail = ((Node) textEmailList.item(0)).getNodeValue().trim();
+                    NodeList mobileList = userElement.getElementsByTagName("mobile");
+                    Element mobileElement = (Element) mobileList.item(0);
+                    NodeList textmobileList = mobileElement.getChildNodes();
+                    szmobile = ((Node) textmobileList.item(0)).getNodeValue().trim();
+                    NodeList groupList = userElement.getElementsByTagName("group");
+                    Element groupElement = (Element) groupList.item(0);
+                    NodeList textGroupList = groupElement.getChildNodes();
+                    szuserGroup = ((Node) textGroupList.item(0)).getNodeValue().trim();
+                    NodeList roleList = userElement.getElementsByTagName("role");
+                    Element roleElement = (Element) roleList.item(0);
+                    NodeList textRoleList = roleElement.getChildNodes();
+                    szrole = ((Node) textRoleList.item(0)).getNodeValue().trim();
+                    //System.out.println(szuserName + " = " + szemail + ", " + szuserGroup + ", " + szrole);
+                    UserBean oUserInfo = new UserBean();
+                    oUserInfo.setName(szuserName);
+                    oUserInfo.setEmail(szemail);
+                    oUserInfo.setMobile(szmobile);
+                    oUserInfo.setGroup(szuserGroup);
+                    oUserInfo.setRole(szrole);
+                    users.add(oUserInfo);
+                    szuserGroups = "";
+                    oUserInfo = null;
+
+                }//end of if clause
+            }//end of for loop with s var
+            Iterator it = users.iterator();
+            HashMap userGroups = new HashMap();
+            HashMap userEmails = new HashMap();
+            HashMap userMobiles = new HashMap();
+            HashMap userRoles = new HashMap();
+            int i = 1;
+            String sznewgroups = "";
+            String sznewRoles = "";
+            ArrayList sOUsers = new ArrayList();
+            while (it.hasNext())
+            {
+                UserBean objUser = (UserBean) it.next();
+                //System.out.println(i + " . " + objUser.getName() + ", " + objUser.getEmail() + ", " + objUser.getGroup() + ", " + objUser.getRole());
+                i++;
+                if (userGroups.containsKey(objUser.getName()))
+                {
+                    sznewgroups = (String) userGroups.get(objUser.getName());
+                    //System.out.println("old group::" + sh.get(objUser.getName()));
+                    sznewgroups += "," + objUser.getGroup();
+                    //System.out.println("new group::" + sznewgroups);
+                    sznewRoles = (String) userRoles.get(objUser.getName());
+                    //System.out.println("old Roles::" + sznewRoles);
+                    sznewRoles += "," + objUser.getRole();
+                    userRoles.put(objUser.getName(), sznewRoles);
+                    userGroups.put(objUser.getName(), sznewgroups);
+
+                } else
+                {
+                    userGroups.put(objUser.getName(), objUser.getGroup());
+                    userEmails.put(objUser.getName(), objUser.getEmail());
+                    userMobiles.put(objUser.getName(), objUser.getMobile());
+                    userRoles.put(objUser.getName(), objUser.getRole());
+                    sOUsers.add(objUser.getName());
+                }
+                objUser = null;
+            }
+            //System.out.println("User Groups::" + userGroups);
+            //System.out.println("User Emails::" + userEmails);
+            //System.out.println("User Roles::" + userRoles);
+            //System.out.println("User Mobiles::" + userMobiles);
+            //System.out.println("User groups size" + userGroups.size());
+            //System.out.println("Users::"+sOUsers);
+            Set st = userGroups.entrySet();
+            Iterator its = st.iterator();
+            while (its.hasNext())
+            {
+                //Entry er=its.next();
+                //Map mp=its.next();
+                Map.Entry e = (Map.Entry) its.next();
+               // System.out.println(e.getKey() + "=" + e.getValue());
+            }
+
+            //System.out.println("#Policies#");
+
+            NodeList listOfTasktype = doc.getElementsByTagName("alerttype");
+            int totalTasktypes = listOfTasktype.getLength();
+            //System.out.println("Total no of Tasktye Config : " + totalTasktypes);
+            ArrayList<TasktypeBean> taskTypeList = new ArrayList<TasktypeBean>();
+            HashMap sOPrimaryRoles = new HashMap();
+            HashMap sOUserRoles = new HashMap();
+            for (int s = 0; s < listOfTasktype.getLength(); s++)
+            {
+                Node firstTasktypeNode = listOfTasktype.item(s);
+
+                if (firstTasktypeNode.getNodeType() == Node.ELEMENT_NODE)
+                {
+                    Element userElement = (Element) firstTasktypeNode;
+                    NodeList lastNameList = userElement.getElementsByTagName("name");
+                    Element lastNameElement = (Element) lastNameList.item(0);
+                    NodeList textNameList = lastNameElement.getChildNodes();
+                    sztaskName = ((Node) textNameList.item(0)).getNodeValue().trim();
+                    NodeList primaryGroupList = userElement.getElementsByTagName("primarygroup");
+                    Element primaryGroupElement = (Element) primaryGroupList.item(0);
+                    NodeList textGroupList = primaryGroupElement.getChildNodes();
+                    szprimaryGroup = ((Node) textGroupList.item(0)).getNodeValue().trim();
+                    NodeList policyList = userElement.getElementsByTagName("policy");
+                    Element policyElement = (Element) policyList.item(0);
+                    NodeList textPolicyList = policyElement.getChildNodes();
+                    szpolicy = ((Node) textPolicyList.item(0)).getNodeValue().trim();
+                    NodeList roleList = userElement.getElementsByTagName("role");
+                    Element roleElement = (Element) roleList.item(0);
+                    NodeList textRoleList = roleElement.getChildNodes();
+                    szuserRole = ((Node) textRoleList.item(0)).getNodeValue().trim();
+                    NodeList userList = userElement.getElementsByTagName("assignee");
+
+                    for (int k = 0; k < userList.getLength(); k++)
+                    {
+                        Element userNameElement = (Element) userList.item(k);
+                        NodeList textUserList = userNameElement.getChildNodes();
+                        szusers += ((Node) textUserList.item(0)).getNodeValue().trim() + ",";
+                    }
+                    //System.out.println(sztaskName + " = " + szprimaryGroup + ", " + szpolicy + ", " + szuserRole + ", " + szusers);
+
+                    TasktypeBean taskBean = new TasktypeBean();
+                    taskBean.setName(sztaskName);
+                    taskBean.setPrimarygroup(szprimaryGroup);
+                    taskBean.setPolicy(szpolicy);
+                    taskBean.setRole(szuserRole);
+                    taskBean.setAssignee(szusers);
+                    taskTypeList.add(taskBean);
+                    //sOPrimaryRoles.put(, args)
+                    szusers = "";
+                    taskBean = null;
+                }//end of if clause
+            }//end of for loop with s var
+            Iterator itypes = taskTypeList.iterator();
+
+            while (itypes.hasNext())
+            {
+                TasktypeBean types = (TasktypeBean) itypes.next();
+                //sOUserRoles.put(i, args)
+                // System.out.println(types.getName() + "=" + types.getPrimarygroup() + ", " + types.getPolicy() + ", " + types.getRole() + ", " + types.getAssignee());
+                types = null;
+            }
+
+            //ProChara Configuration
+
+            //ArrayList<String> taskList = new ArrayList<String>();
+            //taskList.add("Server");
+            //taskList.add("Database");
+            //taskList.add("Network");
+            //taskList.add("JVM");
+            ArrayList<String> roleNames = new ArrayList<String>();
+            Iterator itSlevels = roleset.iterator();
+            while (itSlevels.hasNext())
+            {
+                roleNames.add((String) itSlevels.next());
+            }
+            try
+            {
+
+                //create roles
+                System.out.println("\n\n**********************Adding new SecurityLevels::");
+                boolean addSecuritylevels = AddRole.addNewRoles("avself", roleNames, HttpServletRequest);
+                System.out.println("Security levels added status::" + addSecuritylevels);
+
+                //create groups
+                System.out.println("\n\n**********************Adding new Groups::");
+                boolean addgroups = AddGroup.addNewGroup("avself", groups, HttpServletRequest);
+                System.out.println("Groups added status::" + addgroups);
+
+                //Group roleconfiguration
+                System.out.println("\n\n**********************Adding new GroupRolesConfig::");
+                boolean faddGroupRoles = GroupRoleConfig.addGroupRoles("avself", groupRoles, HttpServletRequest);
+                System.out.println("GroupRoleConfig status::" + faddGroupRoles);
+
+                HashMap userInfo = new HashMap();
+
+                while (it.hasNext())
+                {
+                    UserBean objUser = (UserBean) it.next();
+                    objUser.getName();
+                    if (userInfo.containsKey(objUser.getName()))
+                    {
+                        sznewgroups = (String) userInfo.get(objUser.getName());
+                        //System.out.println("old group::" + sh.get(objUser.getName()));
+                        sznewgroups += "," + objUser.getGroup();
+                        //System.out.println("new group::" + sznewgroups);
+                        userInfo.put(objUser.getName(), sznewgroups);
+
+                    } else
+                    {
+                        userInfo.put(objUser.getName(), objUser.getGroup());
+                    }
+                    objUser = null;
+                }
+                //ArrayList sOUsers = new ArrayList();
+                Iterator iusers = sOUsers.iterator();
+                String szUserName = "";
+                String szEmail = "";
+                String szMobile = "";
+                String sAGroups[] = new String[250];
+                String sARoles[] = new String[250];
+                String szUserGroup = "";
+                String szPrimaryRole = "";
+                String szPrimaryGroup = "";
+
+                while (iusers.hasNext())
+                {
+                    szUserName = (String) iusers.next();
+                    szEmail = (String) userEmails.get(szUserName);
+                    szMobile = (String) userMobiles.get(szUserName);
+                    sAGroups = userGroups.get(szUserName).toString().split(",");
+                    sARoles = userRoles.get(szUserName).toString().split(",");
+
+                    //Add internal user
+                    System.out.println("\n\n**********************Adding new User::" + szUserName);
+                    boolean faddUser = AddNewUsers.addNewUser("avself", szUserName, szEmail, szMobile, sAGroups, "Operations Head", HttpServletRequest);
+                    System.out.println("Internal User Addition status::" + faddUser);
+                    //Add User grouproleconfiguration
+
+                    szPrimaryGroup = sAGroups[0];
+                    szPrimaryRole = sARoles[0];
+                    System.out.println("\n\n**********************Adding new UserGroupRoleConfig::" + szUserName + "->" + szPrimaryGroup + "->" + szPrimaryRole);
+                    boolean fuserGroupRoleconfig = UserGroupRoleConfig.configUserGroupRole("avself", szUserName, szPrimaryGroup, szPrimaryRole, HttpServletRequest);
+                    System.out.println("GroupRoleConfiguration status::" + fuserGroupRoleconfig);
+
+                    szUserName = "";
+                    szEmail = "";
+                    szMobile = "";
+                    sAGroups = null;
+                    sARoles = null;
+                    szPrimaryGroup = "";
+                    szPrimaryRole = "";
+                }
+
+                //Add Tasktype
+                //ArrayList<TasktypeBean> taskTypeList = new ArrayList<TasktypeBean>();
+                //HashMap taskTypeGroups = new HashMap();
+                ArrayList taskList = new ArrayList();
+                String szAssignee[] = new String[250];
+                String szTaskGroups = "";
+                String taskGroups[] = new String[250];
+                String OtherGroups_Array[] = new String[250];
+                ArrayList<String> OtherGroups = new ArrayList<String>();
+                try
+                {
+                    Iterator itasktypes = taskTypeList.iterator();
+                    //System.out.println("Tasktypes info::"+taskTypeList);
+                    while (itasktypes.hasNext())
+                    {
+                        TasktypeBean types = (TasktypeBean) itasktypes.next();
+                       //System.out.println(types.getName() + "=" + types.getPrimarygroup() + ", " + types.getPolicy() + ", " + types.getRole() + ", " + types.getAssignee());
+                       //System.out.println("getting assignees");
+                       //System.out.println("Assignees:::" + types.getAssignee());
+                        szAssignee = types.getAssignee().split(",");
+
+
+                        szTaskGroups = taskTypeGroups.get(types.getName()).toString();
+                        if (szTaskGroups != null && !szTaskGroups.equals(""))
+                        {
+
+                            taskGroups = szTaskGroups.split(",");
+                            int j = 0;
+                            for (int n = 0; n < taskGroups.length; n++)
+                            {
+                                if (!taskGroups[n].equalsIgnoreCase(types.getPrimarygroup()))
+                                {
+                                    //OtherGroups_Array[j] = taskGroups[n];
+                                    OtherGroups.add(taskGroups[n]);
+                                    //System.out.println("Other groups::"+OtherGroups_Array[j]);
+                                    j++;
+                                }
+                            }
+                            j = 0;
+                            taskGroups = null;
+                        }
+                        System.out.println("Other groups length::" + OtherGroups.size());
+                        String szTempGroups = "";
+
+                        Iterator itst = OtherGroups.iterator();
+                        while (itst.hasNext())
+                        {
+                            szTempGroups += (String) itst.next() + ",";
+                        }
+                        itst = null;
+
+                        String str = szTempGroups.trim();
+
+                        //System.out.println("OtherTempGroups-->" + szTempGroups);
+                        OtherGroups_Array = szTempGroups.split(",");
+
+
+                        //System.out.println("\n\n*************************Before adding Tasktype:::"+types.getName());
+                        boolean ftasktypeadd = TaskTypeAdd.addNewTasktype("avself", types.getName(), types.getPrimarygroup(), OtherGroups_Array, types.getPolicy(), szAssignee, HttpServletRequest);
+                        //add priority
+                        //add status
+                        System.out.println("Taskstypeadd status::" + ftasktypeadd);
+
+                        taskList.add(types.getName());
+                        types = null;
+                        OtherGroups_Array = null;
+                        szAssignee = null;
+                        szTaskGroups = "";
+                        OtherGroups.clear();
+                        szTempGroups = "";
+                    }
+
+                    //System.out.println("******Adding Statuses******");
+                    //Add tasktype statuses
+
+                    System.out.println("Tasktype groups::" + taskTypeGroups);
+                    //boolean faddStatuses = AddStatuses.addNewStatus("cust1235", taskTypeGroups, HttpServletRequest);
+                    //add permissions
+                    //System.out.println("Status add-->" + faddStatuses);
+                    //add priority
+                    //Add Attributes
+                    System.out.println("\n\n******Adding Attributes******");
+                     boolean addAttributes = AddAttribute.addAttributes("avself", taskList, HttpServletRequest);
+                     System.out.println("Attributes added status::" + addAttributes);
+
+
+
+
+                    //Add tasktype categories
+                    System.out.println("\n\n******Adding Categories******");
+                    boolean addCategories = AddCategory.addNewCategories("avself", taskList, HttpServletRequest);
+                    System.out.println("Category create status::" + addCategories);
+
+
+                    //************************Security policies****************************
+
+                    Set typegroups = taskTypeGroups.entrySet();
+                    Iterator itypegroups = typegroups.iterator();
+                    ArrayList<PoliciesBean> Opolicies = new ArrayList<PoliciesBean>();
+                    System.out.println("\n\n********Tasktype groups******");
+                    while (itypegroups.hasNext())
+                    {
+                        Map.Entry me = (Map.Entry) itypegroups.next();
+                        //System.out.println(me.getKey() + "=" + me.getValue()+"="+groupRoles.get(me.getValue()));
+                        PoliciesBean Opb = new PoliciesBean();
+                        Opb.setSzTaskType((String) me.getKey());
+                        Opb.setSzGroups((String) me.getValue());
+                        Opb.setSzRoles((String) groupRoles.get(me.getValue()));
+                        Opolicies.add(Opb);
+                        Opb = null;
+                    }
+              
+                    boolean fpolicies=SecurityPoliciesAdd.addPolicies("avself",Opolicies,HttpServletRequest);
+                    System.out.println("Security Policies Add Status::"+fpolicies);
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+    }
+}

@@ -1,0 +1,133 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import java.io.IOException;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+
+/**
+ *
+ * @author gopal
+ */
+public class AuthenticationFilter implements Filter {
+
+    private static final boolean debug = true;
+    private FilterConfig filterConfig = null;
+
+    public AuthenticationFilter() {
+    }
+
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        response.setContentType("text/xml");
+        String szSessionid = "";
+        System.out.println("In filter session check");
+
+        boolean checksession = false;
+        HttpServletRequest httprequest = (HttpServletRequest) request;
+        HttpServletResponse httpresponse = (HttpServletResponse) response;
+        String opStatus = null;
+        String opDescription = null;
+        String szOperation = null;
+        Throwable problem = null;
+        try {
+
+            szOperation = httprequest.getParameter("op");
+            System.out.println("Operation in filter::" + szOperation);
+            if (szOperation.equalsIgnoreCase("LoginServlet")||szOperation.equalsIgnoreCase("GetXlPath")||szOperation.equalsIgnoreCase("DownloadXl")) {
+
+                chain.doFilter(request, response);
+
+            } else {
+
+                szSessionid = httprequest.getParameter("szsessionid");
+                System.out.println("Sessionid from Request::" + szSessionid);
+                
+                if (!szSessionid.equalsIgnoreCase("") && szSessionid != null) {
+                    checksession = CheckSession.checkSession(httprequest, szSessionid);
+                    if (checksession) {
+                        chain.doFilter(request, response);
+
+                    } else {
+                        opStatus = "102";
+                        opDescription = "Invalid Session";
+                        sendResponseMessage(request, response, opStatus, opDescription);
+                    }
+                } else {
+                    opStatus = "108";
+                    opDescription = "Invalid Inputs";
+                    sendResponseMessage(request, response, opStatus, opDescription);
+                }
+
+            }
+
+        } catch (Throwable t) {
+            t.printStackTrace();
+            opStatus = "106";
+            opDescription = "Unable to process the request action";
+            sendResponseMessage(request, response, opStatus, opDescription);
+        }
+
+    }
+
+    public void destroy() {
+    }
+
+    public void init(FilterConfig filterConfig) {
+        this.filterConfig = filterConfig;
+        if (filterConfig != null) {
+            if (debug) {
+                //log("AuthenticationFilter:Initializing filter");
+            }
+        }
+    }
+
+    public FilterConfig getFilterConfig() {
+        return filterConfig;
+    }
+
+    public void setFilterConfig(FilterConfig filterConfig) {
+        this.filterConfig = filterConfig;
+    }
+
+    private void sendResponseMessage(ServletRequest request, ServletResponse response, String szStatus, String szDescription) {
+        String opStatus = szStatus;
+        String opDescription = szDescription;
+        HttpServletRequest httprequest = (HttpServletRequest) request;
+        String action = httprequest.getParameter("op");
+        StringBuffer results = new StringBuffer("<" + action + ">");
+        try {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+
+            results.append("</" + action + ">");
+            response.getWriter().write(results.toString());
+
+        } catch (Exception e) {
+            LogWriter.writeDebug("exception while writing output");
+        } finally {
+            try {
+                results = null;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}

@@ -1,0 +1,137 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package AV_Action;
+import java.util.logging.Level;
+import org.apache.log4j.Logger;
+import java.sql.*;
+import java.util.*;
+import javax.servlet.http.HttpSession;
+import Model.*;
+import controller.LogWriter;
+/**
+ *
+ * @author gopal
+ */
+public class AV_CheckFiles extends AV_Model{
+ static Logger log = Logger.getLogger(AV_CheckFiles.class);
+ public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "checkfiles";
+        String szrespStr=null;
+        StringBuffer result = null;
+        String customerid = "";
+        String Taskid = "";
+        Connection con = null;
+        List patharr = null;
+        List filearr = null;
+        TaskIDFiles taskfiles = null;
+        String szSessionid = "";
+        boolean checksession = false;
+        Taskid = request.getParameter("taskid");
+        szSessionid = request.getParameter("szsessionid");
+        if (Taskid != null && !Taskid.equalsIgnoreCase(""))
+        {
+            
+                try
+                {
+                    String szServerName = request.getServerName();
+                    System.out.println(szServerName);
+
+                    log.info(Taskid + "@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
+                    con = DatabaseConnection.getAVSAConnection(request);
+                    if (con != null)
+                    {
+                        taskfiles = new TaskIDFiles();
+                        taskfiles.getTaskFiles(Taskid, con);
+                        patharr = taskfiles.patharr;
+                        filearr = taskfiles.filearr;
+                        if ((patharr != null && patharr.size() > 0) && (filearr != null && filearr.size() > 0))
+                        {
+                            result = new StringBuffer("<files>");
+                            log.info("got u &&&&&&&&&&&&&");
+                            log.info(patharr);
+                            log.info("Ending checkfiles servlet success fully");
+                            Iterator it = filearr.iterator();
+                            //result.append("<file>");
+                            while (it.hasNext())
+                            {
+
+                                result.append("<name>");
+                                result.append((String) it.next());
+                                result.append("</name>");
+
+                            }
+                            result.append("</files>");
+                            it = null;
+                           
+                            AV_Constants.opStatus=AV_Constants.SUCCESS;
+                        } else
+                        {
+                         
+                            AV_Constants.opStatus=AV_Constants.NODATA_FOUND;
+                            log.info("No data found");
+                        }
+
+                    } else
+                    {
+                       
+                        AV_Constants.opStatus=AV_Constants.DBERROR;
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    AV_Constants.opStatus=AV_Constants.FAILURE;
+                    log.error("error while processing the request"+e);
+                } finally
+                {
+                    taskfiles = null;
+                    patharr = null;
+                    filearr = null;
+
+                    try
+                    {
+                        if (con != null)
+                        {
+                            con.close();
+                        }
+
+                    } catch (SQLException ex)
+                    {
+                        java.util.logging.Logger.getLogger(AV_CheckFiles.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+           
+        } else
+        {
+            
+            AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+        }
+
+        try
+        {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,result,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                szrespStr = null;
+                result = null;
+                szopration=null;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+ }
+}

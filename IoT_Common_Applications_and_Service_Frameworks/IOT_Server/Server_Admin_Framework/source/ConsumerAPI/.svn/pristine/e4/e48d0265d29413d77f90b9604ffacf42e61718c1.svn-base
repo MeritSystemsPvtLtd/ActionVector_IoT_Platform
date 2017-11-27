@@ -1,0 +1,55 @@
+package controller;
+import java.sql.*;
+import java.util.Date;
+import java.util.*;
+import java.text.*;
+import Model.*;
+//import GIFTask.GA_DBConstants;
+
+/***
+ * Used to write user action into database
+ * Creation date: 11 May 2012
+ * @author: gopal
+ */
+public class GA_CommandTask 
+{
+
+/**
+ * Store user action into database (java.sql.connectin, java.lang.String, java.lang.String, java.lang.String) value.
+ * @param con 	The Database Connectin Object
+ * @param sessionid The session id string
+ * @param users The user String value
+ * @param action The action value of user
+ *@@return boolean True/False value of action written
+ */
+	DBConstants DBConstants = new DBConstants();
+	
+	public boolean GA_CommandTask(Connection con,String sessionid,String users,String action)
+	{
+		SimpleDateFormat formatter1=null;
+		//formatter1=new SimpleDateFormat("dd'-'MMM'-'yyyy HH:mm:ss");
+		formatter1=new SimpleDateFormat("yyyy'-'MM'-'dd HH:mm:ss");
+		Date currentdate_2=new Date();
+		String szcurrenttime=formatter1.format(currentdate_2);
+		String szaction= action;
+	
+		try
+		{
+			PreparedStatement statement=con.prepareStatement("INSERT into "+DBConstants.USER_STATISTICS_TABLE+" values(?,?,?,?)");
+			statement.setString(1,sessionid);
+			statement.setString(2,users);
+			statement.setString(3,szcurrenttime);
+			statement.setString(4,szaction);
+			statement.executeUpdate();
+			statement.close();
+		}
+		catch(Exception e)
+		{
+			System.out.println("Error coming while inserting");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+}
+

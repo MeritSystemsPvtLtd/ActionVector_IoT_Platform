@@ -1,0 +1,101 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package AV_Action;
+
+import businessmodel.*;
+import controller.LogWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import org.apache.log4j.Logger;
+/**
+ *
+ * @author gopal
+ */
+public class AV_SetHosts extends AV_Model{
+    static Logger log = Logger.getLogger(AV_SetHosts.class);
+
+public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "sethosts";
+
+        String szrespStr=null;
+        StringBuffer result = new StringBuffer();
+        String szSessionid = "";
+        String szHostXml = null;
+        boolean fchkParam = false;
+        String szHostServices = null;
+        boolean fsetHost = false;
+        try
+        {
+            szSessionid = request.getParameter("szsessionid");
+            szHostXml = request.getParameter("hostxml");
+            if ((szSessionid != null && !szSessionid.equalsIgnoreCase("")) && (szHostXml != null && !szHostXml.equalsIgnoreCase("")))
+            {
+               
+                fchkParam = true;
+            }
+            if (fchkParam)
+            {
+                    fsetHost = UpdateHostInfo.updateHosts(request, szHostXml);
+                    if (fsetHost)
+                    {
+                      
+                        AV_Constants.opStatus=AV_Constants.SUCCESS;
+                        log.info("successfully updated the hostinfo ");
+
+                    } else
+                    {
+                        
+                        AV_Constants.opStatus=AV_Constants.FAILURE;
+                    }
+
+            } else
+            {
+               
+                AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            log.error("Unable to process the request action", e);
+        } finally
+        {
+            try
+            {
+                szSessionid = null;
+                szHostXml = null;
+            } catch (Exception e)
+            {
+                e.getMessage();
+                log.error("error while closing strings");
+            }
+        }
+
+        try
+        {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e)
+        {
+            log.debug("exception while writing output", e);
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                szrespStr = null;
+                result = null;
+                szopration=null;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+}
+}

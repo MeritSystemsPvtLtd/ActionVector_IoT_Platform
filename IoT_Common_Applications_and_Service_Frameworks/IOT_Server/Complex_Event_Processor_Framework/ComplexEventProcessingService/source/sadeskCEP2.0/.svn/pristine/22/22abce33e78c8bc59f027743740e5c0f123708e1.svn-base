@@ -1,0 +1,20 @@
+#Url=http://sadesk.rediff-inc.com:8080/proChara/services/CreatingValidTask
+#assignUrl=http://sadesk.rediff-inc.com:8080/proChara/services/Assignees
+#commentUrl=http://sadesk.rediff-inc.com:8080/proChara/services/AddComments
+#sadeskUrl=http://sadesk.rediff-inc.com:8080/SA-Desk
+#loginUrl=http://sadesk.rediff-inc.com:8080/proChara/services/LoginService
+#logoutUrl=http://sadesk.rediff-inc.com:8080/proChara/services/UserLogout
+
+# For testing comment above lines and uncomment the below
+Url=http://192.168.1.61:8080/proChara/services/CreatingValidTask
+assignUrl=http://192.168.1.61:8080/proChara/services/Assignees
+commentUrl=http://192.168.1.61:8080/proChara/services/AddComments
+sadeskUrl=http://192.168.1.61:8080/SA-Desk
+loginUrl=http://192.168.1.61:8080/proChara/services/LoginService
+logoutUrl=http://192.168.1.61:8080/proChara/services/UserLogout
+
+UserName=Admin
+Password=admin
+Owner=Admin
+Customer=Rediff
+Tasktype=Incident

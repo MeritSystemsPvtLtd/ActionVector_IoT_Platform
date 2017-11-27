@@ -1,0 +1,240 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package com.prokosha.adapter.ganglia;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author Abraham
+ */
+public class AdapterProperties {
+
+    private static final Logger log = Logger.getLogger(AdapterProperties.class.getName());
+    private static String newline=null;
+    private static String eventMapper=null;
+    private static int downloadSleepInterval=0;
+    private static int retryXmlDownload = 0;
+    private static String loopControl=null;
+    private static String cepHost=null;
+    private static int cepPort=0;
+    private static int xmlBuffSize=0;
+    private static boolean enableRT=false;
+    private static String customerID=null;
+    private static String aRgmondHost[];
+    private static String aRgmondPort[];
+    
+    //dogwatch config
+    private static int watchDogPort=0;
+    private static String watchDogHost=null;
+    private static String sendToWatchDog=null;
+
+    public AdapterProperties() {
+    }
+
+
+    public static boolean loadProperties(String fileName) throws IOException {
+        String tmp;
+
+        log.debug("Loading properties file: " + fileName);
+        
+        Properties props = new Properties();
+        props.load(new FileInputStream(fileName));
+
+        //ganglia.gmond-host  host address or ip
+        tmp = props.getProperty("ganglia.gmond-host").trim();
+        if (tmp == null || tmp.trim().length() == 0) {
+            log.error("*** ERROR *** ganglia.gmond-host property not specified - cannot continue!!");
+        } else {
+            aRgmondHost = tmp.split(",");
+        }
+
+        //ganglia.gmond-port port no
+        tmp = props.getProperty("ganglia.gmond-port").trim();
+        if (tmp == null || tmp.trim().length() == 0) {
+            log.error("*** ERROR *** ganglia.gmond-port property not specified - cannot continue!!");
+        } else {
+            aRgmondPort = tmp.split(",");
+        }
+
+        //CEP engine host address or ip
+        cepHost = props.getProperty("CEP.engine-host");
+        if (cepHost == null || cepHost.trim().length() == 0) {
+            log.error("*** ERROR *** CEP.engine-host property not specified - cannot continue!!");
+            return false;
+        }
+
+        //CEP engine port number
+        tmp = props.getProperty("CEP.engine-port");
+        if (tmp != null) {
+            cepPort = Integer.parseInt(tmp.trim());
+        } else {
+            log.debug("CEP.engine-port property not specified - using 7102");
+            cepPort = 7102; //default gmond port
+        }
+
+        //CEP event protocol requires a line terminator after every CEP event
+        newline = props.getProperty("CEP.line-separator"); //cep socket protocol line terminator
+        if (newline == null) {
+            log.debug("CEP.line-seperator property not specified - using newline (\\n)");
+            newline = "\n";
+        }
+
+        //number of seconds to sleep between each Ganglia XML file collection and parsing cycle
+        tmp = props.getProperty("ganglia.download-sleep");
+        if (tmp != null) {
+            downloadSleepInterval = Integer.parseInt(tmp) * 1000; // sleep between gmond reads
+        } else {//default threshold is no sleep
+            log.debug("ganglia.download-sleep property not specified - using 60 seconds");
+            downloadSleepInterval = 60*1000; //sleep for 1 minute
+        }
+
+        //Ganglia XML to CEP event mapping defintion XML
+        eventMapper = props.getProperty("ganglia.cep-event-mapper");
+        if (eventMapper == null || eventMapper.trim().length() == 0) {
+            log.error("*** ERROR *** ganglia.cep-event-mapper property not specified - cannot continue!!");
+            return false;
+        }
+
+        loopControl = props.getProperty("adapter.loop-control");
+        if (loopControl == null || loopControl.trim().length() == 0) {
+            log.debug("adapter.loop-control property not specified - using GANGLIA-CEP!!");
+            loopControl = "GANGLIA-CEP";
+        }
+
+        tmp = props.getProperty("ganglia.retry-count");
+        if (tmp != null) {
+            retryXmlDownload = Integer.parseInt(tmp); // retry XML download
+        } else {//default no retries
+            log.debug("ganglia.retry-count property not specified - will not retry on error");
+            retryXmlDownload = 0;
+        }
+        //the Ganglia XML document buffer intial size
+        tmp = props.getProperty("ganglia.xml-buffer-size");
+        if (tmp != null) {
+            xmlBuffSize = Integer.parseInt(tmp)*1024; //in KBs
+        } else {
+            log.debug("ganglia.xml-buffer-size property not specified - using 10Kb");
+            xmlBuffSize = 10*1024; //default 10Kb
+        }
+        tmp = props.getProperty("eventRT.enable");
+        if (tmp != null) {
+            enableRT = Boolean.valueOf(tmp);            
+        } else {
+            log.debug("eventRT.enable property not specified - using false");
+            enableRT = false;
+        }
+        tmp = props.getProperty("CustomerID");
+        if (tmp != null) {
+            customerID = tmp;
+        } else {
+            log.debug("CustomerID property not specified - using null");
+            customerID = null;
+        }
+
+
+
+
+        //watchdog properties(host, port) reading
+
+        tmp = props.getProperty("WatchDog-port");
+        if (tmp != null) {
+            watchDogPort = Integer.parseInt(tmp); // watchdog port
+        } else {//default no retries
+            log.debug("ganglia.retry-count property not specified - will not retry on error");
+            watchDogPort = 0;
+        }
+        watchDogHost = props.getProperty("WatchDog-host");
+        if (watchDogHost == null || watchDogHost.trim().length() == 0) {
+            log.error("*** ERROR *** ganglia.cep-event-mapper property not specified - cannot continue!!");
+            return false;
+        }
+        tmp = props.getProperty("Send-WatchDog");
+        if (tmp != null) {
+            sendToWatchDog=tmp;
+        } else {
+            log.debug("ganglia.retry-count property not specified - will not retry on error");
+            sendToWatchDog="false";
+        }
+
+
+        //watchdog ends
+
+
+
+
+
+
+
+        return true;
+    }
+
+    //watchdog event Setup 25-07-2013
+ public static boolean sendToWatchDog(){
+            if(sendToWatchDog.equalsIgnoreCase("false")){
+                return false;
+            }
+            return true;
+        }
+    public static String getNewline() {
+        return newline;
+    }
+
+    public static String getCepHost() {
+        return cepHost;
+    }
+
+    public static String getEventMapper() {
+        return eventMapper;
+    }
+
+    public static int getSleepInterval() {
+        return downloadSleepInterval;
+    }
+
+    public static int getCepPort() {
+        return cepPort;
+    }
+
+    public static String getLoopControl() {
+        return loopControl;
+    }
+
+    public static int getRetryCount() {
+        return retryXmlDownload;
+    }
+
+    public static int getXmlBuffSize() {
+        return xmlBuffSize;
+    }
+    
+    public static boolean getEnableRT(){
+    	return enableRT;
+    }
+
+    public static String getCustomerID(){
+    	return customerID;
+    }
+
+    public static String[] getaRgmondHost() {
+        return aRgmondHost;
+    }
+
+    public static String[] getaRgmondPort() {
+        return aRgmondPort;
+    }
+
+    public static String getWatchDogHost() {
+        return watchDogHost;
+    }
+
+    public static int getWatchDogPort() {
+        return watchDogPort;
+    }
+
+}

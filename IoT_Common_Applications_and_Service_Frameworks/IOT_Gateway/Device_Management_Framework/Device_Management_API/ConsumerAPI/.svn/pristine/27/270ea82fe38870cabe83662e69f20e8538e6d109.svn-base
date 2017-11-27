@@ -1,0 +1,144 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/***************************************************************************
+ *
+ *                            Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *     #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8th Block
+ *                          Bangalore - 560 070, India
+ *               Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *          THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ ***************************************************************************/
+package businessmodel;
+
+import controller.*;
+import java.sql.*;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Sep 12, 2012, 2:50:34 PM
+ */
+public class AddStatuses1
+{
+    static Logger log = Logger.getLogger(AddStatuses1.class);
+    public static boolean sendMailTo(Connection con, String szStatusId, String szTaskType, String[] sASendMailArray)
+    {
+        ResultSet rs = null;
+        boolean fFLAG = false;
+        Object OUser1;
+        String szUsers;
+        Integer ISecurityUsers = 1;
+        String szActions = "";
+        String szTempName = "";
+        String sAGroupArray[] = new String[255];
+        int iGroupCount = 0;
+        long iSendMailValue = 0;
+        try
+        {
+            System.out.println("Inside Status-SendMailTo");
+            if (con != null)
+            {
+                    try
+                    {
+                        for (int i = 0; i < sASendMailArray.length; i++)
+                        {
+                            if ("All".equalsIgnoreCase(sASendMailArray[i]))
+                            {
+                                iSendMailValue = 7;
+                                break;
+                            }
+                            if ("Assignee".equalsIgnoreCase(sASendMailArray[i]))
+                            {
+                                iSendMailValue += 2;
+                                continue;
+                            }
+                            if ("Manager".equalsIgnoreCase(sASendMailArray[i]))
+                            {
+                                iSendMailValue += 4;
+                                continue;
+                            }
+                            if ("User".equalsIgnoreCase(sASendMailArray[i]))
+                            {
+                                iSendMailValue += 1;
+                                continue;
+                            }
+                        }
+                        log.info("The SendMail value   :"+iSendMailValue);
+                                 
+                    } catch (Exception e)
+                    {
+                        log.error("Exception::",e);
+                    }
+                    try
+                    {
+                        PreparedStatement statement1 = con.prepareStatement("Select groupname from " + DBConstants.TASKTYPE_GROUP_TABLE + " where tasktype = ?");
+                        statement1.setString(1, szTaskType);
+                        ResultSet rs1 = statement1.executeQuery();
+                        while (rs1.next())
+                        {
+                            sAGroupArray[iGroupCount] = rs1.getString("groupname");
+                            iGroupCount++;
+                        }
+                        log.info("The No of Grouop Names :"+(iGroupCount-1));
+                        //GALogwriter.writeDebug("The No of Grouop Names :"+(iGroupCount-1),1,session);
+                        rs1.close();
+                        statement1.close();
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+
+                        log.error("EXCEPTION :  Getting the groupname from gatasktypegroup", e);
+                    }
+                    System.out.println("Updating the Status Permissions table with SendMailTo");
+                    for (int i = 0; i < iGroupCount; i++)
+                    {
+                        try
+                        {
+                            PreparedStatement statement3 = con.prepareStatement("UPDATE " + DBConstants.STATUS_PERMISSIONS_TABLE + " SET send_mail = ? where statusid = ? and groupname = ?");
+                            statement3.setLong(1, iSendMailValue);
+                            statement3.setString(2, szStatusId);
+                            statement3.setString(3, sAGroupArray[i]);
+                            statement3.executeUpdate();
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.error("EXCEPTION : Updating GAStatusPermissions", e);
+                        }
+                        //Logwriter.writeDebug("Calling the BEAN commandinsert",4,session);
+                        szActions = "New Task" + szTaskType + "  Added";
+                    //commandinsert.GA_CommandTask(con,HSSessions.getId(),szUsers,szActions);
+                    }
+                    sAGroupArray=null;
+                    fFLAG=true;
+            } else
+            {
+                log.info("Connection is NULL here");
+                
+                return fFLAG;
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            log.error("EXCEPTION : performing operation AddStatus-SendMailTo::", e);
+        }
+        return fFLAG;
+    }
+}

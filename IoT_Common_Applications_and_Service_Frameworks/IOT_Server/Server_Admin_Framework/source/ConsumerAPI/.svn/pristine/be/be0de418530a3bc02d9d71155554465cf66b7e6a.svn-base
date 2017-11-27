@@ -1,0 +1,300 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class StatusCreation3 extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(StatusCreation3.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+
+
+        StringBuffer results = new StringBuffer("<statuscreation2>");
+
+        ResultSet rs = null;
+        Connection con = null;
+        boolean bFLAG = false;
+        boolean checksession = true;
+        String opStatus = null;
+        String opDescription = null;
+
+        String username = null;
+        String sessionid = null;
+        HttpSession HSSessions;
+        Object OUser1;
+        String szUsers;
+        Integer ISecurityUsers = 1;
+
+        try
+        {
+            HSSessions = request.getSession(true);
+            OUser1 = HSSessions.getValue("user");
+            //szUsers = OUser1.toString();
+            //ISecurityUsers = (Integer)HSSessions.getValue("ints");
+            //username=request.getParameter("username");
+            //sessionid=request.getParameter("sessionid");
+        } catch (Exception k)
+        {
+
+            checksession = false;
+            log.info("error while geting session");
+        }
+        String szStatusId = "";
+        String szStatusName = "";
+        String szTaskType = "";
+        String szTempName = "";
+        String customerid="";
+        String sAGroupArray[] = new String[1024];
+        int iGroupCount = 0;
+
+        if (checksession)
+        {
+            try
+            {
+                szStatusId = request.getParameter("statusid");
+                szTaskType = request.getParameter("task_type");
+                customerid=request.getParameter("customerid");
+                szStatusName = request.getParameter("statusname");
+                LogWriter.writeDebug(" Staus id ++++++++=........" + szStatusId, 4);
+                //GALogwriter.writeDebug(" task type ++++++++=........"+szTaskType,4,session);
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                LogWriter.writeDebug("EXCEPTION : Getting the request.getParameter() values", 2);
+            }
+            String szTask_Type = szTaskType;
+            try
+            {
+                for (int l = 0; l < szTask_Type.length(); l++)
+                {
+                    char t = szTask_Type.charAt(l);
+                    int asp = (int) t;
+                    if ((int) t == 32)
+                    {
+                        szTask_Type = szTask_Type.replace(t, (char) 43);
+                    }
+                }
+            } catch (Exception esub)
+            {
+                esub.printStackTrace();
+            }
+
+            try
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+                if (con != null)
+                {
+                    if (ISecurityUsers.intValue() == 1)
+                    {
+                        szStatusId = szTaskType + szStatusName;
+                        System.out.println("statusId:" + szStatusId);
+                        bFLAG = true;
+                        try
+                        {
+
+                            System.out.println("Inside Security Users and get groupname");
+                            PreparedStatement statement1 = con.prepareStatement("Select groupname from " + DBConstants.TASKTYPE_GROUP_TABLE + " where tasktype = ?");
+                            statement1.setString(1, szTaskType);
+                            ResultSet rs1 = statement1.executeQuery();
+                            while (rs1.next())
+                            {
+                                sAGroupArray[iGroupCount] = rs1.getString("groupname");
+                                iGroupCount++;
+                            }
+                            rs1.close();
+                            statement1.close();
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            LogWriter.writeDebug("EXCEPTION : Getting the groupname from gatasktypegroup		", 1);
+                        }
+                        for (int i = 0; i < iGroupCount; i++)
+                        {
+                            long iMaxSecLevel = 1;
+                            String aSecurityLevel[] = new String[255];
+                            szTempName = sAGroupArray[i];
+                            try
+                            {
+                                aSecurityLevel = request.getParameterValues("secvalue" + i);
+                            } catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+                            if (aSecurityLevel != null)
+                            {
+                                for (int itemp = 0; itemp < aSecurityLevel.length; itemp++)
+                                {
+                                    if ("All".equalsIgnoreCase(aSecurityLevel[itemp]))
+                                    {
+                                        PreparedStatement statement1 = con.prepareStatement("Select \"level\" from " + DBConstants.SECURITYLEVELS_TABLE + " where \"level\" !=1");
+                                        ResultSet rs1 = statement1.executeQuery();
+                                        while (rs1.next())
+                                        {
+                                            int iLevel = rs1.getInt("level");
+                                            if (iLevel < 255)
+                                            {
+                                                iMaxSecLevel = iMaxSecLevel + (int) java.lang.Math.pow(2, iLevel - 1);
+                                            } else
+                                            {
+                                                iMaxSecLevel = iMaxSecLevel;
+                                            }
+                                        }
+                                        rs1.close();
+                                        statement1.close();
+                                    } else
+                                    {
+                                        try
+                                        {
+                                            int itempSecLevel = Integer.parseInt(aSecurityLevel[itemp]);
+                                            iMaxSecLevel = iMaxSecLevel + itempSecLevel;
+                                        } catch (Exception e)
+                                        {
+                                            e.printStackTrace();
+                                        }
+                                    }
+
+                                }
+                            }
+                            try
+                            {
+
+                                System.out.println("iMaxSecLevel:" + iMaxSecLevel);
+                                System.out.println("updating status permission table");
+                                PreparedStatement statement3 = con.prepareStatement("UPDATE " + DBConstants.STATUS_PERMISSIONS_TABLE + " SET changefrom = ? where statusid = ? and groupname = ?");
+                                statement3.setLong(1, iMaxSecLevel);
+                                statement3.setString(2, szStatusId);
+                                statement3.setString(3, szTempName);
+                                statement3.executeUpdate();
+                                opStatus = "0";
+                                opDescription = "Operation Success";
+                                log.info("operation success");
+                                statement3.close();
+                            } catch (Exception e)
+                            {
+                                e.printStackTrace();
+                                opStatus = "106";
+                                opDescription = "Unable to process the request";
+                                LogWriter.writeDebug("EXCEPTION : Updation in GAStatusPermissions ", 1);
+                            }
+                        }
+
+                    } else
+                    {
+                        opStatus = "103";
+                        opDescription = "Security level failed";
+                        log.info("security level failed");
+                    }
+                } else
+                {
+                    opStatus = "101";
+                    opDescription = "Database Connection failed";
+                    log.info("database connection failed");
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                opStatus = "106";
+                opDescription = "Unable to perform the request action";
+                log.error("error while performing request action", e);
+
+                //GALogwriter.writeDebug("EXCEPTION : performing the whole operation AddStatus4	"+SWriter,1,session);
+            }finally{
+                try{
+                    if(con!=null){
+                        con.close();
+                    }
+                }catch(Exception e){
+                    e.printStackTrace();
+                    log.error("error while closing connection", e);
+                }
+            }
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid Session";
+            System.out.println("Invalid session login again");
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</statuscreation2>");
+            response.getWriter().write(results.toString());
+            //System.out.println(results);
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+        }
+        finally{
+            results=null;
+        }
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

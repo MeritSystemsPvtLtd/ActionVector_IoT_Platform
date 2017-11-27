@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<FroniusEventMapper>
+    <EventDefinition>
+        <CepEvent evName="InverterRealTimeEvent">            
+            <Parameter evField="ACPower" dataCollection="CommonInverterData" fName="PAC" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="ACCurrent" dataCollection="CommonInverterData" fName="IAC" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="ACVoltage" dataCollection="CommonInverterData" fName="UAC" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="ACFrequency" dataCollection="CommonInverterData" fName="FAC" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="DCCurrent" dataCollection="CommonInverterData" fName="IDC" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="DCVoltage" dataCollection="CommonInverterData" fName="UDC" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="DayEnergy" dataCollection="CommonInverterData" fName="DAY_ENERGY" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="YearEnergy" dataCollection="CommonInverterData" fName="YEAR_ENERGY" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="TotalEnergy" dataCollection="CommonInverterData" fName="TOTAL_ENERGY" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="DeviceStatus" dataCollection="CommonInverterData" fName="DeviceStatus" fVal="StatusCode" fUnit="Unit" evType="uint"></Parameter>
+	</CepEvent>
+         <CepEvent evName="ThreePhaseInverterEvent">    
+            <Parameter evField="ACCurrentPhase1" dataCollection="3PInverterData" fName="IAC_L1" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="ACCurrentPhase2" dataCollection="3PInverterData" fName="IAC_L2" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="ACCurrentPhase3" dataCollection="3PInverterData" fName="IAC_L3" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="ACVoltagePhase1" dataCollection="3PInverterData" fName="UAC_L1" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="ACVoltagePhase2" dataCollection="3PInverterData" fName="UAC_L2" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="ACVoltagePhase3" dataCollection="3PInverterData" fName="UAC_L3" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="AmbientTemp" dataCollection="3PInverterData" fName="T_AMBIENT" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="FrontLeftFanSpeed" dataCollection="3PInverterData" fName="ROTATION_SPEED_FAN_FL" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="FrontRightFanSpeed" dataCollection="3PInverterData" fName="ROTATION_SPEED_FAN_FR" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="BackLeftFanSpeed" dataCollection="3PInverterData" fName="ROTATION_SPEED_FAN_BL" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="BackRightFanSpeed" dataCollection="3PInverterData" fName="ROTATION_SPEED_FAN_BR" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+	</CepEvent>
+         <CepEvent evName="MinMaxInverterEvent">  
+            <Parameter evField="MAXACPowerDay" dataCollection="MinMaxInverterData" fName="DAY_PMAX" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="MaxACVoltageDay" dataCollection="MinMaxInverterData" fName="DAY_UACMAX" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="MinACVoltageDay" dataCollection="MinMaxInverterData" fName="DAY_UACMIN" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="MAXDCVoltageDay" dataCollection="MinMaxInverterData" fName="DAY_UDCMAX" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="MAXACPowerYear" dataCollection="MinMaxInverterData" fName="YEAR_PMAX" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="MaxACVoltageYear" dataCollection="MinMaxInverterData" fName="YEAR_UACMAX" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="MinACVoltageYear" dataCollection="MinMaxInverterData" fName="YEAR_UACMIN" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="MAXDCVoltageYear" dataCollection="MinMaxInverterData" fName="YEAR_UDCMAX" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="MAXACPowerTotal" dataCollection="MinMaxInverterData" fName="TOTAL_PMAX" fVal="Value" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="MaxACVoltageTotal" dataCollection="MinMaxInverterData" fName="TOTAL_UACMAX" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="MinACVoltageTotal" dataCollection="MinMaxInverterData" fName="TOTAL_UACMIN" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+            <Parameter evField="MAXDCVoltageTotal" dataCollection="MinMaxInverterData" fName="TOTAL_UDCMAX" fVal="Value" fUnit="Unit" evType="float"></Parameter>
+        </CepEvent>
+        <CepEvent evName="InverterCumulationEvent">
+            <Parameter evField="ACPower" dataCollection="System" fName="PAC" fVal="Values" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="DayEnergy" dataCollection="System" fName="DAY_ENERGY" fVal="Values" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="YearEnergy" dataCollection="System" fName="YEAR_ENERGY" fVal="Values" fUnit="Unit" evType="uint"></Parameter>
+            <Parameter evField="TotalEnergy" dataCollection="System" fName="TOTAL_ENERGY" fVal="Values" fUnit="Unit" evType="uint"></Parameter>
+        </CepEvent>
+        <CepEvent evName="SensorRealTimeEvent">
+        </CepEvent>
+        <CepEvent evName="SensorMinMaxEvent">
+        </CepEvent>
+        <CepEvent evName="StringControlRealTimeEvent">
+        </CepEvent>
+        <CepEvent evName="StringControlLastErrorEvent">
+        </CepEvent>
+        <CepEvent evName="StringControlCurrentSumEvent">
+        </CepEvent>
+    </EventDefinition>
+</FroniusEventMapper>

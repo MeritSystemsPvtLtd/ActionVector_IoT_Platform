@@ -1,0 +1,21 @@
+module com.prokosha.cep.gangliahostdown.v1;
+
+create variable string ACRO_DWN="[HSTDWN]";
+
+@Name("com.prokosha.cep.gangliahostdown.dispatch.1")
+select  "Server" as EventType,CustomerID,
+    ("Server Down ").concat((HostName).toString().concat(ACRO_DWN)) as EventDesc,
+    "Server is down" as EventSymptoms,
+    HostName, HostAddress, resourceType, resourceId
+    from ServerStateStream where (TN > 4*TMAX)
+    group by HostName
+    output first every 1 hour;
+
+@Name("com.prokosha.cep.gangliahostdown.autoclose.2")
+select  "Server" as EventType,CustomerID,
+    ("Server Up ").concat((HostName).toString().concat(ACRO_DWN)) as EventDesc,
+    "Server is up" as EventSymptoms,
+    HostName, HostAddress, resourceType, resourceId
+    from ServerStateStream where (TN <= 4*TMAX)
+    group by HostName
+    output first every 1 hour;

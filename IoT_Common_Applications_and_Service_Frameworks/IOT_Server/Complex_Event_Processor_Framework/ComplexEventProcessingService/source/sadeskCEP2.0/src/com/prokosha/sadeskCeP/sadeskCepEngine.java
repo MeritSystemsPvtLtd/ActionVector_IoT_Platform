@@ -1,0 +1,144 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package com.prokosha.sadeskCeP;
+
+import com.espertech.esperio.socket.config.*;
+import com.espertech.esper.client.deploy.DeploymentException;
+import com.espertech.esper.client.deploy.ParseException;
+import com.espertech.esperio.socket.EsperIOSocketAdapter;
+import javax.xml.parsers.ParserConfigurationException;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import org.xml.sax.SAXException;
+import java.io.IOException;
+import com.prokosha.licensekeygenerator.LicenseKeyGenerator;
+import com.prokosha.licensekeygenerator.ValidateKey;
+
+/**
+ *
+ * @author Abraham
+ */
+public class sadeskCepEngine {
+
+    private static final Logger log = Logger.getLogger(sadeskCepEngine.class.getName());
+
+    public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException, ParseException, DeploymentException, ClassNotFoundException, InterruptedException {
+
+        //Configure the log4j properties
+        int  licenceflag=validateLicence();
+        PropertyConfigurator.configure("config/logger.properties");
+        if(licenceflag>=0){
+        
+
+        log.info ("\n------------------------------------------------------------\n" +
+                  "\n------------- SADesk CEP Engine restarting -----------------\n" +
+                  "\n------------------------------------------------------------\n");
+
+        //TODO: Get properties file name from command line
+        CepProperties.configure("config/cepengine.properties");
+
+        //create the CEP engine, load the event schema into engine
+        log.debug ("Creating engine...");
+        String cepEngineName = CepProperties.getProperty("cepEngineName");
+        //the event schema file must be on CLASSPATH
+        String evSchema = CepProperties.getProperty("cepEventSchema");
+        CepEngine cepEngine = new CepEngine(cepEngineName, evSchema);
+
+        //load the correlator modules
+        log.info ("Loading rules into engine...");
+        String cepModules = CepProperties.getProperty("cepModules");
+        cepEngine.loadRules (cepModules);
+
+/****/
+        //create the configuration object for the socket adapter
+        log.debug ("Creating the configuration for the socket adapter for events...");
+        ConfigurationSocketAdapter adapterConfig = new ConfigurationSocketAdapter();
+
+        //setup the socket adapter to listen for incoming events
+        SocketConfig socket = new SocketConfig();
+        String evDataType = CepProperties.getProperty("cepEventDataType");
+        if (evDataType.equals("CSV")) {
+            socket.setDataType(DataType.CSV);
+        } else if (evDataType.equals("object")) {
+            socket.setDataType(DataType.OBJECT);
+        } else {
+            log.fatal ("*** FATAL ERROR *** - unknown data type for CEP events. " +
+                    "Check 'cepEventDataType' value in properties file - must be 'CSV' or 'object'");
+        }
+
+        String evPort = CepProperties.getProperty("cepEventDataPort");
+        String socketName = CepProperties.getProperty("cepEventSocketName");
+        socket.setPort(Integer.parseInt(evPort));
+        adapterConfig.getSockets().put(socketName, socket);
+
+        // startup the socket adapter
+        log.debug ("Creating the socket adapter to listen for events...");
+        EsperIOSocketAdapter socketAdapter = new EsperIOSocketAdapter(adapterConfig, cepEngineName);
+        socketAdapter.initialize();
+
+        log.info("CEP Engine waiting for events...........");
+        socketAdapter.start();
+        
+        /*log.info("CEP Engine starting RampDetector thread........");
+        RampDetector rampDetect= new RampDetector();
+        rampDetect.run();*/
+        
+        boolean runFlag = true;
+        while (runFlag) {
+            Thread.sleep(1000 * 60 * 60 * 24);//socketAdapter alive for 1 day
+        }
+        
+
+        // destroy the adapter when done
+        //cleanup
+        log.debug ("Destroying engine...");
+        cepEngine.destroy();
+        socketAdapter.destroy();
+        
+        }else
+        {
+            log.error("******************Licence Key Validation Failed********************");
+            log.error("******************Engine is Going to Stop ********************");
+            System.exit(1);
+        }
+/*****/
+/**
+        // simulate the events using CSV adapter
+            CsvEmitter Emtr1 = new CsvEmitter(cepEngine,"MemcacheReadLatencyEvent", "config/MemcMonitor.csv");
+            CsvEmitter Emtr2 = new CsvEmitter(cepEngine,"LoadAverageEvent", "config/LoadAverage.csv");
+
+            ExecutorService threadPool = Executors.newFixedThreadPool(2);
+            threadPool.submit(Emtr1);
+            threadPool.submit(Emtr2);
+
+            threadPool.shutdown();
+            try {
+                threadPool.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                    // no action
+            }
+**/
+        
+       
+    }
+    
+    public static  int  validateLicence(){
+        int keyfromreg=-1;
+        LicenseKeyGenerator wr = new LicenseKeyGenerator();
+	String keyFromReg = wr.getValue();
+      	System.out.println("Key from Registry is :" + keyFromReg);
+        if(keyFromReg!="NA")
+        {
+           ValidateKey vkey=new ValidateKey();
+           keyfromreg =vkey.readFinalKey(keyFromReg);
+           return keyfromreg;
+        }else
+        {
+           return keyfromreg;
+           
+        }
+    }
+}

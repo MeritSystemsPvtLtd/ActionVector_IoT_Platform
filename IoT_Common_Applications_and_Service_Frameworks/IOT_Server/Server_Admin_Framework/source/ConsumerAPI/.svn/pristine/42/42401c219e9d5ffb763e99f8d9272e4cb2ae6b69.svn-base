@@ -1,0 +1,15 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package controller;
+
+/**
+ *
+ * @author gopal
+ * Created on Apr 24, 2012, 6:44:42 PM
+ */
+class GALogwriter {
+
+}

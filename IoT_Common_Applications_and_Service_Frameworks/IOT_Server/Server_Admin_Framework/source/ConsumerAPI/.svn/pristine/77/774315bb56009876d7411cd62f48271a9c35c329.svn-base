@@ -1,0 +1,220 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/* -------------------------------------------------------------------------
+ *
+ *                           Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *              #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *         THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ * --------------------------------------------------------------------------
+ */
+package businessmodel;
+
+import java.util.*;
+import Model.*;
+import controller.CommandTask;
+import controller.DBConstants;
+import controller.LogWriter;
+
+import java.sql.*;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jul 17, 2012, 4:41:57 PM
+ */
+public class TasktypePriority
+{
+
+    public static Logger log = Logger.getLogger(TasktypePriority.class);
+
+    public static boolean addTaskPriories(Connection con, String sztaskType, HttpServletRequest request)
+    {
+
+        //Connection con = null;
+        PreparedStatement statement = null;
+        boolean bFlag = true;
+        String szPriority = "";
+        String szTaskType = "";
+        String szPriorityid = "";
+        String szDefault_priority = "";
+        String szColor = "";
+        String szStatus = "";
+        String szCategory = "";
+        String szSummaryKeywords = "";
+        String customerid = null;
+        boolean bPriority_flag = false;
+        Integer ISecurityUsers = 1;
+        String sStatusArray[] = new String[1024];
+        String sCategoryArray[] = new String[1024];
+        String sPriorityArray[] = null;
+        PreparedStatement statement2 = null;
+
+        boolean check = true;
+
+        try
+        {
+            Properties config = Configuration.initialize();
+            sPriorityArray = config.getProperty("priority").split(",");
+            System.out.println("Inside priority add");
+            System.out.println("Priorities"+config.getProperty("priority"));
+            //szDefault_priority = request.getParameter("default_priority");
+            //szColor = request.getParameter("color");
+            szColor =config.getProperty("prioritycolor");
+            sStatusArray =config.getProperty("prioritystatus").split(",");
+            sCategoryArray =config.getProperty("prioritycategory").split(",");
+            //szSummaryKeywords = request.getParameter("sumkeywords");
+            szTaskType = sztaskType;
+            for (int j = 0; j < sPriorityArray.length; j++)
+            {
+                try
+                {
+                    szPriority = sPriorityArray[j];
+                    if (j == 0)
+                    {
+                        szDefault_priority = "Yes";
+                    }
+
+                    log.info("request parameters get successfully");
+
+                    if (szSummaryKeywords == null || "".equalsIgnoreCase(szSummaryKeywords))
+                    {
+                        szSummaryKeywords = "NONE";
+                    }
+                    if (sStatusArray != null)
+                    {
+                        for (int i = 0; i < sStatusArray.length; i++)
+                        {
+                            if ("NONE".equalsIgnoreCase(sStatusArray[i]))
+                            {
+                                continue;
+                            }
+                            if (i == 0)
+                            {
+                                szStatus += sStatusArray[i];
+                            } else
+                            {
+                                szStatus += "," + sStatusArray[i];
+                            }
+                        }
+                    } else
+                    {
+                        szStatus = "NONE";
+                    }
+                    LogWriter.writeDebug("Status :" + szStatus, 3);
+                    if (sCategoryArray != null)
+                    {
+                        for (int i = 0; i < sCategoryArray.length; i++)
+                        {
+                            if ("NONE".equalsIgnoreCase(sCategoryArray[i]))
+                            {
+                                continue;
+                            }
+                            if (i == 0)
+                            {
+                                szCategory += sCategoryArray[i];
+                            } else
+                            {
+                                szCategory += "," + sCategoryArray[i];
+                            }
+                        }
+                    } else
+                    {
+                        szCategory = "NONE";
+                    }
+                    LogWriter.writeDebug("Category	:" + szCategory, 3);
+                    LogWriter.writeDebug("Summary Keywords:" + szSummaryKeywords, 3);
+                } catch (Exception e)
+                {
+                    System.out.println("Exception while reading inputs");
+                    check = false;
+                    LogWriter.writeDebug("EXCEPTION : Getting the parameters  ", 1);
+                }
+
+                LogWriter.writeDebug("the default priority is ..." + szDefault_priority, 3);
+                if (ISecurityUsers.intValue() == 1 && check)
+                {
+                    try
+                    {
+                        szPriorityid = szTaskType + szPriority;
+                        //con = DatabaseConnection.getDatabaseConnection(request);
+                        log.info("database connected");
+                        if (con != null)
+                        {
+                            statement2 = con.prepareStatement("SELECT * from " + DBConstants.PRIORITY_TABLE + " where task_type=? and default_priority = ?");
+                            statement2.setString(1, szTaskType);
+                            statement2.setInt(2, 1);
+                            ResultSet rs2 = statement2.executeQuery();
+                            while (rs2.next())
+                            {
+                                bPriority_flag = true;
+                            }
+                            statement2.close();
+                            statement = con.prepareStatement("INSERT INTO " + DBConstants.PRIORITY_TABLE + " VALUES(?,?,?,?,?,?,?,?)");
+                            statement.setString(1, szPriorityid);
+                            statement.setString(2, szTaskType);
+                            statement.setString(3, szPriority);
+                            if ("Yes".equalsIgnoreCase(szDefault_priority))
+                            {
+                                if (!bPriority_flag)
+                                {
+                                    statement.setInt(4, 1);
+                                } else
+                                {
+                                    statement.setInt(4, 0);
+                                }
+                            } else
+                            {
+                                statement.setInt(4, 0);
+                            }
+                            statement.setString(5, szColor);
+                            statement.setString(6, szStatus);
+                            statement.setString(7, szCategory);
+                            statement.setString(8, szSummaryKeywords);
+                            statement.executeUpdate();
+                            statement.close();
+                            szStatus="";
+                            szCategory="";
+                            log.info("operation success");
+                        } else
+                        {
+                            log.info("database connection failed");
+                        }
+                    } catch (Exception sqle)
+                    {
+                        //GALogwriter.writeDebug("EXCEPTION : While Adding the priority  "+sqle.getMessage());
+                        bFlag = false;
+                        log.error("error while processing request", sqle);
+                    }
+                } else
+                {
+                    log.info("security level failed");
+                }
+            }//for
+        } catch (Exception e)
+        {
+            bFlag=false;
+        }
+        return bFlag;
+    }
+}

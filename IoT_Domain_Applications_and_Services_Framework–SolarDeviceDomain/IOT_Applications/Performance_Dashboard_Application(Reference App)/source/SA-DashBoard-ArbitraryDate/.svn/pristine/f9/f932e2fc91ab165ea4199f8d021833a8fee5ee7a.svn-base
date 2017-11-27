@@ -1,0 +1,234 @@
+[
+   {
+      "text":"Select Graph",
+      "value":"Options",
+      "items":[
+         {
+            "text":"Health",
+            "id":"Health_id",
+            "value":"Health",
+            "items":[
+               {
+                  "value":"Availability",
+                  "text":"Availability",
+                  "filename":"/server/serverAvail.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Availability"
+                  ],
+                  "index":"0"
+               },
+               {
+                  "value":"CPU Disk Memory Metrics",
+                  "text":"CPU Disk Memory Metrics",
+                  "filename":"/server/serverMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "CPUUtil",
+                     "DskUsgBoot",
+                     "Memusg"
+                  ],
+                  "index":"1"
+               },
+               {
+                  "value":"CPU Load",
+                  "text":"CPU Load",
+                  "filename":"/server/serverLoadMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Load1",
+                     "Load15",
+                     "Load5"
+                  ],
+                  "index":"2"
+               },
+               {
+                  "value":"CPU Utilization",
+                  "text":"CPU Utilization",
+                  "filename":"/server/serverMetrics.json",
+                  "charttype":"lineargauge",
+                  "category":"health",
+                  "metricType":[
+                     "CPUUtil"
+                  ],
+                  "index":"3"
+               },
+               {
+                  "value":"Disk Utilization",
+                  "text":"Disk Utilization",
+                  "filename":"/server/serverMetrics.json",
+                  "charttype":"lineargauge",
+                  "category":"health",
+                  "metricType":[
+                     "DskUsgBoot"
+                  ],
+                  "index":"4"
+               },
+               {
+                  "value":"Fan Speed Metrics",
+                  "text":"Fan Speed Metrics",
+                  "filename":"/server/serverCPUFanSpeedMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "AuxFan",
+                     "Fan4",
+                     "CPUFan",
+                     "CaseFan"
+                  ],
+                  "index":"5"
+               },
+               {
+                  "value":"Memory Utilization",
+                  "text":"Memory Utilization",
+                  "filename":"/server/serverMetrics.json",
+                  "charttype":"lineargauge",
+                  "category":"health",
+                  "metricType":[
+                     "Memusg"
+                  ],
+                  "index":"6"
+               },
+               {
+                  "value":"Temp Metrics",
+                  "text":"Temp Metrics",
+                  "filename":"/server/serverCPUTempMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "AuxTemp",
+                     "SysTemp",
+                     "CPUTemp"
+                  ],
+                  "index":"7"
+               },
+                {
+                        "value": "Time Line Availability",
+                        "text": "Time Line Availability",
+                        "filename": "/server/serverLineChartAvailability.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                  		 "Availability"],
+                        "index": "8"
+                    },
+                {
+                  "value":"Time Line CPU Load",
+                  "text":"Time Line CPU Load",
+                  "filename":"/server/serverLoadMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Load1",
+                     "Load15",
+                     "Load5"
+                  ],
+                  "index":"9"
+               },
+               {
+                  "value":"Time Line CPU Utilization",
+                  "text":"Time Line CPU Utilization",
+                  "filename":"/server/serverLineChartCpuUtilizationByTime.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[
+                     "CPUUtil"
+                  ],
+                  "index":"10"
+               },
+               {
+                  "value":"Time Line Disk Utilization",
+                  "text":"Time Line Disk Utilization",
+                  "filename":"/server/serverLineChartDiscUtilizationByTime.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[
+                     "DskUsgBoot"
+                  ],
+                  "index":"11"
+               },
+               {
+                  "value":"Time Line Fan Speed Metrics",
+                  "text":"Time Line Fan Speed Metrics",
+                  "filename":"/Desktop/DesktopLineChartFanSpeedByTime.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[
+                     "AuxFan",
+                     "Fan4",
+                     "CPUFan",
+                     "CaseFan"
+                  ],
+                  "index":"12"
+               },
+               {
+                  "value":"Time Line Memory Utilization",
+                  "text":"Time Line Memory Utilization",
+                  "filename":"/server/serverLineChartMemoryUtilizationByTime.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[
+                     "Memusg"
+                  ],
+                  "index":"13"
+               },
+               {
+                  "value":"Time Line Temp Metrics",
+                  "text":"Time Line  Temp Metrics",
+                  "filename":"/Desktop/DesktopLineChartCPUTempByTime.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[
+                     "CurrentDiskTmp",
+                     "AuxTemp",
+                     "SysTemp",
+                     "CPUTemp"
+                  ],
+                  "index":"14"
+               }
+            ]
+         },
+         {
+            "text":"Alert",
+            "value":"Alert",
+            "items":[
+               {
+                  "value":"Alerts By Assignee",
+                  "text":"Alerts By Assignee",
+                  "filename":"/server/serverAssignee.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"0"
+               },
+               {
+                  "value":"Alerts By Status",
+                  "text":"Alerts By Status",
+                  "filename":"/server/serverStatus.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"1"
+               },
+               {
+                  "value":"Critical Alerts",
+                  "text":"Critical Alerts",
+                  "filename":"/server/serverAlertCount.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+                  ],
+                  "index":"2"
+               }
+            ]
+         }
+      ]
+   }
+]

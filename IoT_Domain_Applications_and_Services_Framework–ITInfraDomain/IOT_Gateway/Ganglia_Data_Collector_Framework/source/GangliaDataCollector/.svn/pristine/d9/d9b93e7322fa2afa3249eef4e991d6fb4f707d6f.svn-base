@@ -1,0 +1,162 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.adapter.ganglia;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.HashMap;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.*;
+import org.xml.sax.helpers.*;
+
+/**
+ *
+ * @author Abraham
+ */
+public class GmondXmlDocParser {
+
+    private static final Logger log = Logger.getLogger(GmondXmlDocParser.class.getName());
+
+    private static class EventRegisterSAXHandler extends DefaultHandler {
+
+        public void startDocument() throws SAXException {
+            log.debug("Start document");
+        }
+
+        public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
+            log.debug("Start Element:- localname: " + localName + " and element: " + qName);
+
+            HashMap hm = new HashMap();
+            for (int att = 0; att < atts.getLength(); att++) {
+                String attName = atts.getQName(att);
+                String attVal = atts.getValue(attName);
+                hm.put(attName, attVal);
+            }
+            NodeWatcher.nodeStart(qName, hm);
+        }
+
+        public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
+            log.debug("End Element:- localname: " + localName + " and element: " + qName);
+            NodeWatcher.nodeEnd(qName);
+        }
+
+        public void characters(char[] ch, int start, int length) throws SAXException {
+            log.debug("Characters found: " + ch);
+            String token = new String(ch, start, length);
+            //ignore newlines
+            token = token.trim();
+            if (!token.isEmpty()) {
+                log.debug(token);
+            }
+        }
+
+        public void ignorableWhitespace() {
+            log.debug("Ignorable whitespaces");
+        }
+    }
+
+    public GmondXmlDocParser() {
+    }
+
+    public void parseDocFromFile(String gangliaXmlFile) {
+
+        try {
+            log.debug("Begining parsing the Ganglia XML document: " + gangliaXmlFile);
+            XMLReader xmlReader = null;
+            SAXParserFactory spfactory = SAXParserFactory.newInstance();
+            spfactory.setValidating(false);
+            SAXParser saxParser = spfactory.newSAXParser();
+            xmlReader = saxParser.getXMLReader();
+
+            EventRegisterSAXHandler saxHandler = new EventRegisterSAXHandler();
+            xmlReader.setContentHandler(saxHandler);
+
+            InputSource source = new InputSource(gangliaXmlFile);
+            xmlReader.parse(source);
+            log.debug("Parsing Ganglia XML document: " + gangliaXmlFile + "completed...");
+        } catch (Exception ex) {
+            log.error("**** ERROR ***** Ganglia XML error while parsing file: " + gangliaXmlFile + "\n" + ex);
+        }
+    }
+
+    public void parseDocFromBuffer(StringBuffer gangliaXmlBuffer) {
+
+        try {
+            log.debug("Begining parsing the Ganglia XML document buffer...");
+            XMLReader xmlReader = null;
+            SAXParserFactory spfactory = SAXParserFactory.newInstance();
+            spfactory.setValidating(false);
+            SAXParser saxParser = spfactory.newSAXParser();
+            xmlReader = saxParser.getXMLReader();
+
+            EventRegisterSAXHandler saxHandler = new EventRegisterSAXHandler();
+            xmlReader.setContentHandler(saxHandler);
+
+            InputSource source = new InputSource(new StringReader(gangliaXmlBuffer.toString()));
+            xmlReader.parse(source);
+
+            log.debug("Parsing Ganglia XML document buffer completed...");
+        } catch (Exception ex) {
+            log.error("**** ERROR ***** Ganglia XML error while parsing XML document buffer \n " + ex);
+        }
+    }
+
+    public static void main(String args[]) throws ParserConfigurationException, SAXException, IOException {
+
+        PropertyConfigurator.configure("config/logger.properties");
+        log.debug("Starting ClusterStateParser...");
+
+      /**
+        //Unit testing with dummy lsiteners
+        GangliaNodeListener tL1 = new TestNodeListener("TL1");
+        GangliaNodeListener tL2 = new TestNodeListener("TL2");
+        
+        NodeWatcher.addListener("HOST", "*", tL1);
+        NodeWatcher.addListener("HOST", "*", tL1);
+        NodeWatcher.addListener("METRIC", "load_five", tL1);
+        NodeWatcher.addListener("METRIC", "load_one", tL2);
+        NodeWatcher.addListener("METRIC", "load_five", tL1);
+      **/
+
+        //first load up the event mapper XML; NodeWatcher gets initialised with CEP event listeners
+        log.debug("Starting Ganglia to CEP Event Mapper Parser...");
+
+        EventMapperXmlDocParser emxdp = new EventMapperXmlDocParser();
+        emxdp.parseDocument("./config/t_eventmapper.1.xml");
+
+        //print out the registered listeners
+        NodeWatcher.printNodeListeners();
+
+        //load up the Ganglia XML - this will invoke the NodeWatcher listeners (CEP events)
+        GmondXmlDocParser gxdp = new GmondXmlDocParser();
+//        gxdp.parseDocFromFile("./config/gmond-xml-money.xml");
+
+        //read the XML into a buffer and parse from there
+        FileReader fXml = new FileReader("./config/gmond-xml-money.xml");
+        Boolean more = true;
+        StringBuffer sbuf = new StringBuffer();
+        int data;
+        while (more) {//read the full ganglia XML doc
+            try {
+                data = fXml.read();
+                if (data == -1) {
+                    more = false;
+                    log.info("\n------ XML file in buffer contents -----\n"+sbuf);
+                    gxdp.parseDocFromBuffer(sbuf);
+                } else {
+                    sbuf.append((char)data);
+                }
+            } catch (Exception ex) {
+                log.error("*** ERROR *** Reading from XML file failed. " + ex);
+            }
+        }
+
+    }
+}

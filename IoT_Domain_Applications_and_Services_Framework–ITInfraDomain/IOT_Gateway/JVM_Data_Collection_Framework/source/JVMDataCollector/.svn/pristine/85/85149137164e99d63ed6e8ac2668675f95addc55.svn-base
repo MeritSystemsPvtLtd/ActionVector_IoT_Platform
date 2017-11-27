@@ -1,0 +1,158 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.meritsystems.report.tcp;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.UnknownHostException;
+import com.meritsystems.core.configuration.ConfigurationReader;
+import com.meritsystems.core.log.Logger;
+import com.meritsystems.core.log.LoggerFactory;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
+/**
+ *
+ * @author gopal
+ */
+public class WatchDogEventConnector {
+
+    static Logger logger = LoggerFactory.getLogger(WatchDogEventConnector.class);
+    private static SSLSocket requestSocket;
+    private static PrintWriter toWatchDog;
+    private static OutputStream out;
+    private static boolean watchDogReady;
+    private static String watchDogHost;
+    private static int watchDogPort;
+    private static String newline;
+
+    private WatchDogEventConnector() {
+    }
+
+    public static void initialize() {
+        if (!isWatchDogReady()) {
+            watchDogReady = false;
+
+            watchDogHost = ConfigurationReader.getConfiguration().getWatchdogHost();
+            if (ConfigurationReader.getConfiguration().getWatchdogPort() != null) {
+                watchDogPort = Integer.parseInt(ConfigurationReader.getConfiguration().getWatchdogPort());
+            }
+            //newline = CommandParameters.getNewline();
+
+            if (connectToWatchDogHost()) {
+                logger.debug("Connected to the WatchDog engine at host:" + watchDogHost + " and port: " + watchDogPort + "...");
+            } else {
+                logger.error("*** ERROR ****Could not connect to WatchDog engine at host:" + watchDogHost + " and port: " + watchDogPort + ". Will try again later...", "");
+            }
+        }
+    }
+
+    private static boolean connectToWatchDogHost() {
+        //connect to the WatchDog engine socket
+        logger.info("Connecting to WatchDog engine at host:" + watchDogHost + " and port: " + watchDogPort);
+        try {
+            if (!watchDogReady) {
+
+                if (watchDogHost == null) {
+                    logger.error("*** FATAL ERROR *** WatchDog host not specified in properties file. Will not send to WatchDog...", "");
+                    watchDogReady = false;
+                } else {
+                    SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+                    requestSocket = (SSLSocket) sslsocketfactory.createSocket(InetAddress.getByName(watchDogHost), watchDogPort);
+                    if (requestSocket == null) {
+                        logger.error("socket is null", "");
+                    }
+                    out = requestSocket.getOutputStream();
+                    toWatchDog = new PrintWriter(out, true);
+                    watchDogReady = true;
+                }
+
+            }
+        } catch (UnknownHostException ex) {
+            logger.error("** CRITICAL ERROR ** Cannot connect to WatchDog engine : unknown host exception\n" + ex, "");
+            watchDogReady = false;
+        } catch (IOException ex) {
+            logger.error("** CRITICAL ERROR ** Cannot connect to WatchDog engine : IO exception\n" + ex, "");
+            watchDogReady = false;
+        }
+        return watchDogReady;
+    }
+
+    public static boolean isWatchDogReady() {
+        return watchDogReady;
+    }
+
+    public static boolean sendMessage(String message) {
+        //log.info("Sending this message to WatchDog: " + data);
+        try {
+            if (toWatchDog == null) {
+                logger.debug("writer Object is null; could send data to watchDogHost  " + watchDogHost + "@" + watchDogPort + "....");
+                closeDataProcessor();
+                connectToWatchDogHost();
+            }
+            if (toWatchDog != null) {
+                if (toWatchDog.checkError()) {
+                    closeDataProcessor();
+                    connectToWatchDogHost();
+                }
+            }
+            if (!requestSocket.getChannel().isOpen()) {
+                closeDataProcessor();
+                connectToWatchDogHost();
+            }
+            if ((!toWatchDog.checkError()) && !isWatchDogReady()) {
+                logger.info("Sending data " + message);
+                toWatchDog.println(message);
+                logger.info("Sending data successful");
+                toWatchDog.flush();
+            } else {
+                watchDogReady = false;
+                connectToWatchDogHost();
+            }
+
+            return true;
+        } catch (Exception ex) {
+            logger.error("** CRITICAL ERROR ** Connection to WatchDog engine broken : IO exception\n" + ex, "");
+            watchDogReady = false;
+            return false;
+        }
+    }
+
+    public static void closeDataProcessor() {
+        //log.debug("Closing Socket and PrintWriter for host : " + gszEventProcessorHost + "...........");
+        try {
+            try {
+                if (toWatchDog != null) {
+                    toWatchDog.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (requestSocket != null) {
+                    requestSocket.shutdownInput();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            watchDogReady = false;
+            toWatchDog = null;
+            out = null;
+            requestSocket = null;
+            //dataStorage = null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

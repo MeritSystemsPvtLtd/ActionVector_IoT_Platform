@@ -1,0 +1,17 @@
+#process=ResourceName,ResId,ResProcessName,InstanceId,InstancePort
+#Ganglia=gmetad,192.168.1.2,java com.prokosha.adapter.ganglia.GangliaAdapter,192.168.1.55,8649
+#DBMonitor=dbmonitor,192.168.1.2,java com.prokosha.dbmonitor.DBMonitor,null,null
+#JVMLocal=JVMLocal,192.168.1.2,java com.meritsystems.monitor.JVMMonitor,null,null
+#JVMRemote=JVMRemote,192.168.1.2,java com.meritsystems.monitor.Monitor,null,null
+#NetAgent=NetAgent,192.168.1.2,java lm.sensors.LMSensors,null,null
+#OpsView=OpsView,192.168.1.2,java com.prokosha.adapter.perfdata.SadeskPerfdataAdapter,null,null
+#new configuration
+#ResourceName=ResourceType,ResourceId:port
+gmetad=Server,192.168.1.55:8649,192.168.1.57:8649
+dbmonitor=Database,192.168.1.46:postgres,192.168.1.57:mysql
+jvmlocal=JVM,192.168.1.46:jvmlocal1,192.168.1.57:jvmlocal2
+jvmremote=JVM,192.168.1.46:jvmremote1,192.168.1.57:jvmremote2
+NetAgent=Network,192.168.1.55:network1,192.168.1.177:network2
+OpsView=Server,192.168.1.46:server1,192.168.1.57:server2
+#merit2ksys
+#2kmerit

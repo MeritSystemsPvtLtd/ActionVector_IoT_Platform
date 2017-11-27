@@ -1,0 +1,35 @@
+module com.prokosha.cep.loadmonitor.v1;
+
+/**
+** Rule set 1: Detect when the average CPU load increases and doubles in the past 5 minutes.
+** Alert once every 2 minutes for every distinct server
+**/
+//compute the CpuLoad
+//@Name("com.prokosha.sadeskCeP.LoadMonitor.istream.2")
+insert into LoadMon
+        select (Load1/CpuNum) as CpuLoad, HostName, HostAddress
+        from ServerStateStream;
+
+//compute the 5 minute average of the load
+//@Name("com.prokosha.sadeskCeP.LoadMonitor.istream.4")
+insert into AvgLoadMon
+    select avg(CpuLoad) as CurrentAvgLoad, HostName, HostAddress
+    from LoadMon.win:time(5 minutes)
+        group by HostName;
+
+//extract the begin avgLoad and end avgLoad for every 5 minute window
+//@Name("com.prokosha.sadeskCeP.LoadMonitor.istream.5")
+insert into LoadIncreaseMon
+        select CurrentAvgLoad, first(CurrentAvgLoad) as PriorAvgLoad, HostName, HostAddress
+        from AvgLoadMon.win:time(5 minutes)
+        group by HostName;
+
+@Name("com.prokosha.sadeskCeP.LoadMonitor.dispatch.7")
+select "Correlated Event" as EventType,
+        "ALERT - Server Load is rising" as EventDesc,
+        "Average load has increased by over 100% in the past 5 minutes" as EventSymptoms,
+        HostName, HostAddress, CurrentAvgLoad, PriorAvgLoad as AvgLoadAtBegining
+        from LoadIncreaseMon.win:time(5 minutes)
+        where ((CurrentAvgLoad/PriorAvgLoad > 2.0))
+        group by HostName
+        output first every 2 minute;

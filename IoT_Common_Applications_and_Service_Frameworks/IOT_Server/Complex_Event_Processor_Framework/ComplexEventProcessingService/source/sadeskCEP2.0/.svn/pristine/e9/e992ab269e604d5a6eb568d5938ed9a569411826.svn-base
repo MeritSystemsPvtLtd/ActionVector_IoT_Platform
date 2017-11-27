@@ -1,0 +1,705 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.sadeskCeP;
+
+
+import com.espertech.esper.client.EventBean;
+import com.espertech.esper.client.UpdateListener;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import javax.xml.soap.MessageFactory;
+import javax.xml.soap.SOAPBody;
+import javax.xml.soap.SOAPBodyElement;
+import javax.xml.soap.SOAPConnection;
+import javax.xml.soap.SOAPConnectionFactory;
+import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPMessage;
+import javax.xml.soap.SOAPPart;
+import java.util.logging.Level;
+
+import org.apache.log4j.Logger;
+/*import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;*/
+
+/**
+ *
+ * @author rekha
+ */
+public class OTRSDispatcher implements UpdateListener {
+
+    private static final Logger log = Logger.getLogger(OTRSDispatcher.class.getName());
+    private Properties properties = null;
+    private String szService = null;
+    private String szSubservice = null;
+    private String szHostGroup = "";
+    private String szTaskType = null;
+    private javax.xml.soap.SOAPConnection connSOAP = null;
+
+    public OTRSDispatcher() throws Exception {
+        properties = new Properties();
+        try {
+            properties.load(new FileInputStream("config/otrsCepTask.ini"));
+        } catch (IOException ex) {
+            log.debug("ERROR while loading properties file=======");
+            ex.printStackTrace();
+            throw ex;
+        }
+    }
+
+    public void update(EventBean[] corrEvent, EventBean[] oldData) {
+        try {
+            if (corrEvent == null) {
+                return;
+            }
+
+            for (int i = 0; i < corrEvent.length; i++) {
+                log.debug("[EventCount:" + (i + 1) + "]\nEventDump==> " + corrEvent[i].getUnderlying());
+                // pretty print the correlated event to the logs
+                prettyprint(corrEvent[i]);
+                dispatchEvents((HashMap) corrEvent[i].getUnderlying());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void prettyprint(EventBean corrEvent) {
+
+        StringBuffer sbuf = new StringBuffer();
+
+        HashMap ev = (HashMap) corrEvent.getUnderlying();
+        Set keys = ev.keySet();
+        Iterator index = keys.iterator();
+
+        String key;
+        while (index.hasNext()) {
+            key = (String) index.next();
+            sbuf.append("   ").append(key).append(" = ").append(ev.get(key)).append("   \n");
+        }
+        log.warn("\n\n-------- Correlated Event ---------\n" + sbuf + "\n-------------------------------------\n\n");
+    }
+
+    public void dispatchEvents(HashMap theEvent) throws IOException {
+
+        String szComments;
+        String EventType = null;
+        String EventDesc = null;
+        String EventSymptoms = null;
+        String id = null;
+        StringBuffer context = new StringBuffer();
+        String contextualtext = null;
+        String HostName = null;
+        String HostGroup = null;
+        String Filter = null;
+        String szSourceEvent = null;
+        String AlertType = null;
+        String resourceType = null;
+        String AlertAcronym = null;
+        String resourceId = null;
+        String eventID = null;
+        String szCustID = "merit";
+        String otrsUrl = properties.getProperty("otrsUrl");
+        String sadeskUrl = properties.getProperty("sadeskUrl");
+
+        URL url;
+        String szSession = null;
+        ObjectInputStream input = null;
+        URLConnection conn;
+        Class msgClass = null;
+        Object msgObj = null;
+        String types = "";
+        String updateEnableDisable = "ON";
+        String szEventSourceXml = null;
+        try {
+            // Get a set of the entries
+            Set set = theEvent.entrySet();
+            // Get an iterator
+            Iterator i = set.iterator();
+            // Display/Assign elements
+
+            while (i.hasNext()) {
+                Map.Entry me = (Map.Entry) i.next();
+                log.info("me.getKey()::" + me.getKey());
+                if (me.getKey().equals("EventDesc")) {
+                    EventDesc = me.getValue().toString();
+                    AlertAcronym = EventDesc.substring(EventDesc.lastIndexOf("["));
+                    log.info("Acronym===:" + AlertAcronym);
+                } else if (me.getKey().equals("EventType")) {
+                    EventType = me.getValue().toString();
+                } else if (me.getKey().equals("EventSymptoms")) {
+                    EventSymptoms = me.getValue().toString();
+                } else if (me.getKey().equals("HostName")) {
+                    HostName = me.getValue().toString();
+                } else if (me.getKey().equals("AlertType")) {
+                    AlertType = me.getValue().toString();
+                } else if (me.getKey().equals("HostGroup")) {
+                    HostGroup = me.getValue().toString();
+                } else if (me.getKey().equals("Filter")) {
+                    Filter = me.getValue().toString();
+                } else if (me.getKey().equals("eventSource")) {
+                    szSourceEvent = me.getValue().toString();
+                } else if (me.getKey().equals("EventSourceXml")) {
+                    szEventSourceXml = me.getValue().toString();
+                } else if (me.getKey().equals("resourceType")) {
+                    resourceType = me.getValue().toString();
+                } else if (me.getKey().equals("resourceId")) {
+                    resourceId = me.getValue().toString();
+                } else if (me.getKey().equals("eventID")) {
+                    eventID = me.getValue().toString();
+                } else if (me.getKey().equals("CustomerID")) {
+                    szCustID = me.getValue().toString();
+                } else {
+                    contextualtext = (me.getKey() + " = "
+                            + me.getValue().toString() + " <br>");
+                    context.append(contextualtext);
+                }
+            }
+            contextualtext = context.toString();
+            log.info("contextualtext:::" + contextualtext);
+            log.info("HostName::::::::::::::::::" + HostName);
+            otrsUrl = "http://" + szCustID + "." + otrsUrl;
+            sadeskUrl = "http://" + szCustID + "." + sadeskUrl;
+            log.info("OTRS URL=" + otrsUrl);
+
+            if (szCustID != null) {
+                try {
+                    /*String ContextClassName = properties.getProperty(AlertAcronym);
+                    if (ContextClassName != null) {
+
+                        String updateEDFlag[] = ContextClassName.split(",");
+                        updateEnableDisable = updateEDFlag[1].toString().trim();
+                        QtartContextGenerator contextGenerator = new QtartContextGenerator(szSourceEvent, Filter, properties);
+                        types = QtartContextGenerator.getSzService() + ":" + QtartContextGenerator.getSzSubservice() + "::";
+                        HostName = QtartContextGenerator.getSzHost();
+                    } else {
+
+                        DefalutContextGenerator defaultGenerator = new DefalutContextGenerator();
+                        if (!(resourceType == null || resourceType.equalsIgnoreCase("") || resourceType.equalsIgnoreCase("null"))) {
+                            types = defaultGenerator.initilize(properties, HostName, resourceType, sadeskUrl);
+                        } else if (resourceType == null || resourceType.equalsIgnoreCase("") || resourceType.equalsIgnoreCase("null")) {
+                            types = defaultGenerator.initilize(properties, HostName, "default", sadeskUrl);
+                        }
+
+                        log.info("Responce from type controller" + types);
+
+                    }
+                    setTaskType(types, AlertType);*/
+                    setTaskType(AlertType);
+                    this.szHostGroup = HostGroup;
+                    log.info("SUBSERVICE:" + szSubservice);
+                    log.info("SERVICE:" + szService);
+                    log.info("Task type for service " + szService
+                            + " subservice " + szSubservice + " is "
+                            + szTaskType);
+                    if (szTaskType == null) {
+                        log.info("Task type not mapped. Setting to default.");
+                        szTaskType = properties.getProperty("Default");
+                    }
+                    log.info("Tasktype is ::" + szTaskType);
+                } catch (Exception e) {
+                    log.error("*********Error******** in CepTypeServlet Responce");
+                    log.error(e.getMessage());
+                } finally {
+                    if (input != null) {
+                        input.close();
+                        conn = null;
+                    }
+                }
+                //String hostName = HostName;// get it from ip address
+                String szUserName = properties.getProperty("UserName");
+                String szPassword = properties.getProperty("Password");
+
+                String szCreatedBy = HostName + "/" + szHostGroup;
+                log.info("HostGroup===" + szCreatedBy);
+                //String Customer = properties.getProperty("Customer");
+                //code added to get the customer from the event field configured in properties
+                String custEvtField = properties.getProperty("Customer");
+                log.info("customer for prochara gatask comes from evt field==>>"+custEvtField);
+                String Customer = theEvent.get(custEvtField).toString();
+                String szTask_id = null;
+                String szPriority = "1";
+                String szStatus = "szStatus";
+                String szCategory = EventType;// get it from resource info using
+                // ciid
+                String szTask_summary = EventDesc;// get it from cepoutput
+                String szSla = "None";
+                String szActions = szHostGroup;
+                String szLastaction = "szLastaction";
+                String szParentId = "szParentId";
+                String szTaskOwner=properties.getProperty("Owner");
+
+
+                //new field to get otrs default Queue
+                String szQueueName=properties.getProperty("Queue");
+
+                
+                log.info("------------I m in START of calling OTRS::TicketCraete() from Client----------------");
+                try {
+                    // Create the connection
+                    SOAPConnectionFactory scf = SOAPConnectionFactory.newInstance();
+                    connSOAP = scf.createConnection();
+                    System.out.println("$$$$$$$$$$$$$$$$$$$$$$$ In SOAP Message processing $$$$$$$$$$$$$$$$$$$$$");
+                    // Create message
+                    MessageFactory mf = MessageFactory.newInstance();
+                    SOAPMessage msg = mf.createMessage();
+
+                    // Object for message parts
+                    SOAPPart sp = msg.getSOAPPart();
+
+
+                    SOAPEnvelope env = sp.getEnvelope();
+                    env.setEncodingStyle("http://schemas.xmlsoap.org/soap/encoding/");
+                    SOAPBody body = env.getBody();
+                    SOAPBodyElement createTicket = body.addBodyElement(env.createName("TicketCreate"));
+                    createTicket.addChildElement("CustomerUserLogin").addTextNode(szUserName);
+                    createTicket.addChildElement("Password").addTextNode(szPassword);
+                    SOAPBodyElement ticket = (SOAPBodyElement) createTicket.addChildElement("Ticket");
+                    ticket.addChildElement("Title").addTextNode(szTaskType+" Alert");
+                    ticket.addChildElement("Queue").addTextNode(szQueueName);
+                    ticket.addChildElement("Type").addTextNode(szTaskType);
+                    ticket.addChildElement("State").addTextNode("new");
+                    ticket.addChildElement("Priority").addTextNode("3 normal");
+                    ticket.addChildElement("CustomerUser").addTextNode(szUserName);
+                    ticket.addChildElement("Owner").addTextNode(szTaskOwner);
+
+                    //Adding article to the Ticket
+                    SOAPBodyElement article = (SOAPBodyElement) createTicket.addChildElement("Article");
+                    article.addChildElement("Subject").addTextNode(EventDesc);
+                    article.addChildElement("Body").addTextNode(EventDesc);
+                    article.addChildElement("ContentType").addTextNode("text/plain; charset=utf8");
+
+                    //Adding dynamic Fields
+                    SOAPBodyElement dynamic = (SOAPBodyElement) createTicket.addChildElement("DynamicField");
+                    dynamic.addChildElement("Name").addTextNode("HostName");
+                    dynamic.addChildElement("Value").addTextNode(resourceId+"/"+HostName);
+
+
+                    SOAPBodyElement dynamic1 = (SOAPBodyElement) createTicket.addChildElement("DynamicField");
+                    dynamic1.addChildElement("Name").addTextNode("resourceId");
+                    dynamic1.addChildElement("Value").addTextNode(resourceId);
+
+
+                    SOAPBodyElement dynamic2 = (SOAPBodyElement) createTicket.addChildElement("DynamicField");
+                    dynamic2.addChildElement("Name").addTextNode("resourceType");
+                    dynamic2.addChildElement("Value").addTextNode(resourceType);
+
+
+                    SOAPBodyElement dynamic3 = (SOAPBodyElement) createTicket.addChildElement("DynamicField");
+                    dynamic3.addChildElement("Name").addTextNode("Category");
+                    dynamic3.addChildElement("Value").addTextNode(szCategory);
+
+                    SOAPBodyElement dynamic4 = (SOAPBodyElement) createTicket.addChildElement("DynamicField");
+                    dynamic4.addChildElement("Name").addTextNode("HostGroup");
+                    dynamic4.addChildElement("Value").addTextNode(HostName);
+
+                    SOAPBodyElement dynamic5 = (SOAPBodyElement) createTicket.addChildElement("DynamicField");
+                    dynamic5.addChildElement("Name").addTextNode("CreatedBy");
+                    dynamic5.addChildElement("Value").addTextNode(szCreatedBy);
+
+
+                    url = new URL(otrsUrl);
+
+                    javax.xml.soap.SOAPMessage resp = connSOAP.call(msg, url);
+                    System.out.println("=================The OTRS Response Received=========================");
+                    System.out.println("Response Message received");
+
+                    if (resp != null) {
+                        System.out.println("incoming response is not null");
+                       // FileOutputStream incomingFile = new FileOutputStream("/home/raghu/Desktop/tcktresponse.msg");
+                       // resp.writeTo(incomingFile);
+                      //  incomingFile.close();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                /*AttributeArray = new Attribute[20];
+                 Attribute a1 = new Attribute();
+                 a1.setName("Reportedby");
+                 a1.setValue("Opsview");
+                 AttributeArray[1] = a1;
+                 a1 = null;
+                 Attribute a4 = new Attribute();
+                 a4.setName("Service/ITResourceID");
+                 a4.setValue(szService);
+                 AttributeArray[4] = a4;
+                 a4 = null;
+                 Attribute a5 = new Attribute();
+                 a5.setName("HostGroupName");
+                 a5.setValue(szHostGroup);
+                 AttributeArray[5] = a5;
+                 a5 = null;
+
+                 Attribute a6 = new Attribute();
+                 a6.setName("HostName");
+                 a6.setValue(HostName);
+                 AttributeArray[6] = a6;
+                 a6 = null;
+
+                 Attribute a7 = new Attribute();
+                 a7.setName("SubService");
+                 a7.setValue(szSubservice);
+                 AttributeArray[7] = a7;
+                 a7 = null;
+
+                 long num = number++;
+                 log.info("Number Value=" + num);
+
+                 Attribute a8 = new Attribute();
+                 a8.setName("CurrentAssigneeRole");
+                 a8.setValue(Long.toString(num));
+                 AttributeArray[8] = a8;
+                 a8 = null;
+
+                 Attribute a9 = new Attribute();
+                 a9.setName("Current AssigneeUser");
+                 a9.setValue(resourceId);
+                 AttributeArray[9] = a9;
+                 a9 = null;
+
+                 Attribute a10 = new Attribute();
+                 a10.setName("resourceType");
+                 a10.setValue(resourceType);
+                 AttributeArray[10] = a10;
+                 a10 = null;
+
+                 Attribute a11 = new Attribute();
+                 a11.setName("eventID");
+                 a11.setValue(eventID);
+                 AttributeArray[11] = a11;
+                 a11 = null;
+
+                 Attribute a12 = new Attribute();
+                 a12.setName("resourceId");
+                 a12.setValue(resourceId);
+                 AttributeArray[12] = a12;
+                 a12 = null;
+
+                 creatTaskDetailsRequest0.setAttributeArray(AttributeArray);
+                 CreatTaskDetailsResponse cr = new CreatTaskDetailsResponse();
+                 cr = commStub.createTaskDetails(creatTaskDetailsRequest0);// Save
+                 AttributeArray = null;
+                 // Order
+                 commStub._getServiceClient().cleanup();
+                 commStub.cleanup();
+                 // Status
+
+                 id = cr.getTaskID();
+                 if (compareTask) {
+                 TaskComparator tc = TaskComparator.getComparatorInstance();
+                 TaskDetails td = map(creatTaskDetailsRequest0);
+                 td.setSzTaskId(id);
+                 tc.compareObject(td);
+                 tc.closeTask();
+                 }
+
+                 log.info("TASKID after creating task" + id + num);
+                 if (szEventSourceXml != null) {
+                 try {
+
+                 String uploadFileUrl = new String(sadeskUrl + "/upLoadFile.srv?szUserName=" + szUserName + "&id=" + id + "&tasktype=" + szTaskType);
+                 HttpClient client = new HttpClient();
+                 MultipartPostMethod mPost = new MultipartPostMethod(uploadFileUrl);
+                 client.setConnectionTimeout(8000);
+
+                 // Send any XML file as the body of the POST request
+                 File f1 = new File(szEventSourceXml);
+
+                 System.out.println("File Length = " + f1.length());
+
+                 mPost.addParameter(f1.getName(), f1);
+
+                 int statusCode1 = client.executeMethod(mPost);
+
+                 System.out.println("statusLine>>>" + mPost.getStatusLine());
+                 mPost.releaseConnection();
+
+                 } catch (Exception e) {
+                 e.printStackTrace();
+                 log.warn("Erroe while getting responce from UploadFile Servlet" + e.getStackTrace());
+
+                 }
+                 }
+                 log.info("RESPONSE TASKID::::::::::" + cr.getTaskID());
+                 log.info("------------I m in END of calling Receive Order service from Client----------------");
+                 // szComments = "Event Symptoms"+ EventSymptoms
+                 // +"Contextual Information"+ contextualtext ;
+
+                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                 Date date = new Date();
+                 String str1 = df.format(date);
+                 log.info("INSIDE SERVLET cepAddCommentServlet" + str1);
+
+                 AddCommentsResponse resp = null;
+                 AddCommentsStub commentStub = null;
+                 AddCommentsLoginRequest attachObj = null;
+                 commentStub = new AddCommentsStub(
+                 "http://" + szCustID + "." + properties.getProperty("commentUrl"));
+                 try {
+                 String szMessage = "";
+                 log.info("------------I m in START of calling Add Comments service from Client In StateController cepAddCommentServlet----------------");
+                 log.info("szSession::::" + szSession);
+                 // String targetEndpoint =
+                 // "http://192.168.1.61:8080/proChara/services/AddComments";
+
+                 attachObj = new AddCommentsLoginRequest();
+
+                 attachObj.setSzComments(EventSymptoms.toString());
+                 attachObj.setPassword(szPassword);
+                 attachObj.setSzUser(szUserName);
+                 attachObj.setUserName(szUserName);
+                 attachObj.setSzTaskID(id);
+                 resp = commentStub.addCommentsWithLogin(attachObj);
+                 szMessage = resp.getMessage();
+                 log.info("------------I m in END of calling AddComments service from Client In StateController- cepAddCommentServlet---------------"
+                 + szMessage);
+
+
+                 } catch (Exception e) {
+                 log.warn("========= ERROR AddComment ===============cepAddCommentServlet");
+                 log.error(e.getMessage());
+                 } finally {
+                 try {
+
+                 if (resp != null) {
+                 resp = null;
+                 }
+                 commentStub._getServiceClient().cleanup();
+                 commentStub.cleanup();
+                 if (commentStub != null) {
+                 commentStub = null;
+                 }
+                 if (attachObj != null) {
+                 attachObj = null;
+                 }
+                 } catch (Exception e) {
+                 System.out.println("***ERROR While Deinitilizing in final Block*******");
+                 }
+                 }*/
+            } else {
+                log.error("******* Customer ID Not Found Event Disgarded *******");
+            }
+
+        } catch (Exception e) {
+            log.debug("========= ERROR ===============" + e.getStackTrace());
+            log.error(e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                /*if (AttributeArray != null) {
+                 AttributeArray = null;
+                 }
+                 if (commStub != null) {
+                 commStub._getServiceClient().cleanup();
+                 }
+                 if (commStub != null) {
+                 commStub.cleanup();
+                 }
+                 if (commStub != null) {
+                 commStub = null;
+                 }*/
+                if (connSOAP != null) {
+                    connSOAP = null;
+                }
+            } catch (Exception e) {
+                System.out.println("***ERROR While Deinitilizing in final Block*******");
+            }
+        }
+    }
+
+    /*public static TaskDetails map(
+            CreatTaskDetailsRequest createTaskDetailsRequest) {
+        TaskDetails newTaskDetails = new TaskDetails();
+        try {
+
+            newTaskDetails.setSzActions(createTaskDetailsRequest.getActions());
+            newTaskDetails.setSzCategory(createTaskDetailsRequest.getCategory());
+            // ciid not available
+            newTaskDetails.setSzCreatedBy(createTaskDetailsRequest.getOwner());
+            newTaskDetails.setCustomer(createTaskDetailsRequest.getCustomer());
+            newTaskDetails.setSzLastaction(createTaskDetailsRequest.getLastAction());
+            newTaskDetails.setSzPassword(createTaskDetailsRequest.getPassword());
+            newTaskDetails.setSzPriority(createTaskDetailsRequest.getPriority());
+            newTaskDetails.setSzTaskType(createTaskDetailsRequest.getProcessType());
+            newTaskDetails.setSzSla(createTaskDetailsRequest.getSLA());
+            newTaskDetails.setSzStatus(createTaskDetailsRequest.getStatus());
+            newTaskDetails.setSzTaskSummary(createTaskDetailsRequest.getSummary());
+            newTaskDetails.setSzParentId(createTaskDetailsRequest.getSzParentTaskID());
+            newTaskDetails.setSzTaskId(createTaskDetailsRequest.getTaskId());
+            newTaskDetails.setSzUserName(createTaskDetailsRequest.getUserName());
+
+            newTaskDetails.setA1(createTaskDetailsRequest.getAttributeArray()[1]);
+            // newTaskDetails.setA2(createTaskDetailsRequest.getAttributeArray()[2]);
+            // newTaskDetails.setA3(createTaskDetailsRequest.getAttributeArray()[3]);
+            newTaskDetails.setA4(createTaskDetailsRequest.getAttributeArray()[4]);
+            newTaskDetails.setA5(createTaskDetailsRequest.getAttributeArray()[5]);
+            newTaskDetails.setA6(createTaskDetailsRequest.getAttributeArray()[6]);
+            newTaskDetails.setA7(createTaskDetailsRequest.getAttributeArray()[7]);
+            newTaskDetails.setA8(createTaskDetailsRequest.getAttributeArray()[8]);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            newTaskDetails = null;
+        }
+        return newTaskDetails;
+
+    }*/
+
+    private void setTaskType(String alertType) {
+        
+
+        try {
+
+                if (szTaskType == null) {
+                    try{
+                    szTaskType = properties.getProperty(alertType);
+                    }catch(Exception e){
+                        log.info("Task type not defined for ::"+alertType);
+                    }
+
+                }
+                if (szTaskType == null) {
+                    szTaskType = properties.getProperty("Default");
+                }
+                log.debug("setTaskType()::tasktype==="+szTaskType);
+
+           
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        }
+    }
+
+    /*private boolean updateIfExists(String AlertAcronym, String EventSymptoms, String szCustID, String szUserName, String szPassword) {
+
+        ObjectInputStream input = null;
+        OutputStreamWriter writer = null;
+        URL url = null;
+        URLConnection conn = null;
+        Object object02 = null;
+        String szSession = null;
+
+        try {
+            url = new URL(sadeskUrl + "/CEPStateControllerServlet.srv");
+            conn = url.openConnection();
+
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            writer = new OutputStreamWriter(conn.getOutputStream());
+
+            //write parameters
+            writer.write("HostName=" + HostName + "&ticketTimeOut=" + ticketTimeOut + "&TaskType=" + szTaskType + "&AlertAcronym=" + AlertAcronym + "&EventSymptoms=" + EventSymptoms);
+            writer.flush();
+            conn.connect();
+            input = new ObjectInputStream(conn.getInputStream());
+            object02 = input.readObject();
+            String response = object02.toString();
+            String res_split[] = response.split(",");
+            log.info("Responce from CEPStateController" + res_split[0]);
+
+            if (Boolean.parseBoolean(res_split[0])) {
+
+
+                AddCommentsResponse resp = null;
+                AddCommentsStub commentStub = null;
+                AddCommentsLoginRequest attachObj = null;
+                commentStub = new AddCommentsStub(
+                        "http://" + szCustID + "." + properties.getProperty("commentUrl"));
+                try {
+                    String szMessage = "";
+                    log.info("------------I m in START of calling Add Comments service from Client In StateController cepAddCommentServlet----------------");
+                    log.info("szSession::::" + szSession);
+                    // String targetEndpoint =
+                    // "http://192.168.1.61:8080/proChara/services/AddComments";
+
+                    attachObj = new AddCommentsLoginRequest();
+
+                    attachObj.setSzComments(EventSymptoms.toString());
+                    attachObj.setPassword(szPassword);
+                    attachObj.setSzUser(szUserName);
+                    attachObj.setUserName(szUserName);
+                    attachObj.setSzTaskID(res_split[1].trim());
+                    resp = commentStub.addCommentsWithLogin(attachObj);
+                    szMessage = resp.getMessage();
+                    log.info("------------I m in END of calling AddComments service from Client In StateController- cepAddCommentServlet---------------"
+                            + szMessage);
+                    return Boolean.parseBoolean(res_split[0]);
+
+                } catch (Exception e) {
+                    log.warn("========= ERROR AddComment ===============cepAddCommentServlet");
+                    log.error(e.getMessage());
+                } finally {
+                    try {
+
+                        if (resp != null) {
+                            resp = null;
+                        }
+                        commentStub._getServiceClient().cleanup();
+                        commentStub.cleanup();
+                        if (commentStub != null) {
+                            commentStub = null;
+                        }
+                        if (attachObj != null) {
+                            attachObj = null;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("***ERROR While Deinitilizing in final Block*******");
+                    }
+                }
+            } else {
+                return Boolean.parseBoolean(res_split[0]);
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("failed to update, creating new task");
+        } finally {
+            try {
+                if (input != null) {
+                    input.close();
+                }
+
+                if (writer != null) {
+                    writer.close();
+                }
+
+                if (url != null) {
+                    url = null;
+                }
+
+                if (conn != null) {
+                    conn = null;
+                }
+
+                if (input != null) {
+                    input = null;
+                }
+
+                if (writer != null) {
+                    writer = null;
+                }
+
+                if (object02 != null) {
+                    object02 = null;
+                }
+            } catch (Exception e) {
+                System.out.println("***ERROR While Deinitilizing in final Block*******");
+            }
+        }
+        return false;
+    }*/
+    
+}

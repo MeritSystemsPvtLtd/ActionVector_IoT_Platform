@@ -1,0 +1,377 @@
+/**
+ * *********************************************************************
+ * Software Developed by Merit Systems Pvt. Ltd., No. 42/1, 55/c, Nandi Mansion,
+ * 40th Cross, Jayanagar 8th Block Bangalore - 560 070, India Work Created for
+ * Merit Systems Private Limited All rights reserved
+ *
+ * THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT LAWS AND TREATIES
+ * NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED, DISTRIBUTED,
+ * REVISED, MODIFIED, TRANSLATED, ABRIDGED, CONDENSED, EXPANDED, COLLECTED,
+ * COMPILED, LINKED, RECAST, TRANSFORMED OR ADAPTED WITHOUT THE PRIOR WRITTEN
+ * CONSENT ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION COULD
+ * SUBJECT THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ * *********************************************************************
+ */
+package com.merit.dashboard.service;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import com.merit.dashboard.Availability.GetAvailability;
+import com.merit.dashboard.DAO.metrics.LineChartMetrics;
+import main.ServiceThreadListener;
+import com.merit.dashboard.bizlogic.BizLogic;
+import com.merit.dashboard.file.SendFileToJson;
+import com.merit.dashboard.jsongenerator.PerformanceRatioComparisonGenerator;
+import com.merit.dashboard.queryexecuter.QueryExecuter;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import org.apache.log4j.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+public class DashBoardService {
+
+    static Logger log = Logger.getLogger(DashBoardService.class);
+    QueryExecuter queryExecuter = null;
+    BizLogic bizlogic = null;
+    LineChartMetrics lineChartMetrics = null;
+    long smilli = 0;
+    long emilli = 0;
+    static boolean metricflag = true;
+    SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    /**
+     * ************************************************************************************************
+     * This method is calling queryExecuter.collectMetricdata() for getting all
+     * Metric Info, queryExecuter.collectTicketdata() for getting all Tiket Info
+     * and GetAvailability.getAvailabilityByPeriod() for getting Availability
+     * Information and then returning all these JSON String are combined and
+     * creating JSON Files name MetricTypes.json
+     *
+     * @param customer Selected customerID
+     * @param resourceType Different category as
+     * Desktop,Server,DataBase,Network,JVM
+     * @param startDate from date as subtract(endDate-timestampselection) in
+     * Date Format
+     * @param endDate Current date in Date Format
+     * @return timestampselection Selected Time Period means (hour, days, week,
+     * month, year)
+     *
+     * *************************************************************************************************
+     */
+    public void generateMetricTypeJson(String resourceType, String cCustomer, String service, String selection, String startDate,
+            String endDate, String timestampselection, String customer) {
+        try {
+            SendFileToJson sfj;//modified
+            queryExecuter = new QueryExecuter();
+            bizlogic = new BizLogic();
+
+            Date dateStart = formatter1.parse(startDate);
+            Date dateEnd = formatter1.parse(endDate);
+            String date = formatter1.format(dateStart);
+            String date1 = formatter1.format(dateEnd);
+            smilli = dateStart.getTime() / 1000;
+            emilli = dateEnd.getTime() / 1000;
+
+            String szMetricJson = "";
+            if (selection.contains("Availability")) {
+                //availability hence no change
+                //String szAvailJson = GetAvailability.getAvailabilityByPeriod(emilli, smilli, "'" + resourceType + "'", cCustomer, service,
+                String szAvailJson = GetAvailability.getAvailabilityByPeriod(emilli, smilli, "'" + resourceType + "'",
+                        customer, timestampselection, cCustomer, service);
+                //System.out.println(">>>>>>>>>>>>>>><<<<<<<<<<<<<< szAvailJson = " + szAvailJson);
+                szMetricJson = szAvailJson;
+                //szMetricJson = bizlogic.generateJsonFromCombinedTable(new LinkedHashMap<String, String>(), new LinkedHashMap<String, String>(), szAvailJson);
+            } else if (selection.contains("Alert")) {
+                //alerts only and no change for selection
+                LinkedHashMap<String, String> mapTicketInfo = queryExecuter.collectTicketdata(customer, resourceType, cCustomer, service, date, date1,
+                        selection);
+                szMetricJson = ServiceThreadListener.modifyMapToJSONArray(mapTicketInfo);//bizlogic.generateJsonFromCombinedTable(new LinkedHashMap<String, String>(), mapTicketInfo, "[{}]");
+                // System.out.println("*********** Alerts szMetricJson = " + szMetricJson);
+            } else {
+                //metrictype except avalability and alerts
+                String metricTypeIn = ServiceThreadListener.getJSONMetricGroupSet(resourceType, selection);
+                LinkedHashMap<String, String> mapMetricInfo = queryExecuter.collectMetricdata(customer, resourceType, cCustomer, service,
+                        metricTypeIn, smilli, emilli);
+                szMetricJson = ServiceThreadListener.modifyMapToJSONArray(mapMetricInfo);//bizlogic.generateJsonFromCombinedTable(mapMetricInfo, new LinkedHashMap<String, String>(), "[{}]");
+                // System.out.println("*********** other metricType szMetricJson = " + szMetricJson);
+            }
+
+
+            sfj = new SendFileToJson(customer, selection, timestampselection, resourceType, cCustomer, service, "MetricTypes", szMetricJson);//modified
+            sfj = null;
+            QueryExecuter.pojoObject = null;
+            //mapTicketInfo = null;
+            queryExecuter = null;
+            //mapMetricInfo = null;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Error in generateMetricTypeJson" + e.toString());
+        }
+    }
+
+    /**
+     * ************************************************************************************************
+     * This method is calling lineChartMetrics.generateLineChart() and then
+     * returning JSON String for creating JSON Files for generating Chart
+     *
+     * @param customer Selected customerID
+     * @param resourceType Different category as
+     * Desktop,Server,DataBase,Network,JVM
+     * @param startDate from date as subtract(endDate-timestampselection) in
+     * Date Format
+     * @param endDate Current date in Date Format
+     * @return timestampselection Selected Time Period means (hour, days, week,
+     * month, year)
+     *
+     * *************************************************************************************************
+     */
+    public void generateLineChartJson(String resourceType, String cCustomer, String service, String selection, String startDate, String endDate, String timestampselection, String customer) {
+        lineChartMetrics = new LineChartMetrics();
+        SendFileToJson sfj;//modified
+        try {
+            Date dateStart = formatter1.parse(startDate);
+            Date dateEnd = formatter1.parse(endDate);
+            smilli = dateStart.getTime() / 1000;
+            emilli = dateEnd.getTime() / 1000;
+            String szMetricTypeValueJson = null;
+            HashMap<String, String> map = ServiceThreadListener.getJSONLocationMap(resourceType);
+            if (selection.startsWith("TimeLine")) {
+                szMetricTypeValueJson = lineChartMetrics.generateLineChart(resourceType, cCustomer, service, smilli, emilli, customer,
+                        map.get(selection));
+                sfj = new SendFileToJson(customer, selection, timestampselection, resourceType, cCustomer, service, "LineChartByTime",
+                        szMetricTypeValueJson);
+                sfj = null;
+            }
+            lineChartMetrics = null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Error in generateLineChartJson" + e.toString());
+        }
+    }
+
+    /**
+     * ************************************************************************************************
+     * This method is calling queryExecuter.generateServicesLeftGridJson() for
+     * generating default service and
+     * queryExecuter.generateDefaultResourceTypeJson() for generating default
+     * ResourceType JSON for Chart and then returning JSON String for creating
+     * JSON Files
+     *
+     * @param customer Selected customerID
+     * @param resourceType Different category as
+     * Desktop,Server,DataBase,Network,JVM
+     * @param startDate from date as subtract(endDate-timestampselection) in
+     * Date Format
+     * @param endDate Current date in Date Format
+     * @return timestampselection Selected Time Period means (hour, days, week,
+     * month, year)
+     *
+     * *************************************************************************************************
+     */
+    public void generateDefaultServiceAndResourceTypeJson(String resourceType, String cCustomer, String service, String startDate,
+            String endDate, String timestampselection, String customer) {
+        SendFileToJson sfj;//modified
+        try {
+            queryExecuter = new QueryExecuter();
+            resourceType = "";
+            /*String szCustomerJson = queryExecuter.generateCustomersLeftGridJson(resourceType, startDate, endDate,
+             timestampselection, customer);
+             //new SendFileToJson(customer, "", timestampselection, resourceType, cCustomer, null, "Defaultservice", szServiceJson);
+             new SendFileToJson(customer, "", timestampselection, resourceType, null, null, "CustomersStatus", szCustomerJson);
+             String szServiceJson = queryExecuter.generateServicesLeftGridJson(resourceType, cCustomer, startDate, endDate,
+             timestampselection, customer);
+             //new SendFileToJson(customer, "", timestampselection, resourceType, cCustomer, null, "Defaultservice", szServiceJson);
+             new SendFileToJson(customer, "", timestampselection, resourceType, cCustomer, null, "ServicesStatus", szServiceJson);
+             String szResourceTypeJson = queryExecuter.generateDefaultResourceTypeJson(resourceType, cCustomer, service, startDate, endDate,
+             timestampselection, customer);
+             new SendFileToJson(customer, "", timestampselection, resourceType, cCustomer, service, "DefaultResourcetype", szResourceTypeJson);*/
+            String watchDogAlertJson = queryExecuter.getWatchDogAlertJson(customer, cCustomer);
+            System.out.println("watchDogAlertJson="+watchDogAlertJson);
+            //sfj = new SendFileToJson(customer, "", "Hour" + File.separator + "..", resourceType, cCustomer, service, "WatchDogAlert", watchDogAlertJson);
+            sfj = new SendFileToJson(customer, "", "Hour" + File.separator, resourceType, null, null, "WatchDogAlert", watchDogAlertJson);
+            String szResourceTypeJson = queryExecuter.generateDefaultResourceTypeJson(resourceType, cCustomer, service, startDate, endDate,
+                    timestampselection, customer);
+            sfj = new SendFileToJson(customer, "", timestampselection, resourceType, cCustomer, service, "DefaultResourcetype", szResourceTypeJson);//modified
+            //code to generate weather jsons at service level
+            String szWeatherJson = queryExecuter.generateWeatherJson(resourceType, cCustomer, service, startDate, endDate,
+                    timestampselection, customer);
+            sfj = new SendFileToJson(customer, "", timestampselection, resourceType, cCustomer, service, "Weather", szWeatherJson);//modified
+            //code to generate irradiation jsons at service level
+            String szIrradiationJson = queryExecuter.generateIrradiationJson(resourceType, cCustomer, service, startDate, endDate,
+                    timestampselection, customer);
+            sfj = new SendFileToJson(customer, "", timestampselection, "Inverter", cCustomer, service, "Irradiation", szIrradiationJson);
+            //code to generate current snapshot jsons at customer level
+            String szSnapShotJson = queryExecuter.generateCurrentSnapShotJson(resourceType, cCustomer, "", startDate, endDate,
+                    timestampselection, customer);
+            sfj = new SendFileToJson(customer, "", timestampselection, resourceType, cCustomer, "", "Summary", szSnapShotJson);//modified
+            //code to generate current snapshot jsons at service level
+            szSnapShotJson = queryExecuter.generateCurrentSnapShotJson(resourceType, cCustomer, service, startDate, endDate,
+                    timestampselection, customer);
+            sfj = new SendFileToJson(customer, "", timestampselection, resourceType, cCustomer, service, "Summary", szSnapShotJson);//modified
+            if (metricflag) {
+                String metricResourceJson = queryExecuter.getMetricResourceTypeMapping(customer, cCustomer, service);
+                sfj = new SendFileToJson(customer, "", "Hour", "", cCustomer, service, "MetricResourceMappingJson", metricResourceJson);//modified
+                metricflag = false;
+            }
+
+            log.debug("Done generating default service resourcetype jsons");
+            queryExecuter = null;
+            sfj = null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Error in generateDefaultServiceAndResourceTypeJson" + e.toString());
+
+        }
+        //new SendFileToJson(customer, timestampselection, resourceType, szJsonName, szMetricTypeValueJson);
+    }
+
+    public void generateJSONForLeftGrid(String resourceType, String cCustomer, String service, String startDate, String endDate,
+            String timestampselection, String customer) {
+        SendFileToJson sfj;//modified
+        try {
+            bizlogic = new BizLogic();
+            queryExecuter = new QueryExecuter();
+            Date dateStart = formatter1.parse(startDate);
+            Date dateEnd = formatter1.parse(endDate);
+            String date = formatter1.format(dateStart);
+            String date1 = formatter1.format(dateEnd);
+            smilli = dateStart.getTime() / 1000;
+            emilli = dateEnd.getTime() / 1000;
+            LinkedHashMap<String, String> mapMetricInfo = queryExecuter.collectMetricdata1(customer, resourceType, cCustomer, service,
+                    smilli, emilli);
+            System.out.println("collectMetricData ==>>");
+            Iterator tempItr = mapMetricInfo.keySet().iterator();
+            String tmp;
+            while (tempItr.hasNext()) {
+                tmp = tempItr.next().toString();
+                System.out.println(tmp + "==>>" + mapMetricInfo.get(tmp));
+            }
+            LinkedHashMap<String, String> mapTicketInfo = queryExecuter.collectTicketdata1(customer, resourceType, cCustomer, service, date, date1);
+
+            System.out.println("collectTicketdata1 ==>>");
+            tempItr = mapTicketInfo.keySet().iterator();
+            while (tempItr.hasNext()) {
+                tmp = tempItr.next().toString();
+                System.out.println(tmp + "==>>" + mapTicketInfo.get(tmp));
+            }
+
+
+            try {
+                log.debug("in generateJSONForLeftGrid(), deriving health based on Performance Ratio");
+                String chartType = "[\"0\",\"1\"]";
+                String resourceNames = "[\"Default\"]";
+                String resourceID;
+                String PRHealthJSON;
+                JSONParser jsonParser = new JSONParser();
+                JSONObject prObject;
+                JSONArray prJSONArray;
+                Double prVal;
+                String availValue = null;
+                boolean isCritical = false;
+                PRHealthJSON = PerformanceRatioComparisonGenerator.getJSONFromAggregatedMetrics(resourceType, cCustomer, service, resourceType, null, null, smilli,
+                        emilli, timestampselection, customer);
+                prJSONArray = (JSONArray) jsonParser.parse(PRHealthJSON);
+                for (int i = 0; i < prJSONArray.size(); i++) {
+                    prObject = (JSONObject) prJSONArray.get(i);
+                    resourceID = prObject.get("ResourceID").toString();
+                    availValue = "\"ServiceName\":\"" + service + "\",\"ResourceType\":\"" + resourceType + "\",\"ServerName\":\"" + resourceID
+                            + "\",\"Health\":[\"GREY\"],\"ResourceSubType\":\"" + resourceType + "\",\"ResourceChartType\":" + chartType
+                            + ",\"ResourceNames\":" + resourceNames + ",\"ResourceID\":\"" + resourceID + "\"";
+
+                    if (prObject.get("PerformanceRatio") == null) {
+                    } else if (prObject.get("PerformanceRatio").toString().equals("")) {
+                    } else {
+                        prVal = Double.parseDouble(prObject.get("PerformanceRatio").toString());
+                        log.info("PR for device " + resourceID + " is :" + prVal);
+                        if (prVal < 0.9) {
+                            availValue = "\"ServiceName\":\"" + service + "\",\"ResourceType\":\"" + resourceType + "\",\"ServerName\":\"" + resourceID
+                                    + "\",\"Health\":[\"CRITICAL\"],\"ResourceSubType\":\"" + resourceType + "\",\"ResourceChartType\":" + chartType
+                                    + ",\"ResourceNames\":" + resourceNames + ",\"ResourceID\":\"" + resourceID + "\"";
+                            isCritical = true;
+                        } else {
+                            availValue = "\"ServiceName\":\"" + service + "\",\"ResourceType\":\"" + resourceType + "\",\"ServerName\":\"" + resourceID
+                                    + "\",\"Health\":[\"OK\"],\"ResourceSubType\":\"" + resourceType + "\",\"ResourceChartType\":" + chartType
+                                    + ",\"ResourceNames\":" + resourceNames + ",\"ResourceID\":\"" + resourceID + "\"";
+                            isCritical = false;
+                        }
+                    }
+                    tmp = service + "," + resourceID + "," + resourceID;
+                    if ((!mapMetricInfo.containsKey(tmp)) || (isCritical)) {
+                        if (mapMetricInfo.containsKey(tmp)) {
+                            mapMetricInfo.remove(tmp);
+                        }
+                        log.info("Map value for device " + resourceID + "=" + availValue);
+                        mapMetricInfo.put(tmp, availValue);
+                    }
+
+                }
+                jsonParser = null;
+                prObject = null;
+                prJSONArray = null;
+                availValue = null;
+            } catch (Exception e) {
+                log.error("Error in generateJSONForLeftGrid() while deriving health based on Performance Ratio");
+                e.printStackTrace();
+            }
+
+            System.out.println("collectMetric and PR data ==>>");
+            tempItr = mapMetricInfo.keySet().iterator();
+            while (tempItr.hasNext()) {
+                tmp = tempItr.next().toString();
+                System.out.println(tmp + "==>>" + mapMetricInfo.get(tmp));
+            }
+
+            //String szAvailJson = GetAvailability.getAvailabilityByPeriod(emilli, smilli, "'" + resourceType + "'", cCustomer, service, customer,
+            String szAvailJson = GetAvailability.getAvailabilityByPeriod(emilli, smilli, "'" + resourceType + "'", customer,
+                    timestampselection, cCustomer, service);
+            System.out.println("szAvailJson==>>" + szAvailJson);
+            String szMetricJson = bizlogic.generateJsonFromCombinedTable(mapMetricInfo, mapTicketInfo, szAvailJson);
+            sfj = new SendFileToJson(customer, "", timestampselection, resourceType, cCustomer, service, "LeftGrid", szMetricJson);//modified
+            sfj = null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Error in generateJSONForLeftGrid" + e.toString());
+
+        }
+        //new SendFileToJson(customer, timestampselection, resourceType, szJsonName, szMetricTypeValueJson);
+    }
+
+    public static HashMap<String, HashMap<String, ArrayList>> generateCustomerServiceMap(List customer) {
+        ArrayList cCustomers;
+        String cCustomer;
+        ArrayList serviceLst;
+        HashMap<String, HashMap<String, ArrayList>> customersMap = new HashMap();
+        HashMap<String, ArrayList> custServiceMap = new HashMap();
+        System.out.println("Im in generateCustomerServiceMap");
+        try {
+            Object[] custArr = customer.toArray();
+            System.out.println("custArr.length==>>" + custArr.length);
+            String cName;//
+            for (int c = 0; c < custArr.length; c++) {
+                cName = custArr[c].toString();
+                System.out.println("cName==>>" + cName);
+                custServiceMap = new HashMap();
+                cCustomers = QueryExecuter.getCCustomers(cName);
+                for (int i = 0; i < cCustomers.size(); i++) {
+                    cCustomer = (String) cCustomers.get(i);
+                    serviceLst = QueryExecuter.getServiceList(cName, cCustomer);
+                    custServiceMap.put(cCustomer, serviceLst);
+                }
+                customersMap.put(cName, custServiceMap);
+            }
+            return customersMap;
+        } catch (Exception e) {
+            log.error("Error in generateCustomerServiceMap==>>" + e.toString());
+            e.printStackTrace();
+            log.error("Error in generateCustomerServiceMap" + e.toString());
+        }
+        return null;
+    }
+}

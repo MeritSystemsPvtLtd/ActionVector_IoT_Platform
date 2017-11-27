@@ -1,0 +1,94 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package businessmodel;
+
+import Model.DatabaseConnection;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author niteshc
+ */
+public class GetResources {
+
+    static Logger log = Logger.getLogger(GetResources.class);
+
+    public static String getResourcesInfo(javax.servlet.http.HttpServletRequest request, String customer, String service) {
+
+        Connection con = null;
+        ResultSet rs = null;
+        Statement st = null;
+        String resource = null;
+        StringBuffer sbr = new StringBuffer("");
+        try {
+            con = DatabaseConnection.getAVSAConnection(request);
+            if (con != null) {
+                log.info("Connection is not null before getting resource configuration");
+                st = con.createStatement();
+                try {
+                    boolean recFound = false;
+                    String query = "select resourceid from hostinfo where service='" + service + "'and customerid in (select id from"
+                            + " customerinfo where customername='" + customer + "') and service!=resourceid and resourceid not like 'FroniusAdapter%'";
+                    // System.out.println("Query===>" + query);
+                    rs = st.executeQuery(query);
+                    while (rs.next()) {
+                        recFound = true;
+                        resource = rs.getString("resourceid");
+                        sbr.append("{\"ResourceId\":\"" + resource + "\"},");
+                    }
+                    rs.close();
+                    rs = null;
+                    st.close();
+                    st = null;
+                    if (recFound) {
+                        sbr.deleteCharAt(sbr.length() - 1);
+                    }
+                    //System.out.println("ResourceId ====>" + sbr);
+                    if (!recFound) {
+                        sbr.append("null");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("Error while fetching resourceId list in GetResources ", e);
+                }
+            } else {
+                return null;
+            }
+            return sbr.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Error while establishing connection ", e);
+            return null;
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                con = null;
+                if (rs != null) {
+                    rs.close();
+                }
+                rs = null;
+                if (st != null) {
+                    st.close();
+                }
+                st = null;
+                resource = null;
+                sbr = null;
+
+            } catch (NullPointerException npe) {
+                npe.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error("error while closing connection ", e);
+            }
+        }
+
+    }
+}

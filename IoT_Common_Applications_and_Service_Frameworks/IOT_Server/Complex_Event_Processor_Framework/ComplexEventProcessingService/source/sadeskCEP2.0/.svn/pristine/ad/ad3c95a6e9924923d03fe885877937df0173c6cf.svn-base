@@ -1,0 +1,875 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.sadeskCeP;
+
+import addcomments.*;
+import userlogout.*;
+//import changestatus.*;
+import loginservice.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.*;
+import creatingvalidtask.*;
+import java.net.URLEncoder;
+import java.util.Properties;
+import org.apache.log4j.Logger;
+import java.io.*;
+//import java.io.ObjectOutputStream;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.MultipartPostMethod;
+
+/**
+ *
+ * @author Bimal
+ */
+public class CepSadeskDispatcher {
+
+    private static final Logger log = Logger.getLogger(CepSadeskDispatcher.class.getName());
+    Properties properties = null;
+    private String output;
+    private String[] szGroups;
+    public static final boolean compareTask = false;
+    private static long number = 0;
+    private String szService = null;
+    private String szSubservice = null;
+    private String szHostGroup = "";
+    private String szTaskType = null;
+    private static int counter = 0;
+    int thrIndx;
+
+    /*
+     * EVENT FORMAT::::::: ServerSwapUsed = 4000.0 MemcLatency = 8.03E-4
+     * MemcPort = 11211 ServerLoad5 = 0.03 ServerLoad15 = 0.02 ServerSwapMax =
+     * 4000.0 EventSymptoms = Latency in WARNING range [>0.0005s] and server
+     * load in WARNING range [>2.0] EventDesc = Memcached Performance
+     * Degradation EventType = Correlated Event ServerLoad1 = 3.0 MemcServer =
+     * 10.50.11.18 MemcClient = Bsefeed
+     */
+    /*
+     * public static void main(String[] args) { HashMap hm = new HashMap();
+     *
+     * hm.put("ServerSwapUsed","4000.0"); hm.put("MemcLatency","8.03E-4");
+     * hm.put("MemcPort","11211"); hm.put("ServerLoad5","0.03");
+     * hm.put("ServerLoad5","0.02"); hm.put("ServerLoad5","0.03");
+     * hm.put("EventType","Correlated Event"); hm.put("EventDesc",
+     * "Memcached Performance Degradation"); hm.put("EventSymptoms",
+     * "Latency in WARNING range [>0.0005s] and server load in WARNING range [>2.0]"
+     * ); dispatchEvents(hm); }
+     */
+    public CepSadeskDispatcher() {
+        properties = new Properties();
+        try {
+            properties.load(new FileInputStream("config/sadeskCepTask.ini"));
+        } catch (IOException ex) {
+            log.debug("ERROR while loading properties file=======");
+        }
+    }
+
+    public void dispatchEvents(HashMap theEvent) throws IOException {
+        CreatingValidTaskStub commStub = null;
+        Attribute[] AttributeArray = null;
+        String szComments;
+        String EventType = null;
+        String EventDesc = null;
+        String EventSymptoms = null;
+        String id = null;
+        StringBuffer context = new StringBuffer();
+        String contextualtext = null;
+        String HostName = null;
+        String HostGroup = null;
+        String Filter = null;
+        String szSourceEvent = null;
+        String AlertType = null;
+        String resourceType = null;
+        String AlertAcronym = null;
+        String resourceId = null;
+        String eventID = null;
+        String szCustID = "merit";
+        String sadeskUrl = properties.getProperty("sadeskUrl");
+
+        URL url;
+        String szSession = null;
+        ObjectInputStream input = null;
+        URLConnection conn;
+        Class msgClass = null;
+        Object msgObj = null;
+        String types = "";
+        String updateEnableDisable = "ON";
+        String szEventSourceXml = null;
+        try {
+            thrIndx = counter;
+            log.info("CepSadeskDispatcher thread start::" + thrIndx);
+            counter++;
+            // Get a set of the entries
+            Set set = theEvent.entrySet();
+            // Get an iterator
+            Iterator i = set.iterator();
+            // Display/Assign elements
+
+            while (i.hasNext()) {
+                Map.Entry me = (Map.Entry) i.next();
+                log.info("me.getKey()::" + me.getKey());
+                if (me.getKey().equals("EventDesc")) {
+                    EventDesc = me.getValue().toString();
+                    AlertAcronym = EventDesc.substring(EventDesc.lastIndexOf("["));
+                    log.info("Acronym===:" + AlertAcronym);
+                } else if (me.getKey().equals("EventType")) {
+                    EventType = me.getValue().toString();
+                } else if (me.getKey().equals("EventSymptoms")) {
+                    EventSymptoms = me.getValue().toString();
+                } else if (me.getKey().equals("HostName")) {
+                    HostName = me.getValue().toString();
+                } else if (me.getKey().equals("AlertType")) {
+                    AlertType = me.getValue().toString();
+                } else if (me.getKey().equals("HostGroup")) {
+                    HostGroup = me.getValue().toString();
+                } else if (me.getKey().equals("Filter")) {
+                    Filter = me.getValue().toString();
+                } else if (me.getKey().equals("eventSource")) {
+                    szSourceEvent = me.getValue().toString();
+                } else if (me.getKey().equals("EventSourceXml")) {
+                    szEventSourceXml = me.getValue().toString();
+                } else if (me.getKey().equals("resourceType")) {
+                    resourceType = me.getValue().toString();
+                } else if (me.getKey().equals("resourceId")) {
+                    resourceId = me.getValue().toString();
+                } else if (me.getKey().equals("eventID")) {
+                    eventID = me.getValue().toString();
+                } else if (me.getKey().equals("CustomerID")) {
+                    szCustID = me.getValue().toString();
+                } else {
+                    contextualtext = (me.getKey() + " = "
+                            + me.getValue().toString() + " <br>");
+                    context.append(contextualtext);
+                }
+            }
+            contextualtext = context.toString();
+            log.info("contextualtext:::" + contextualtext);
+            log.info("HostName::::::::::::::::::" + HostName);
+            //sadeskUrl="http://"+szCustID+"."+sadeskUrl;
+            sadeskUrl = "http://" + szCustID + sadeskUrl;
+            log.info("CEPDispather::SA-Desk URL=" + sadeskUrl);
+
+            if (szCustID != null) {
+                try {
+                    log.info("Responce from type controller:::::::::::::1");
+                    /*url = new URL(sadeskUrl + "/CepTypeServlet.srv?hostName="
+                     + HostName);
+                     log.info("Responce from type controller:::::::::::::2"
+                     + url);
+                     conn = url.openConnection();
+                     conn.setDoInput(true);
+                     conn.connect();
+                     input = new ObjectInputStream(conn.getInputStream());
+                     Object object02 = input.readObject();*/
+                    String ContextClassName = properties.getProperty(AlertAcronym);
+                    if (ContextClassName != null) {
+
+                        String updateEDFlag[] = ContextClassName.split(",");
+                        updateEnableDisable = updateEDFlag[1].toString().trim();
+                        QtartContextGenerator contextGenerator = new QtartContextGenerator(szSourceEvent, Filter, properties);
+                        types = QtartContextGenerator.getSzService() + ":" + QtartContextGenerator.getSzSubservice() + "::";
+                        HostName = QtartContextGenerator.getSzHost();
+                    } else {
+
+                        DefalutContextGenerator defaultGenerator = new DefalutContextGenerator();
+                        if (!(resourceType == null || resourceType.equalsIgnoreCase("") || resourceType.equalsIgnoreCase("null"))) {
+                            types = defaultGenerator.initilize(properties, HostName, resourceType, sadeskUrl);
+                        } else if (resourceType == null || resourceType.equalsIgnoreCase("") || resourceType.equalsIgnoreCase("null")) {
+                            types = defaultGenerator.initilize(properties, HostName, "default", sadeskUrl);
+                        }
+
+                        log.info("Responce from type controller" + types);
+
+                    }
+                    setTaskType(types, AlertType);
+                    this.szHostGroup = HostGroup;
+                    log.info("SUBSERVICE:" + szSubservice);
+                    log.info("SERVICE:" + szService);
+                    log.info("Task type for service " + szService
+                            + " subservice " + szSubservice + " is "
+                            + szTaskType);
+                    if (szTaskType == null) {
+                        log.info("Task type not mapped. Setting to default.");
+                        szTaskType = properties.getProperty("Default");
+                    }
+                    log.info("Tasktype is ::" + szTaskType);
+                } catch (Exception e) {
+                    log.error("*********Error******** in CepTypeServlet Responce");
+                    log.error(e.getMessage());
+                } finally {
+                    if (input != null) {
+                        input.close();
+                        conn = null;
+                    }
+                }
+                String hostName = HostName;// get it from ip address
+                String szUserName = properties.getProperty("UserName");
+                String szPassword = properties.getProperty("Password");
+
+                szComments = "<strong><u>Event Symptoms::</u></strong> <br> "
+                        + EventSymptoms
+                        + "<br> <strong><u> Contextual Information:: </u></strong><br> "
+                        + contextualtext + "<br>";
+                szComments = URLEncoder.encode(szComments, "UTF-8");
+                log.info("Value Passed to Servlet is " + szComments);
+                String ticketTimeOut = properties.getProperty("TicketTimeout");
+                if (updateEnableDisable.equalsIgnoreCase("ON")) {
+                    if (updateIfExists(sadeskUrl, szTaskType, HostName, ticketTimeOut, AlertAcronym, szComments, szCustID, szUserName, szPassword)) {
+                        log.info("Updated Existing Task");
+                        return;
+                    } else {
+                        log.info("Creating new task");
+                    }
+                } else {
+                    log.info("Creating new task");
+                }
+
+                // szService = "money";
+                // szSubservice = "homepage";
+                // HostName="10.50.11.18";
+
+                String szCreatedBy = HostName + "/" + szHostGroup;
+                log.info("HostGroup===" + szCreatedBy);
+                //String Customer = properties.getProperty("Customer");
+                //code added to get the customer from the event field configured in properties
+                String custEvtField = properties.getProperty("Customer");
+                log.info("customer for prochara gatask comes from evt field==>>"+custEvtField);
+                String Customer = theEvent.get(custEvtField).toString();
+                String szTask_id = null;
+                // String szTaskType = properties.getProperty("Tasktype");
+                // String szTaskType = properties.getProperty(szService);
+                String szPriority = "1";
+                String szStatus = "szStatus";
+                String szCategory = EventType;// get it from resource info using
+                // ciid
+                String szTask_summary = EventDesc;// get it from cepoutput
+                String szSla = "None";
+                String szActions = szHostGroup;
+                String szLastaction = "szLastaction";
+                String szParentId = "szParentId";
+
+                log.info("------------I m in START of calling Creatinfg Valid Task service from Client----------------");
+                commStub = new CreatingValidTaskStub("http://" + szCustID + properties.getProperty("Url"));
+                CreatTaskDetailsRequest creatTaskDetailsRequest0 = new CreatTaskDetailsRequest();
+                creatTaskDetailsRequest0.setUserName(szUserName);
+                creatTaskDetailsRequest0.setPassword(szPassword);
+                creatTaskDetailsRequest0.setTaskId(szTask_id);
+                creatTaskDetailsRequest0.setProcessType(szTaskType);
+                creatTaskDetailsRequest0.setOwner(szCreatedBy);
+                creatTaskDetailsRequest0.setCustomer(Customer);
+                creatTaskDetailsRequest0.setPriority(szPriority);
+                creatTaskDetailsRequest0.setCategory(szCategory);
+                creatTaskDetailsRequest0.setSummary(szTask_summary);
+                creatTaskDetailsRequest0.setStatus(szStatus);
+                creatTaskDetailsRequest0.setSLA(szSla);
+                creatTaskDetailsRequest0.setActions(szActions);
+                creatTaskDetailsRequest0.setLastAction(szLastaction);
+                creatTaskDetailsRequest0.setSzParentTaskID(szParentId);
+
+                log.debug("hello");
+
+                AttributeArray = new Attribute[20];
+
+                /*
+                 * Attribute a1 = new Attribute(); a1.setName("Reported By");
+                 * a1.setValue("Opsview"); AttributeArray[1] = a1;
+                 *
+                 * Attribute a2 = new Attribute();
+                 * a2.setName("Service/IT resource ID"); a2.setValue(szService);
+                 * AttributeArray[4] = a2;
+                 *
+                 * Attribute a3 = new Attribute(); a3.setName("HostGroup Name");
+                 * a3.setValue(URLEncoder.encode(hostgroup)); AttributeArray[5] =
+                 * a3;
+                 *
+                 * Attribute a4 = new Attribute(); a4.setName("HostName");
+                 * a4.setValue(HostName); AttributeArray[6] = a4;
+                 *
+                 * Attribute a5 = new Attribute(); a5.setName("Sub Service");
+                 * a5.setValue(szSubservice); AttributeArray[7] = a5;
+                 */
+                Attribute a1 = new Attribute();
+                a1.setName("Reportedby");
+                a1.setValue("Opsview");
+                AttributeArray[1] = a1;
+                a1 = null;
+                Attribute a4 = new Attribute();
+                a4.setName("Service/ITResourceID");
+                a4.setValue(szService);
+                AttributeArray[4] = a4;
+                a4 = null;
+                Attribute a5 = new Attribute();
+                a5.setName("HostGroupName");
+                a5.setValue(szHostGroup);
+                AttributeArray[5] = a5;
+                a5 = null;
+
+                Attribute a6 = new Attribute();
+                a6.setName("HostName");
+                a6.setValue(HostName);
+                AttributeArray[6] = a6;
+                a6 = null;
+
+                Attribute a7 = new Attribute();
+                a7.setName("SubService");
+                a7.setValue(szSubservice);
+                AttributeArray[7] = a7;
+                a7 = null;
+
+                long num = number++;
+                log.info("Number Value=" + num);
+
+                Attribute a8 = new Attribute();
+                a8.setName("CurrentAssigneeRole");
+                a8.setValue(Long.toString(num));
+                AttributeArray[8] = a8;
+                a8 = null;
+
+                Attribute a9 = new Attribute();
+                a9.setName("Current AssigneeUser");
+                a9.setValue(resourceId);
+                AttributeArray[9] = a9;
+                a9 = null;
+
+                Attribute a10 = new Attribute();
+                a10.setName("resourceType");
+                a10.setValue(resourceType);
+                AttributeArray[10] = a10;
+                a10 = null;
+
+                Attribute a11 = new Attribute();
+                a11.setName("eventID");
+                a11.setValue(eventID);
+                AttributeArray[11] = a11;
+                a11 = null;
+
+                Attribute a12 = new Attribute();
+                a12.setName("resourceId");
+                a12.setValue(resourceId);
+                AttributeArray[12] = a12;
+                a12 = null;
+
+                creatTaskDetailsRequest0.setAttributeArray(AttributeArray);
+                CreatTaskDetailsResponse cr = new CreatTaskDetailsResponse();
+                cr = commStub.createTaskDetails(creatTaskDetailsRequest0);// Save
+                AttributeArray = null;
+                // Order
+                commStub._getServiceClient().cleanup();
+                commStub.cleanup();
+                // Status
+
+                id = cr.getTaskID();
+                if (compareTask) {
+                    TaskComparator tc = TaskComparator.getComparatorInstance();
+                    TaskDetails td = map(creatTaskDetailsRequest0);
+                    td.setSzTaskId(id);
+                    tc.compareObject(td);
+                    tc.closeTask();
+                }
+
+                log.info("TASKID after creating task" + id + num);
+                if (szEventSourceXml != null) {
+                    try {
+
+                        String uploadFileUrl = new String(sadeskUrl + "/upLoadFile.srv?szUserName=" + szUserName + "&id=" + id + "&tasktype=" + szTaskType);
+                        HttpClient client = new HttpClient();
+                        MultipartPostMethod mPost = new MultipartPostMethod(uploadFileUrl);
+                        client.setConnectionTimeout(8000);
+
+                        // Send any XML file as the body of the POST request
+                        File f1 = new File(szEventSourceXml);
+
+                        System.out.println("File Length = " + f1.length());
+
+                        mPost.addParameter(f1.getName(), f1);
+
+                        int statusCode1 = client.executeMethod(mPost);
+
+                        System.out.println("statusLine>>>" + mPost.getStatusLine());
+                        mPost.releaseConnection();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        log.warn("Erroe while getting responce from UploadFile Servlet" + e.getStackTrace());
+
+                    }
+                }
+                log.info("RESPONSE TASKID::::::::::" + cr.getTaskID());
+                log.info("------------I m in END of calling Receive Order service from Client----------------");
+                // szComments = "Event Symptoms"+ EventSymptoms
+                // +"Contextual Information"+ contextualtext ;
+
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date date = new Date();
+                String str1 = df.format(date);
+                log.info("INSIDE SERVLET cepAddCommentServlet" + str1);
+                /*  LoginServiceStub loginStub = new LoginServiceStub(
+                 "http://"+szCustID+"."+properties.getProperty("loginUrl"));
+                 try {
+                 log.info("------------I m in START of calling Login service from Client- cepAddCommentServlet---------------");
+                 log.info(szUserName + "%%%%%%%%%%%%%%%%%%%%%%%%%%" + szPassword);
+                 // String targetEndpoint =
+                 // "http://192.168.1.61:8080/proChara/services/LoginService";
+                 // log.info("Target End Point***************** " +
+                 // targetEndpoint);
+
+                 ChkUserRequest inputr = new ChkUserRequest();
+
+                 inputr.setSzUserName(szUserName);
+                 inputr.setSzUserAddr(szPassword);
+
+                 ChkUserResponse resp = loginStub.chkUser(inputr);
+                 // szSession = resp.getSzSession();
+
+                 log.info("------------I m in END of calling Login service from Client cepAddCommentServlet----------------"
+                 + resp.getSzValidate());
+
+                 output = resp.getSzValidate();
+                 szSession = resp.getSzSession();
+                 log.info("------------I m in Calling getGropu cepAddCommentServlet");
+                 GetGroupsRequest grpReq = new GetGroupsRequest();
+                 grpReq.setSzSessionId(szSession);
+                 GroupInput respOut = loginStub.getGroups(grpReq);
+                 szGroups = respOut.getSzGroups();
+                 log.info("Prochara sessionid is cepAddCommentServlet==========>"
+                 + szSession);
+
+                 } catch (Exception e) {
+                 // esclog.info("========= ERROR ===============");
+                 log.info("========= ERROR ===============cepAddCommentServlet");
+                 log.error(e.getMessage());
+                 szSession = null;
+                 // e.printStackTrace();
+                 } finally {
+
+                 loginStub._getServiceClient().cleanup();
+                 loginStub.cleanup();
+                 loginStub = null;
+
+                 }
+
+                 AddCommentsResponse resp = null;
+                 AddCommentsStub commentStub = null;
+                 AddCommentsRequest attachObj = null;
+                 commentStub = new AddCommentsStub(
+                 "http://"+szCustID+"."+properties.getProperty("commentUrl"));
+                 try {
+                 String szMessage = "";
+                 log.info("------------I m in START of calling Add Comments service from Client In StateController cepAddCommentServlet----------------");
+                 log.info("szSession::::" + szSession);
+                 // String targetEndpoint =
+                 // "http://192.168.1.61:8080/proChara/services/AddComments";
+
+                 attachObj = new AddCommentsRequest();
+
+                 attachObj.setSzSessionId(szSession);
+                 attachObj.setSzTaskID(id);
+                 attachObj.setSzComments(szComments);
+                 attachObj.setSzUser(szUserName);
+                 resp = commentStub.addTaskComments(attachObj);
+                 szMessage = resp.getMessage();
+                 log.info("------------I m in END of calling AddComments service from Client In StateController- cepAddCommentServlet---------------"
+                 + szMessage);
+
+                 } catch (Exception e) {
+                 log.warn("========= ERROR AddComment ===============cepAddCommentServlet");
+                 log.error(e.getMessage());
+                 } finally {
+                 try {
+
+                 if (resp != null) {
+                 resp = null;
+                 }
+                 commentStub._getServiceClient().cleanup();
+                 commentStub.cleanup();
+                 if (commentStub != null) {
+                 commentStub = null;
+                 }
+                 if (attachObj != null) {
+                 attachObj = null;
+                 }
+                 } catch (Exception e) {
+                 System.out.println("***ERROR While Deinitilizing in final Block*******");
+                 }
+                 }
+                 UserLogoutStub logoutStub = null;
+                 LogoutUserResponse respLogout = null;
+                 logoutStub = new UserLogoutStub(
+                 "http://"+szCustID+"."+properties.getProperty("logoutUrl"));
+                 try {
+                 log.info("------------START of calling Logout service from Client cepLogoutServlet- cepAddCommentServlet--------------");
+                 // String targetEndpoint =
+                 // "http://192.168.1.61:8080/proChara/services/UserLogout";
+
+                 LogoutUserRequest inputLogout = new LogoutUserRequest();
+                 log.info("session value in logout call cepAddCommentServlet"
+                 + szSession);
+                 inputLogout.setSzUserName(szUserName);
+                 inputLogout.setSzSession(szSession);
+
+                 respLogout = logoutStub.logoutUser(inputLogout);
+                 output = respLogout.getSzLogout();
+                 log.info(szUserName
+                 + "And Session Is in cepLogOutServlet cepAddCommentServlet"
+                 + szSession);
+              
+
+                 } catch (Exception e) {
+                 log.error(e.getMessage());
+                 log.warn("catching Exception");
+
+                 } finally {
+
+                 try {
+                 logoutStub._getServiceClient().cleanup();
+
+                 logoutStub.cleanup();
+                 if (logoutStub != null) {
+                 logoutStub = null;
+                 }
+                 } catch (Exception e) {
+                 System.out.println("***ERROR While Deinitilizing in final Block*******");
+                 }
+
+                 }*/
+                AddCommentsResponse resp = null;
+                AddCommentsStub commentStub = null;
+                AddCommentsLoginRequest attachObj = null;
+                commentStub = new AddCommentsStub(
+                        "http://" + szCustID + properties.getProperty("commentUrl"));
+                try {
+                    String szMessage = "";
+                    log.info("------------I m in START of calling Add Comments service from Client In StateController cepAddCommentServlet----------------");
+                    log.info("szSession::::" + szSession);
+                    // String targetEndpoint =
+                    // "http://192.168.1.61:8080/proChara/services/AddComments";
+
+                    attachObj = new AddCommentsLoginRequest();
+
+                    attachObj.setSzComments(EventSymptoms.toString());
+                    attachObj.setPassword(szPassword);
+                    attachObj.setSzUser(szUserName);
+                    attachObj.setUserName(szUserName);
+                    attachObj.setSzTaskID(id);
+                    resp = commentStub.addCommentsWithLogin(attachObj);
+                    szMessage = resp.getMessage();
+                    log.info("------------I m in END of calling AddComments service from Client In StateController- cepAddCommentServlet---------------"
+                            + szMessage);
+
+
+                } catch (Exception e) {
+                    log.warn("========= ERROR AddComment ===============cepAddCommentServlet");
+                    log.error(e.getMessage());
+                } finally {
+                    try {
+
+                        if (resp != null) {
+                            resp = null;
+                        }
+                        commentStub._getServiceClient().cleanup();
+                        commentStub.cleanup();
+                        if (commentStub != null) {
+                            commentStub = null;
+                        }
+                        if (attachObj != null) {
+                            attachObj = null;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("***ERROR While Deinitilizing in final Block*******");
+                    }
+                }
+            } else {
+                log.error("******* Customer ID Not Found Event Disgarded *******");
+            }
+
+        } catch (Exception e) {
+            log.debug("========= ERROR ===============" + e.getStackTrace());
+            log.error(e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                if (AttributeArray != null) {
+                    AttributeArray = null;
+                }
+                if (commStub != null) {
+                    commStub._getServiceClient().cleanup();
+                }
+                if (commStub != null) {
+                    commStub.cleanup();
+                }
+                if (commStub != null) {
+                    commStub = null;
+                }
+            } catch (Exception e) {
+                System.out.println("***ERROR While Deinitilizing in final Block*******");
+            }
+        }
+    }
+
+    public static TaskDetails map(
+            CreatTaskDetailsRequest createTaskDetailsRequest) {
+        TaskDetails newTaskDetails = new TaskDetails();
+        try {
+
+            newTaskDetails.setSzActions(createTaskDetailsRequest.getActions());
+            newTaskDetails.setSzCategory(createTaskDetailsRequest.getCategory());
+            // ciid not available
+            newTaskDetails.setSzCreatedBy(createTaskDetailsRequest.getOwner());
+            newTaskDetails.setCustomer(createTaskDetailsRequest.getCustomer());
+            newTaskDetails.setSzLastaction(createTaskDetailsRequest.getLastAction());
+            newTaskDetails.setSzPassword(createTaskDetailsRequest.getPassword());
+            newTaskDetails.setSzPriority(createTaskDetailsRequest.getPriority());
+            newTaskDetails.setSzTaskType(createTaskDetailsRequest.getProcessType());
+            newTaskDetails.setSzSla(createTaskDetailsRequest.getSLA());
+            newTaskDetails.setSzStatus(createTaskDetailsRequest.getStatus());
+            newTaskDetails.setSzTaskSummary(createTaskDetailsRequest.getSummary());
+            newTaskDetails.setSzParentId(createTaskDetailsRequest.getSzParentTaskID());
+            newTaskDetails.setSzTaskId(createTaskDetailsRequest.getTaskId());
+            newTaskDetails.setSzUserName(createTaskDetailsRequest.getUserName());
+
+            newTaskDetails.setA1(createTaskDetailsRequest.getAttributeArray()[1]);
+            // newTaskDetails.setA2(createTaskDetailsRequest.getAttributeArray()[2]);
+            // newTaskDetails.setA3(createTaskDetailsRequest.getAttributeArray()[3]);
+            newTaskDetails.setA4(createTaskDetailsRequest.getAttributeArray()[4]);
+            newTaskDetails.setA5(createTaskDetailsRequest.getAttributeArray()[5]);
+            newTaskDetails.setA6(createTaskDetailsRequest.getAttributeArray()[6]);
+            newTaskDetails.setA7(createTaskDetailsRequest.getAttributeArray()[7]);
+            newTaskDetails.setA8(createTaskDetailsRequest.getAttributeArray()[8]);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            newTaskDetails = null;
+        }
+        return newTaskDetails;
+
+    }
+
+    private void setTaskType(String serviceMapping, String alertType) {
+        String types[] = serviceMapping.split("::");
+
+        try {
+
+            for (int i = 0; i < types.length; i++) {
+                String mapping[] = types[i].split(":");
+                szService = mapping[0];
+                if (mapping.length > 1) {
+                    szSubservice = mapping[1];
+                }
+                if (mapping.length > 2) {
+                    szHostGroup = mapping[2];
+                }
+                if (szTaskType == null) {
+                    szTaskType = properties.getProperty(alertType);
+
+                }
+                if (szTaskType == null) {
+                    szTaskType = properties.getProperty(szService + "-"
+                            + szSubservice + "-" + alertType);
+                }
+                if (szTaskType == null) {
+                    szTaskType = properties.getProperty(szService + "-"
+                            + szSubservice);
+                    log.info("Prop===" + szService + "-"
+                            + szSubservice);
+                }
+                if (szTaskType == null) {
+                    szTaskType = properties.getProperty(szService);
+
+                }
+                if (szTaskType != null) {
+                    break;
+                }
+
+                mapping = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (types != null) {
+                    types = null;
+                }
+
+            } catch (Exception e) {
+                System.out.println("***ERROR While Deinitilizing in final Block*******");
+            }
+
+        }
+    }
+
+    private boolean updateIfExists(String sadeskUrl, String szTaskType, String HostName, String ticketTimeOut,
+            String AlertAcronym, String EventSymptoms, String szCustID, String szUserName, String szPassword) {
+
+        ObjectInputStream input = null;
+        OutputStreamWriter writer = null;
+        URL url = null;
+        URLConnection conn = null;
+        Object object02 = null;
+        String szSession = null;
+
+        try {
+            url = new URL(sadeskUrl + "/CEPStateControllerServlet.srv");
+            conn = url.openConnection();
+
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            writer = new OutputStreamWriter(conn.getOutputStream());
+
+            //write parameters
+            writer.write("HostName=" + HostName + "&ticketTimeOut=" + ticketTimeOut + "&TaskType=" + szTaskType + "&AlertAcronym=" + AlertAcronym + "&EventSymptoms=" + EventSymptoms);
+            writer.flush();
+            conn.connect();
+            input = new ObjectInputStream(conn.getInputStream());
+            object02 = input.readObject();
+            String response = object02.toString();
+            String res_split[] = response.split(",");
+            log.info("Responce from CEPStateController" + res_split[0]);
+
+            if (Boolean.parseBoolean(res_split[0])) {
+
+
+                AddCommentsResponse resp = null;
+                AddCommentsStub commentStub = null;
+                AddCommentsLoginRequest attachObj = null;
+                commentStub = new AddCommentsStub(
+                        "http://" + szCustID + properties.getProperty("commentUrl"));
+                try {
+                    String szMessage = "";
+                    log.info("------------I m in START of calling Add Comments service from Client In StateController cepAddCommentServlet----------------");
+                    log.info("szSession::::" + szSession);
+                    // String targetEndpoint =
+                    // "http://192.168.1.61:8080/proChara/services/AddComments";
+
+                    attachObj = new AddCommentsLoginRequest();
+
+                    attachObj.setSzComments(EventSymptoms.toString());
+                    attachObj.setPassword(szPassword);
+                    attachObj.setSzUser(szUserName);
+                    attachObj.setUserName(szUserName);
+                    attachObj.setSzTaskID(res_split[1].trim());
+                    resp = commentStub.addCommentsWithLogin(attachObj);
+                    szMessage = resp.getMessage();
+                    log.info("------------I m in END of calling AddComments service from Client In StateController- cepAddCommentServlet---------------"
+                            + szMessage);
+                    return Boolean.parseBoolean(res_split[0]);
+
+                } catch (Exception e) {
+                    log.warn("========= ERROR AddComment ===============cepAddCommentServlet");
+                    log.error(e.getMessage());
+                } finally {
+                    try {
+
+                        if (resp != null) {
+                            resp = null;
+                        }
+                        commentStub._getServiceClient().cleanup();
+                        commentStub.cleanup();
+                        if (commentStub != null) {
+                            commentStub = null;
+                        }
+                        if (attachObj != null) {
+                            attachObj = null;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("***ERROR While Deinitilizing in final Block*******");
+                    }
+                }
+                /*  UserLogoutStub logoutStub = null;
+                 LogoutUserResponse respLogout = null;
+                 logoutStub = new UserLogoutStub(
+                 "http://"+szCustID+"."+properties.getProperty("logoutUrl"));
+                 try {
+                 log.info("------------START of calling Logout service from Client cepLogoutServlet- cepAddCommentServlet--------------");
+                 // String targetEndpoint =
+                 // "http://192.168.1.61:8080/proChara/services/UserLogout";
+
+                 LogoutUserRequest inputLogout = new LogoutUserRequest();
+                 log.info("session value in logout call cepAddCommentServlet"
+                 + szSession);
+                 inputLogout.setSzUserName(szUserName);
+                 inputLogout.setSzSession(szSession);
+
+                 respLogout = logoutStub.logoutUser(inputLogout);
+                 output = respLogout.getSzLogout();
+                 log.info(szUserName
+                 + "And Session Is in cepLogOutServlet cepAddCommentServlet"
+                 + szSession);
+              
+                 return Boolean.parseBoolean(res_split[0]);
+                 } catch (Exception e) {
+                 log.error(e.getMessage());
+                 log.warn("catching Exception");
+
+                 } finally {
+
+                 try {
+                 logoutStub._getServiceClient().cleanup();
+
+                 logoutStub.cleanup();
+                 if (logoutStub != null) {
+                 logoutStub = null;
+                 }
+                 } catch (Exception e) {
+                 System.out.println("***ERROR While Deinitilizing in final Block*******");
+                 }
+
+                 }*/
+
+
+
+            } else {
+                return Boolean.parseBoolean(res_split[0]);
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("failed to update, creating new task");
+        } finally {
+            try {
+                if (input != null) {
+                    input.close();
+                }
+
+                if (writer != null) {
+                    writer.close();
+                }
+
+                if (url != null) {
+                    url = null;
+                }
+
+                if (conn != null) {
+                    conn = null;
+                }
+
+                if (input != null) {
+                    input = null;
+                }
+
+                if (writer != null) {
+                    writer = null;
+                }
+
+                if (object02 != null) {
+                    object02 = null;
+                }
+            } catch (Exception e) {
+                System.out.println("***ERROR While Deinitilizing in final Block*******");
+            }
+        }
+        return false;
+    }
+
+    protected void finalize() throws Throwable {
+        log.info("CepSadeskDispatcher thread end::" + thrIndx);
+        super.finalize();
+
+    }
+}

@@ -1,0 +1,118 @@
+<html>
+<head><meta content="text/html;charset=utf-8" http-equiv="Content-Type"></head>
+<body>
+<div id = "loader" style = "position : absolute; left : 65%; top : 50%; z-index : 100"></div>
+<div id="example4" class="k-content">
+	<table id="diagram4"><tr>
+			<td>
+				<div id="invertercharthead">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="inverterinput" />
+							</td>
+							<td>
+								<input id="inverterchartname" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="inverterRTButton" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="inverterchart" style="border: 0;"></div>
+			</td>
+			<td>
+				<div id="invertercharthead2">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="inverterinput2" />
+							</td>
+							<td>
+								<input id="inverterchartname2" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="inverterRTButton2" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="inverterchart2" style="border: 0;"></div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div id="invertercharthead3">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="inverterinput3" />
+							</td>
+							<td>
+								<input id="inverterchartname3" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="inverterRTButton3" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="inverterchart3" style="border: 0;"></div>
+			</td>
+			<td>
+				<div id="invertercharthead4">
+					<table width="100%"><tr>
+							<td valign="top" width="36%">
+								<ul id="inverterinput4" />
+							</td>
+							<td>
+								<input id="inverterchartname4" type="text" class="k-textbox" readonly="readonly" />
+								<button class="k-button" id="inverterRTButton4" onclick="generateLiveLineChart(this.id)">
+									<font size=2>Live</font>
+								</button>
+							</td>
+					</tr></table>
+				</div>
+				<div id="inverterchart4" style="border: 0;"></div>
+			</td>
+		</tr></table>
+		<div id="inverterlistView"></div>
+</div>
+
+<script>
+
+var chartheaddiv=["inverterchartname","inverterchartname2","inverterchartname3","inverterchartname4"]
+
+var combodiv = [ "#inverterinput", "#inverterinput2", "#inverterinput3", "#inverterinput4",
+		"#invertercharthead", "#invertercharthead2", "#invertercharthead3",
+		"#invertercharthead4", "#example4", "#diagram4", "#inverterchart",
+		"#inverterchart2", "#inverterchart3", "#inverterchart4", "#inverterlistView",
+		"invertertypeColumn", "invertertypeColumn2", "invertertypeColumn3",
+		"invertertypeColumn4", "inverterseriesType", "inverterseriesType2",
+		"inverterseriesType3", "inverterseriesType4" ]
+var headdiv = [ [ "invertertypeColumn", "invertertypeBar", "invertertypeLine" ],
+		[ "invertertypeColumn2", "invertertypeBar2", "invertertypeLine2" ],
+		[ "invertertypeColumn3", "invertertypeBar3", "invertertypeLine3" ],
+		[ "invertertypeColumn4", "invertertypeBar4", "invertertypeLine4" ] ]
+
+var combourl;
+var gridurl;
+var gridtitle = "<font color=737C7D ><b>Inverter</b></font>";
+
+$(document).ready(function() {
+	gridurl = customer + "/Inverter/InverterLeftGrid.json";
+	combourl = "jsonconfigurations/InverterComboSource.json";
+	displayAdjust()
+	loadgrid(combodiv[14], gridurl, gridtitle);
+
+	$(window).resize(function() {
+		$("#inverterlistView").data("kendoGrid").refresh();
+		$("#inverterchart").data("kendoChart").refresh();
+		$("#inverterchart2").data("kendoChart").refresh();
+		$("#inverterchart3").data("kendoChart").refresh();
+		$("#inverterchart4").data("kendoChart").refresh();
+		$(combodiv[0]).data("kendoComboBox").refresh();
+		$(combodiv[1]).data("kendoComboBox").refresh();
+		$(combodiv[2]).data("kendoComboBox").refresh();
+		$(combodiv[3]).data("kendoComboBox").refresh();
+	})
+});
+</script>
+
+</body>
+</html>

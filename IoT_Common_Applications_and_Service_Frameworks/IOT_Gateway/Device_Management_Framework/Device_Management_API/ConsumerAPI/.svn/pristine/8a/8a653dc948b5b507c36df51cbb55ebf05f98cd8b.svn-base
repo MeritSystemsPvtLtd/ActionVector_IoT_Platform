@@ -1,0 +1,188 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/* -------------------------------------------------------------------------
+ *
+ *                           Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *              #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *         THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ * --------------------------------------------------------------------------
+ */
+package businessmodel;
+
+import Model.*;
+import controller.DBConstants;
+import controller.GA_CommandTask;
+import controller.LogWriter;
+import java.util.*;
+import java.sql.*;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jul 30, 2012, 5:39:04 PM
+ */
+public class SecurityPoliciesAdd
+{
+
+    public static Logger log = Logger.getLogger(SecurityPoliciesAdd.class);
+
+    static boolean addPolicies(String szCustomerid, ArrayList<PoliciesBean> Opolicies, HttpServletRequest request)
+    {
+        Connection con = null;
+        PreparedStatement statement = null;
+        boolean bFlag = true;
+        String szCCActions = "";
+        String szTaskType = "";
+        Integer ISecurityUsers = 1;
+        String szSecuritylevel = null;
+        String sAGroupNameArray[] = new String[1024];
+        String SecurityLevel_Array[] = new String[1024];
+        String szAllowPeers = "No";
+        boolean bCheckFlag = true;
+        String customerid = "";
+        GA_CommandTask commandinsert = new GA_CommandTask();
+        String szSecAction[] = new String[1024];
+        String szAction = "";
+        int count = 0;
+        int icount =0;
+
+
+
+        if (ISecurityUsers.intValue() == 1)
+        {
+            try
+            {
+                if (szCustomerid != null && !szCustomerid.equalsIgnoreCase(""))
+                {
+                    con = DatabaseConnection.getDbConnection(request, szCustomerid);
+                } else
+                {
+                    con = DatabaseConnection.getDatabaseConnection(request);
+                }
+                System.out.println("connection get successfully");
+                log.info("Connection got successfully");
+
+                if (con != null)
+                {
+                    Iterator policies = Opolicies.iterator();
+                    PoliciesBean pb = new PoliciesBean();
+                    System.out.println("Tasktype policies in SecurityPoliciesAdd");
+                    Properties config = Configuration.initialize();
+                     icount=Opolicies.size();
+
+                    while (policies.hasNext())
+                    {
+                        pb = (PoliciesBean) policies.next();
+                        System.out.println(pb.getSzTaskType() + "=" + pb.getSzGroups() + "=" + pb.getSzRoles());
+
+                        szTaskType = pb.getSzTaskType();
+                        sAGroupNameArray = pb.getSzGroups().split(",");
+                        SecurityLevel_Array = pb.getSzRoles().split(",");
+                        szAction = config.getProperty("actions");
+                        szSecAction = szAction.split(",");
+                        //szAllowPeers = request.getParameter("allowpeers");
+                        if (szAllowPeers == null)
+                        {
+                            szAllowPeers = "No";
+                        }
+
+                        for (int k = 0; k < sAGroupNameArray.length; k++)
+                        {
+                            PreparedStatement statement2 = con.prepareStatement("Select * from " + DBConstants.POLICIES_TABLE + " where tasktype = ? and action = ? and groupname = ? and securitylevel = ?");
+                            for (int i = 0; i < SecurityLevel_Array.length; i++)
+                            {
+                                for (int j = 0; j < szSecAction.length; j++)
+                                {
+                                    bCheckFlag = true;
+                                    statement2.setString(1, szTaskType);
+                                    statement2.setString(2, szSecAction[j]);
+                                    statement2.setString(3, sAGroupNameArray[k]);
+                                    statement2.setString(4, SecurityLevel_Array[i]);
+                                    ResultSet rs2 = statement2.executeQuery();
+                                    while (rs2.next())
+                                    {
+                                        bCheckFlag = false;
+                                    }
+                                    LogWriter.writeDebug("Check flag is ..." + bCheckFlag, 4);
+                                    if (bCheckFlag)
+                                    {
+                                        statement = con.prepareStatement("INSERT INTO " + DBConstants.POLICIES_TABLE + " values(?,?,?,?,?)");
+                                        statement.setString(1, szTaskType);
+                                        statement.setString(2, szSecAction[j]);
+                                        statement.setString(3, sAGroupNameArray[k]);
+                                        statement.setString(4, SecurityLevel_Array[i]);
+                                        statement.setString(5, szAllowPeers);
+                                        statement.executeUpdate();
+                                        LogWriter.writeDebug("Insertion Security Policy Done successfully...", 3);
+                                    }
+                                    rs2.close();
+                                    statement.close();
+                                }
+                            }
+                            statement2.close();
+                        }
+                        szTaskType = "";
+                        szAction = "";
+                        sAGroupNameArray = null;
+                        szSecAction = null;
+                        SecurityLevel_Array = null;
+                        szCCActions = "New Security Policy Added for " + szTaskType;
+                        //commandinsert.GA_CommandTask(con, sessions.getId(), szUsers, szCCActions);
+                        count++;
+                    }//while
+                }//if
+                else
+                {
+                    System.out.println("Database Connection Failed");
+                }
+            } catch (Exception sqle)
+            {
+
+
+                LogWriter.writeDebug("EXCEPTION : While Performing the Addition of New security Policy " + sqle.getMessage(), 1);
+                bFlag = false;
+                log.error("error while processing request", sqle);
+                sqle.printStackTrace();
+            } finally
+            {
+                try
+                {
+                    if (con != null)
+                    {
+                        con.close();
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    log.error("error while closing connection", e);
+                }
+            }
+
+        }
+        if(icount==count)
+            return true;
+        else
+            return false;
+    }
+}

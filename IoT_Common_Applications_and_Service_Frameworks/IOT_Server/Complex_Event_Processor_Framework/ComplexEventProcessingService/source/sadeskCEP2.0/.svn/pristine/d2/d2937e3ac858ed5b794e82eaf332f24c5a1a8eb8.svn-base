@@ -1,0 +1,42 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.sadeskCeP;
+
+import java.io.ObjectInputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Properties;
+import org.apache.log4j.Logger;
+
+public class DefalutContextGenerator {
+
+    private static final Logger log = Logger.getLogger(DefalutContextGenerator.class.getName());
+    URL url;
+    ObjectInputStream input = null;
+    URLConnection conn;
+    String types = null;
+
+    public DefalutContextGenerator() {
+    }
+
+    public String initilize(Properties prop, String HostName, String resourceType,String szURL) {
+        String sadeskUrl = szURL;
+        try {
+
+            url = new URL(sadeskUrl + "/CepTypeServlet.srv?hostName=" +HostName+"&resourceType="+resourceType );
+            log.info("CepTypeServlet URL==>>"+sadeskUrl + "/CepTypeServlet.srv?hostName=" +HostName+"&resourceType="+resourceType);
+            conn = url.openConnection();
+            conn.setDoInput(true);
+            conn.connect();
+            input = new ObjectInputStream(conn.getInputStream());
+            Object object02 = input.readObject();
+            types = object02.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return types;
+    }
+}

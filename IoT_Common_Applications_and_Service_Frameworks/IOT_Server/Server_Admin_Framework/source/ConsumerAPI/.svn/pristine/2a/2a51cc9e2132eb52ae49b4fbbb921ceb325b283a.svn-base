@@ -1,0 +1,202 @@
+/***************************************************************************
+ *
+ *                            Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *              #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8th Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *          THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ ***************************************************************************/
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import java.io.*;
+import Model.*;
+import org.apache.log4j.Logger;
+import java.sql.*;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ *
+ * @author gopal
+ */
+public class ChangeUserEmail extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(ChangeUserEmail.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+        StringBuffer results = new StringBuffer("<userchangeemailid>");
+        Connection con = null;
+        Statement stat = null;
+        ResultSet rs = null;
+        String opStatus = "";
+        String opDescription = "";
+        String szSessionid = "";
+        String szUserName = "";
+        String sznewemailid = "";
+        boolean fcheckparam = false;
+        boolean checksession = false;
+        try
+        {
+            szSessionid = request.getParameter("szsessionid");
+            szUserName = request.getParameter("szusername");
+            sznewemailid = request.getParameter("newemailid");
+            if ((szSessionid != null && !szSessionid.equalsIgnoreCase("")) && (szUserName != null && !szUserName.equalsIgnoreCase("")) && (sznewemailid != null && !sznewemailid.equalsIgnoreCase("")))
+            {
+                fcheckparam = true;
+            }
+            if (fcheckparam)
+            {
+                /*checksession = CheckSession.checkSession(request, szSessionid);
+                if (checksession)
+                {*/
+                    con = DatabaseConnection.getAVSAConnection(request);
+                    if (con != null)
+                    {
+                        stat = con.createStatement();
+                        try
+                        {
+                            System.out.println("update gaoperator set user_email='" + sznewemailid + "' where lower(user_id)=lower('" + szUserName + "')");
+                            rs = stat.executeQuery("update gaoperator set user_email='" + sznewemailid + "' where lower(user_id)=lower('" + szUserName + "')");
+
+                            rs.close();
+                            stat.close();
+                        } catch (Exception ex)
+                        {
+                            System.out.println("NO Return statements" + ex.getMessage());
+                            log.debug("NO Return statements", ex);
+                        }
+                        System.out.println("email Successfully updated for user " + szUserName);
+                        log.info("email Successfully updated for user " + szUserName);
+                        opStatus = "0";
+                        opDescription = "Email Updated successfully";
+                    } else
+                    {
+                        opStatus = "102";
+                        opDescription = "Invalid Session";
+                    }
+                /*} else
+                {
+                opStatus = "102";
+                opDescription = "Invalid Session";
+                }*/
+            } else
+            {
+                opStatus = "108";
+                opDescription = "Invalid Inputs";
+            }
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+            System.out.println("Error while changing Email");
+            log.debug("Error while changing email", ex);
+            opStatus = "106";
+            opDescription = "Unable to process the request action";
+        } finally
+        {
+            if (con != null)
+            {
+                try
+                {
+                    con.close();
+                } catch (SQLException ex)
+                {
+                    log.debug("exception while closing connection", ex);
+                }
+            }
+
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</userchangeemailid>");
+            response.getWriter().write(results.toString());
+
+        } catch (Exception e)
+        {
+            log.debug("exception while writing output", e);
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                results = null;
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

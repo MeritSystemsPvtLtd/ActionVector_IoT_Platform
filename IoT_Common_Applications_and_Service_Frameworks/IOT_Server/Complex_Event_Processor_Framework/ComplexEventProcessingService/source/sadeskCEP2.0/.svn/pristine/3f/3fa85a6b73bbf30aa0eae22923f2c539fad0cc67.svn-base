@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : EventRegistry.xml.xml
+    Created on : January 13, 2011, 2:39 PM
+    Author     : Abraham
+    Description:
+        Describes the events that the Rediff SADesk Correlator will recognise and handle
+        eventTypes - lists all the types of events that the engine is expected to receive
+        event - describes the attributes name and type for each event listed in eventTypes
+-->
+
+<eventRegistry>
+    <event name="HostMonitorEvent">
+        <field>host</field>
+        <type>String.class</type>
+        <field>resource</field>
+        <type>String.class</type>
+        <field>time</field>
+        <type>long.class</type>
+        <field>bytes</field>
+        <type>long.class</type>
+    </event>
+    <event name="HttpMonitorEvent">
+        <field>host</field>
+        <type>String.class</type>
+        <field>resource</field>
+        <type>String.class</type>
+        <field>time</field>
+        <type>long.class</type>
+        <field>kbytes</field>
+        <type>long.class</type>
+        <field>Type20X</field>
+        <type>long.class</type>
+        <field>Type30X</field>
+        <type>long.class</type>
+        <field>Type403</field>
+        <type>long.class</type>
+        <field>Type404</field>
+        <type>long.class</type>
+        <field>Type40X</field>
+        <type>long.class</type>
+        <field>Type500</field>
+        <type>long.class</type>
+        <field>Type503</field>
+        <type>long.class</type>
+        <field>Type50X</field>
+        <type>long.class</type>
+    </event>
+</eventRegistry>

@@ -1,0 +1,201 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AddTaskCategory extends HttpServlet
+{
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+
+        StringBuffer results = new StringBuffer("<category-creation>");
+        HttpSession HSsessions;
+        String opStatus = null;
+        String opDescription = null;
+        Object OUser1;
+        String szUsers1;
+        Integer ISecurityUsers = 1;
+
+        try
+        {
+            HSsessions = request.getSession(true);
+        //OUser1 = HSsessions.getValue("user");
+        //szUsers1 = OUser1.toString();
+        //ISecurityUsers = (Integer)HSsessions.getValue("ints");
+        } catch (Exception npe)
+        {
+            //<jsp:forward page="LoginFirst.jsp"  />
+        }
+        //GALogwriter.writeDebug("At GA_CategoryAdd.jsp ",4,session);
+
+        Connection con = null;
+        boolean FLAG = true;
+        int iDefaultCategory = 0;
+        String szCategory = "";
+        String szTasktype = "";
+        String szCategoryid = "";
+        String szDefaultCategory = "";
+        boolean bCategoryflag = false;
+        try
+        {
+            szCategory = request.getParameter("category");
+            szTasktype = request.getParameter("task_type");
+            szDefaultCategory = request.getParameter("default_category");
+        } catch (Exception e)
+        {
+            //GALogwriter.writeDebug("EXCEPTION : Getting the parameters  ",1,session);
+        }
+        //GALogwriter.writeDebug("the default category is ..."+szDefaultCategory,3,session);
+        if (ISecurityUsers.intValue() == 1)
+        {
+            try
+            {
+                szCategoryid = szTasktype + szCategory;
+                con = DatabaseConnection.getDatabaseConnection(request);
+                if (con != null)
+                {
+                    PreparedStatement statement2 = con.prepareStatement("SELECT * from " + DBConstants.CATEGORY_TABLE + " where task_type=? and default_category = ?");
+                    statement2.setString(1, szTasktype);
+                    statement2.setInt(2, 1);
+                    ResultSet rs2 = statement2.executeQuery();
+                    while (rs2.next())
+                    {
+                        bCategoryflag = true;
+                    }
+                    rs2.close();
+                    statement2.close();
+                    PreparedStatement statement = con.prepareStatement("INSERT INTO " + DBConstants.CATEGORY_TABLE + " VALUES(?,?,?,?)");
+                    statement.setString(1, szCategoryid);
+                    statement.setString(2, szTasktype);
+                    statement.setString(3, szCategory);
+                    if ("Yes".equalsIgnoreCase(szDefaultCategory))
+                    {
+                        if (!bCategoryflag)
+                        {
+                            statement.setInt(4, 1);
+                        } else
+                        {
+                            statement.setInt(4, 0);
+                        }
+                    } else
+                    {
+                        statement.setInt(4, 0);
+                    }
+                    statement.executeUpdate();
+                } else
+                {
+                    opStatus = "101";
+                    opDescription = "Database Connection failure";
+                //log.info("The Connection is NULL here");
+
+                }
+            } catch (Exception sqle)
+            {
+                sqle.printStackTrace();
+                //GALogwriter.writeDebug("EXCEPTION : While Adding the category  "+SWriter,1,session);
+                FLAG = false;
+
+            }
+            if (!FLAG)
+            {
+                opStatus = "106";
+                opDescription = "Unable to perform the request action";
+            }
+            if (FLAG)
+            {
+                opStatus = "0";
+                opDescription = "Operation successfull";
+            //log.info("operation successful");
+            //GALogwriter.writeDebug("The Category is Added here successfully ",1,session);
+            }
+        } else
+        {
+            opStatus = "103";
+            opDescription = "Security level failed";
+        //<jsp:forward page = "LoginFirst.jsp" />
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</category-creation>");
+            response.getWriter().write(results.toString());
+        //System.out.println(results);
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            results = null;
+        }
+
+
+
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

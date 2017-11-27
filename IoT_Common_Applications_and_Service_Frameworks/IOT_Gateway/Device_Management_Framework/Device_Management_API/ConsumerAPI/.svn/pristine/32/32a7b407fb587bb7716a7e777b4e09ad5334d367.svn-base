@@ -1,0 +1,148 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package AV_Action;
+import Model.*;
+import controller.DBConstants;
+import controller.LogWriter;
+import java.sql.*;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_GetTasktypegroup extends AV_Model {
+
+ static Logger log = Logger.getLogger(AV_GetTasktypegroup.class);
+public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "tasktype-groups";
+        String szrespStr=null;
+        StringBuffer result = new StringBuffer("<tasktype>");
+        Connection con = null;
+        HttpSession HSSessions = null;
+        Integer ISecurityUsers = 1;
+        String szTaskType = "";
+       try
+        {
+            HSSessions = request.getSession(true);
+            
+        } catch (Exception k)
+        {
+            log.error("error while getting session details", k);
+            k.printStackTrace();
+        }
+       
+            try
+            {
+                try
+                {
+                    szTaskType = request.getParameter("task_type");
+                 
+
+                } catch (Exception e)
+                {
+                   
+                    AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+                    LogWriter.writeDebug("EXCEPTION : Getting the getParameter() value 'task_type'", 1);
+                }
+
+                con = DatabaseConnection.getAVSAConnection(request);
+                if (con != null)
+                {
+                    if (ISecurityUsers.intValue() == 1)
+                    {
+                        if (con != null)
+                        {
+                            try
+                            {
+                                result.append(szTaskType);
+                                result.append("</tasktype>");
+                                result.append("<groups>");
+                                PreparedStatement statement2 = con.prepareStatement("SELECT groupname from " + DBConstants.TASKTYPE_GROUP_TABLE + " where tasktype = ?");
+                                statement2.setString(1, szTaskType);
+                                ResultSet rs2 = statement2.executeQuery();
+                                while (rs2.next())
+                                {
+
+                                    result.append("<group>");
+                                    result.append(rs2.getString("groupname"));
+                                    result.append("</group>");
+
+                                }
+                                rs2.close();
+                                statement2.close();
+                                result.append("</groups>");
+                               
+                                AV_Constants.opStatus=AV_Constants.SUCCESS;
+                            } catch (Exception e)
+                            {
+                               
+                                AV_Constants.opStatus=AV_Constants.DBERROR;
+                                e.printStackTrace();
+                                LogWriter.writeDebug("EXCEPTION : Performing database operation select groupname from gatasktypegroup		");
+                                log.error("error while connecting to database", e);
+                            }
+                        }
+                    } else
+                    {
+                       
+                        AV_Constants.opStatus=AV_Constants.SECURITYLEVEL_FAIL;
+                    }
+
+                } else
+                {
+                   
+                    AV_Constants.opStatus=AV_Constants.DBERROR;
+                    LogWriter.writeDebug("Connection is NULL ");
+                    log.info("Database connection failed");
+                }
+            } catch (Exception e)
+            {
+               
+                AV_Constants.opStatus=AV_Constants.FAILURE;
+                e.printStackTrace();
+                LogWriter.writeDebug("EXCEPTION : Performing the whole operation GA_AddSecurityPolicy	" + e);
+                log.error("error while processing your request", e);
+            } finally
+            {
+                try
+                {
+                    con.close();
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    log.error("error while closing connection", e);
+                }
+            }
+     
+        try
+        {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,result,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+            log.error("error while writing output", e);
+        } finally
+        {
+            try
+            {
+                szrespStr = null;
+                result = null;
+                szopration=null;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+}
+}

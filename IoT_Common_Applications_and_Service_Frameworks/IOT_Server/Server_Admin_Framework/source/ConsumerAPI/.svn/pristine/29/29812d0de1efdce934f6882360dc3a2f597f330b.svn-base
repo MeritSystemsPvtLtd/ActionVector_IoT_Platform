@@ -1,0 +1,165 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package AV_Action;
+
+import Model.*;
+import controller.LogWriter;
+import java.sql.Connection;
+import java.util.*;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_GetTasktypebyUserAction extends AV_Model {
+
+    static Logger log = Logger.getLogger(AV_GetTasktypebyUserAction.class);
+
+    public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "tasktypes-user";
+        String szrespStr=null;
+        List UserTasktypes = new ArrayList();
+        String authentication = null;
+        String duration = null;
+        boolean checkparam = true;
+        String userid = null;
+        String customerid = "";
+        StringBuffer result = new StringBuffer("<tasktypes>");
+        StringBuffer userinfo = null;
+        boolean checksession = false;
+        UserSpecifications userdefined = null;
+        String sessionid = "";
+
+        try {
+            customerid = request.getParameter("customerid");
+            userid = (String) request.getParameter("szusername");
+            sessionid = request.getParameter("szsessionid");
+
+            userid = userid.trim();
+        } catch (Exception e) {
+
+            e.printStackTrace();
+            log.error("error while reading inputs", e);
+            checkparam = false;
+
+        }
+
+        Connection con = null;
+
+        try {
+            
+            if (checkparam && userid != null) {
+                
+                con = DatabaseConnection.getAVSAConnection(request);
+
+                authentication = "yes";
+                userdefined = new UserSpecifications();
+                UserTasktypes = (ArrayList) userdefined.GetUserTasktype(userid, con);
+                duration = userdefined.getDuration(userid, con);
+                System.out.println("User Tasktypes are======>" + UserTasktypes);
+                System.out.println("User set Duration is=====>   " + duration);
+                log.info("tasktypes and duration are::" + UserTasktypes + " and  " + duration);
+                if (con != null) {
+                    userinfo = new StringBuffer("<userinfo>");
+                    int daysToDecrement = 0;
+                    String dateback = null;
+                    String currentdate = null;
+                    int numberofdaystofilter = 0;
+                    try {
+                        numberofdaystofilter = Integer.parseInt(duration);
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        log.error("error while converting time to integer", ex);
+                    }
+                    Calendar cal = Calendar.getInstance();
+                    daysToDecrement = -+numberofdaystofilter;
+                    cal.add(Calendar.DATE, daysToDecrement);
+                    dateback = (cal.get(Calendar.MONTH) + 1) + "-" + cal.get(Calendar.DATE) + "-" + cal.get(Calendar.YEAR);
+                    Calendar cal1 = Calendar.getInstance();
+                    currentdate = (cal1.get(Calendar.MONTH) + 1) + "-" + cal1.get(Calendar.DATE) + "-" + cal1.get(Calendar.YEAR);
+
+                    System.out.println("startdate=====>" + dateback + "currentdate======>" + currentdate);
+                    userinfo.append("<username>");
+                    userinfo.append(userid);
+                    userinfo.append("</username>");
+                    userinfo.append("<startdate>");
+                    userinfo.append(dateback);
+                    userinfo.append("</startdate>");
+                    userinfo.append("<enddate>");
+                    userinfo.append(currentdate);
+                    userinfo.append("</enddate>");
+                    userinfo.append("</userinfo>");
+
+
+                } else {
+                    
+                    AV_Constants.opStatus=AV_Constants.DBERROR;
+                }
+
+                if (UserTasktypes == null || UserTasktypes.isEmpty()) {
+                    result.append("<empty>");
+                    result.append("No tasktype exist for this user");
+                    result.append("</empty>");
+                } else {
+                    Iterator it = UserTasktypes.iterator();
+                    while (it.hasNext()) {
+                        result.append("<tasktype>");
+                        result.append((String) it.next());
+                        result.append("</tasktype>");
+                    }
+                }
+
+                AV_Constants.opStatus=AV_Constants.SUCCESS;
+            } else {
+               
+                AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+            }
+            
+            result.append("</tasktypes>");
+
+        } catch (Exception e) {
+            
+            AV_Constants.opStatus=AV_Constants.FAILURE;
+
+            e.printStackTrace();
+            log.error("error while processing request action", e);
+        } finally {
+            try {
+
+                con = null;
+
+                UserTasktypes = null;
+                userdefined = null;
+
+                if (con != null) {
+                    con.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                log.error("error while closing connection");
+            }
+        }
+        try {
+
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,result,userinfo,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e) {
+            LogWriter.writeDebug("exception while writing output");
+        } finally {
+            try {
+                szopration=null;
+                szrespStr=null;
+                result = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}

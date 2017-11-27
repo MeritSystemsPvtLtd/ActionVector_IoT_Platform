@@ -1,0 +1,287 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package controller;
+import Model.*;
+import java.sql.*;
+
+
+import java.util.*;
+import java.util.HashMap;
+
+import java.io.IOException;
+//import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+/**
+ *
+ * @author gopal
+ */
+public class AssociatedGroupRoles extends HttpServlet {
+   
+    Connection con = null;
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml");
+
+        Statement statement2 = null;
+        StringBuffer results = new StringBuffer("<group-rolelist>");
+        StringBuffer result = null;
+        String opStatus = null;
+        String opDescription = null;
+        String check = null;
+        HttpSession HSSessions;
+        boolean checksession = true;
+        String customerid="";
+        String szFromAdminLogin = null;
+        String[] szRoleArr = null;
+        boolean config=false;
+        //HashMap obMap = new  HashMap<Integer, String>();
+
+
+        HashMap<String, String>hashMap = new HashMap<String, String>();
+        int iGroupLen = 0;
+        ResultSet rs1 = null;
+        Object OUser1;
+        String szUsers;
+        Integer ISecurityUsers = 1;
+        PreparedStatement statement1 = null;
+        java.util.ArrayList vGroupList = new java.util.ArrayList();
+        java.util.ArrayList vSecurityList = new java.util.ArrayList();
+        try
+        {
+            HSSessions = request.getSession(true);
+            //HSSessions = request.getSession(true);
+            OUser1 = HSSessions.getValue("user");
+            szUsers = OUser1.toString();
+            ISecurityUsers = (Integer) HSSessions.getValue("ints");
+            szFromAdminLogin = (String) HSSessions.getAttribute("FromAdminLogin");
+            customerid=request.getParameter("customerid");
+        } catch (Exception k)
+        {
+            //checksession=false;
+            k.printStackTrace();
+            opStatus = "102";
+            opDescription = "Session invalid";
+            System.out.println("Session fail");
+
+        }
+        if (checksession)
+        {
+            try
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+
+            } catch (Exception e)
+            {
+            }
+            if (con != null)
+            {
+                System.out.println("aaa:::::" + con);
+                try
+                {
+
+                    statement1 = con.prepareStatement("select groupname from gagroupname");
+                    rs1 = statement1.executeQuery();
+                    //System.out.println("resultset::" + rs1);
+                    while (rs1.next())
+                    {
+                        vGroupList.add((String) rs1.getString("groupname"));
+                    }
+                    //System.out.println("groups::" + vGroupList);
+                    rs1.close();
+                    statement1.close();
+
+
+                    statement1 = con.prepareStatement("select * from gagrouproles");
+                    rs1 = statement1.executeQuery();
+                    //System.out.println("resultsetnext::" + rs1);
+                    while (rs1.next())
+                    {
+
+                        String szKey = rs1.getString("groupname");
+                        String szValues = (String)rs1.getString("role");
+                        hashMap.put(szKey, szValues);
+
+
+                    }
+                    System.out.println("grouped roles:::" + hashMap);
+                    rs1.close();
+                    statement1.close();
+
+
+
+                    statement1 = con.prepareStatement("select name from gasecuritylevels where level !=1 and name != 'User'");
+                    rs1 = statement1.executeQuery();
+
+                    while (rs1.next())
+                    {
+                        vSecurityList.add((String) rs1.getString("name"));
+
+                    }
+                    System.out.println("roles:::::" + vSecurityList);
+                    rs1.close();
+                    statement1.close();
+                    ListIterator lit = vGroupList.listIterator();
+
+                    int i = 0, j = 0;
+                    result = new StringBuffer("<groups>");
+                    while (lit.hasNext())
+                    {
+                        ++i;
+                        result.append("<group>");
+                        result.append("<group-name" + i + ">");
+                        String name = (String) lit.next();
+                        result.append(name);
+                        result.append("</group-name" + i + ">");
+
+                        if (hashMap.containsKey(name))
+                        {
+
+                            config = true;
+                            String szTemp = (String) hashMap.get(name);
+                            System.out.println(name+"===========>" + szTemp);
+                            szRoleArr = szTemp.split(",");//String szTemp = (String) hashMap.get(szGrp);}
+                            //System.out.println("rolearr:"+szRoleArr);
+
+                        } else
+                        {
+                            config = false;
+                        }
+                        ListIterator lst = vSecurityList.listIterator();
+                        while (lst.hasNext())
+                        {
+
+                            result.append("<role>");
+                            String role = (String) lst.next();
+                            result.append("<name>");
+                            result.append(role);
+                            result.append("</name>");
+                            if (config)
+                            {
+                                for (int k = 0; k < szRoleArr.length; k++)
+                                {
+
+
+                                    if (role.equalsIgnoreCase(szRoleArr[k]))
+                                    {
+                                        System.out.println(role+"  Selected--->"+ szRoleArr[k]);
+                                        check = "true";
+                                        break;
+                                    } else
+                                    {
+                                        check = "false";
+                                    }
+
+                                }
+                            } else
+                            {
+                                check = "false";
+                            }
+                            result.append("<check>");
+                            result.append(check);
+                            result.append("</check>");
+                            result.append("</role>");
+
+                        }
+                        szRoleArr = null;
+                        lst = null;
+                        //result.append("</roles>");
+                        result.append("</group>");
+                        //System.out.println("result::" + result);
+                    }
+                    result.append("</groups>");
+                    opStatus = "0";
+                    opDescription = "Success";
+                    hashMap=null;
+                } catch (Exception e)
+                {
+                    opStatus = "106";
+                    opDescription = "Unable to process the request";
+                    e.printStackTrace();
+                }
+            } else
+            {
+                opStatus = "101";
+                opDescription = "Database operation failed";
+            }
+            iGroupLen = vGroupList.size();
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid Session Login again";
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            if (!(result == null))
+            {
+                //results.append("<group-roles>\n");
+                results.append(result);
+            //results.append("</group-roles>");
+            }
+            results.append("</group-rolelist>");
+            response.getWriter().write(results.toString());
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            System.out.println("xml response fail");
+        }
+        System.out.println(opStatus);
+        //System.out.println(results);
+
+    }
+    
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException {
+        processRequest(request, response);
+    } 
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }// </editor-fold>
+
+}

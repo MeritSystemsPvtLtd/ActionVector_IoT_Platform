@@ -1,0 +1,54 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.FilterNode.v1;
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.1")
+select * from MemoryStatsEvent;
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.2")
+select * from HTTPResponseTimeEvent;
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.3")
+select * from ConcurrentProcessesEvent;
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.4")
+insert into LoadOnMemcache
+	select Load1, Load5, Load15
+	from LoadAverageEvent(HostName='MoneyMemcache');
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.5")
+insert into LoadOnMemcache1
+	select Load1, Load5, Load15
+	from LoadAverageEvent(HostName='MoneyMemcache-1');
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.6")
+//insert into SwapOnMemcache
+//	select SwapUsage, MaxSwaps as SwapMax
+//	from SwapStatsEvent(HostName='MoneyMemcache');
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.7")
+//insert into SwapOnMemcache1
+//	select SwapUsage, MaxSwaps as SwapMax
+//	from SwapStatsEvent(HostName='MoneyMemcache-1');
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.8")
+insert into LatencyBse1
+	select HostName as MemcacheClient, MemcacheServer, MemcachePort, ElapsedTime as MemcacheLatency
+	from MemcacheReadLatencyEvent(MemcacheServer='10.50.11.18' and MemcachePort='11211');
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.9")
+insert into LatencyBse2
+	select HostName as MemcacheClient, MemcacheServer, MemcachePort, ElapsedTime as MemcacheLatency
+	from MemcacheReadLatencyEvent(MemcacheServer='10.50.31.1' and MemcachePort='11212');
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.10")
+insert into LatencyBse3
+	select HostName as MemcacheClient, MemcacheServer, MemcachePort, ElapsedTime as MemcacheLatency
+	from MemcacheReadLatencyEvent(MemcacheServer='10.50.11.18' and MemcachePort='11213');
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.11")
+insert into LatencyNse1
+	select HostName as MemcacheClient, MemcacheServer, MemcachePort, ElapsedTime as MemcacheLatency
+	from MemcacheReadLatencyEvent(MemcacheServer='10.50.31.1' and MemcachePort='11211');
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.12")
+insert into LatencyNse2
+	select HostName as MemcacheClient, MemcacheServer, MemcachePort, ElapsedTime as MemcacheLatency
+	from MemcacheReadLatencyEvent(MemcacheServer='10.50.11.18' and MemcachePort='11212');
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.13")
+insert into LatencyNse3
+	select HostName as MemcacheClient, MemcacheServer, MemcachePort, ElapsedTime as MemcacheLatency
+	from MemcacheReadLatencyEvent(MemcacheServer='10.50.31.1' and MemcachePort='11213');

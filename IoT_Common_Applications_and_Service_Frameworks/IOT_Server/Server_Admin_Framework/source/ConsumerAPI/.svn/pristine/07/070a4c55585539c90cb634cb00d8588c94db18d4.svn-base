@@ -1,0 +1,46 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Mail;
+
+import java.sql.*;
+
+/**
+ *
+ * @author gopal
+ * Created on Jun 11, 2012, 3:01:45 PM
+ */
+public class SendMail
+{
+
+    public static String setMailBody(String link)
+    {
+        StringBuffer szHTMLSource = new StringBuffer();
+        String szHTMLSource1 = null;
+        String subject = null;
+        Connection con = null;
+        System.out.println("  INSIDE TASK HISTORY");
+        PreparedStatement statement_new = null;
+        ResultSet rs_new = null;
+        try
+        {
+
+            szHTMLSource.append("<html>");
+            szHTMLSource.append("<table width=100%><tr bgcolor='LIGHTblue' WIDTH=100%>"
+                                  + "<th WIDTH=100%>Subscription Summary</th></tr>");
+            szHTMLSource.append("</table>");
+            szHTMLSource.append("<table align='center' width=100%>");
+            szHTMLSource.append("<tr bgcolor='LIGHTblue' WIDTH=100%><th>Customer Subscription Details</th></tr>");
+            szHTMLSource.append("<td align='center'><b>Click on below link to complete the setup</b></td>");
+            szHTMLSource.append("<tr><td align='center'><b><a href=\""+link+"\" >Click here</a></b></td></tr>");
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+        szHTMLSource.append("</table></html>");
+        return szHTMLSource.toString();
+    }
+}

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : modules.xml
+    Created on : January 17, 2011, 7:52 PM
+    Author     : Abraham
+    Description:
+        Purpose of the document follows.
+    <module>
+        MemcachePerfMonitor.epl
+    </module>
+    <module>
+        Tester.epl
+    </module>
+-->
+
+<config>
+    <module>
+        rules/Filter.epl
+    </module>
+    <!--module>
+	rules/CpuLoadMonitor.epl
+    </module>
+    <module>
+        rules/CPUDiskMemMonitor.epl
+    </module>
+    <module>
+	rules/OracleConnectionsMonitor.epl
+    </module>
+    <module>
+        rules/GangliaHostUpDown.epl
+    </module>
+    <module>
+        rules/DBMonitor.epl
+    </module>
+    <module>
+        rules/NetAgent.epl
+    </module>
+    <module>
+        rules/JVM.epl
+    </module> 
+    <module>
+        rules/HealthMonitorQSize.epl
+    </module>
+    <module>
+        rules/HealthMonitorProcessSize.epl
+    </module>
+    <module>
+        rules/MailSearchConsistency.epl
+    </module>
+<module>
+        rules/DesktopTempMonitor.epl
+    </module>
+    <module>
+        rules/DesktopFanMonitor.epl
+    </module>
+<module>
+        rules/DesktopBatteryMon.epl
+    </module>    
+    <module>
+            rules/CPURampDetector.epl
+    </module>
+    <module>
+            rules/MemRampDetector.epl
+    </module>
+    <module>
+            rules/DiskRampDetector.epl
+    </module>
+    <module>
+            rules/CPUDiskMemStepFlapDetector.epl
+    </module>
+    <module>
+            rules/HeapRampDetector.epl
+    </module>
+    <module>
+            rules/HeapStepFlapDetector.epl
+    </module>
+    <module>
+        rules/InverterPower.epl
+    </module>
+    <module>
+        rules/InverterEnergy.epl
+    </module>
+    <module>
+        rules/InverterACVoltage.epl
+    </module-->
+    <module>
+        rules/Inverter.epl
+    </module>
+    <module>
+        rules/FroniusError.epl
+    </module>
+    <!--module>
+        rules/InverterEnergy.epl
+    </module-->
+
+</config>

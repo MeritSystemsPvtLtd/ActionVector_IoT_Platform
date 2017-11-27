@@ -1,0 +1,476 @@
+package com.meritsystems.core.configuration;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.meritsystems.core.MetricsEnum;
+
+/**
+ * @author shashi Holds all configuration objects
+ */
+public class Configuration implements Serializable {
+
+    /**
+     * Name of application
+     */
+    public static final String APPNAME = "app.name";
+    /**
+     * Option to enable disable sending the data steam to ETLAdapter
+     */
+    public static String sendtoETL = "eventRT.enable";
+    /**
+     * Option to enable disable sending the data steam to ETLAdapter
+     */
+    public static String customerIDPro = "CustomerID";
+    /**
+     * JMX URL
+     */
+    public static final String URL = "jmxhost.url";
+    /**
+     * Service
+     */
+    public static final String SERVICE = "jmxhost.service";
+    /**
+     * host of the Server
+     */
+    public static final String HOSTNAME = "jmxhost.host";
+    /**
+     * IPAddress of the server
+     */
+    public static final String IPADDRESS = "jmxhost.IP";
+    /**
+     * Password to connect to all the ports
+     */
+    public static final String PASSWORD = "jmxhost.password";
+    /**
+     * Username to connect to all the ports
+     */
+    public static final String USERNAME = "jmxhost.username";
+    /**
+     * metrics to be collected from all the ports
+     */
+    public static final String METRICS = "jmxhost.metrics";
+    /**
+     * report class to be called
+     */
+    public static final String REPORT = "report.reporter";
+    /**
+     * interval to collect data of JVM in seconds
+     */
+    public static final String INTERVAL = "jmx.refreshtime";
+    /**
+     * Configured for reports
+     */
+    public static final String CLAS_SUBMETRICS = "CLAS.submetrics";
+    /**
+     * Configured for reports
+     */
+    public static final String COMP_SUBMETRICS = "COMP.submetrics";
+    /**
+     * Configured for reports
+     */
+    public static final String GARB_SUBMETRICS = "GARB.submetrics";
+    /**
+     * Configured for reports
+     */
+    public static final String MEMM_SUBMETRICS = "MEMM.submetrics";
+    /**
+     * Configured for reports
+     */
+    public static final String MEMO_SUBMETRICS = "MEMO.submetrics";
+    /**
+     * Configured for reports
+     */
+    public static final String MEMP_SUBMETRICS = "MEMP.submetrics";
+    /**
+     * Configured for reports
+     */
+    public static final String OS_SUBMETRICS = "OS.submetrics";
+    /**
+     * Configured for reports
+     */
+    public static final String RUN_SUBMETRICS = "RUN.submetrics";
+    /**
+     * Configured for reports
+     */
+    public static final String THR_SUBMETRICS = "THR.submetrics";
+    /**
+     * metrics to be collected from all the ports
+     */
+    public static final String METRICS_CLASSLOADING = "METRICS.metrics";
+    //watchdog event parameters
+    public static final String WATCHDOG_HOST = "WatchDog-host";
+    public static final String WATCHDOG_PORT = "WatchDog-port";
+    /**
+     * Configured for reports
+     */
+    public static final String APP_METRICS = "APP.submetrics";
+    /**
+     * Host to where XML report has to be submitted
+     */
+    private String watchdogHost = null;
+    private String watchdogPort = null;
+    public static final String XML_DESTINATION_REPORT = "report.xml.host";
+    private String appname = null;
+    private String optionETLAdapter = null;
+    private String customerID = null;
+    private String userName = null;
+    private String password = null;
+    private List<HostProperties> url = null;
+    private List<String> metrics = null;
+    private List<String> reporters = null;
+    private int refreshInterval = 100;
+    private List<String> classloadingSubmetrics = null;
+    private List<String> compileSubmetrics = null;
+    private List<String> runtimeSubmetrics = null;
+    private List<String> memoryPoolSubmetrics = null;
+    private List<String> memorySubmetrics = null;
+    private List<String> memorymanagerSubmetrics = null;
+    private List<String> threadSubmetrics = null;
+    private List<String> garbageSubmetrics = null;
+    private List<String> osSubmetrics = null;
+    private List<String> appSubmetrics = null;
+    private List<MetricsEnum> metricsEnum = null;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 527166820411630272L;
+
+    /**
+     *
+     */
+    public Configuration() {
+        super();
+    }
+
+    public void setWatchdogHost(String watchdogHost) {
+        this.watchdogHost = watchdogHost;
+    }
+
+    public void setWatchdogPort(String watchdogPort) {
+        this.watchdogPort = watchdogPort;
+    }
+
+    public String getWatchdogHost() {
+        return watchdogHost;
+    }
+
+    public String getWatchdogPort() {
+        return watchdogPort;
+    }
+
+    /**
+     * @return
+     */
+    public String getUserName() {
+        return userName;
+    }
+
+    /**
+     * @param userName
+     */
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    /**
+     * @return
+     */
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * @param password
+     */
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /**
+     * @return
+     */
+    public List<HostProperties> getURL() {
+        return url;
+    }
+
+    /**
+     * @param ports
+     */
+    public void addHostProperties(HostProperties url) {
+        if (this.url == null) {
+            this.url = new ArrayList<HostProperties>();
+        }
+
+        this.url.add(url);
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getMetrics() {
+        return metrics;
+    }
+
+    /**
+     * @param metrics
+     */
+    public void setMetrics(List<String> metrics) {
+        this.metrics = metrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getReporters() {
+        return reporters;
+    }
+
+    /**
+     * @param reporters
+     */
+    public void setReporters(List<String> reporters) {
+        this.reporters = reporters;
+    }
+
+    /**
+     * @return
+     */
+    public int getRefreshInterval() {
+        return refreshInterval;
+    }
+
+    /**
+     * @param refreshInterval
+     */
+    public void setRefreshInterval(int refreshInterval) {
+        this.refreshInterval = refreshInterval;
+    }
+
+    /**
+     * Constructs a
+     * <code>String</code> with all attributes in name = value format.
+     *
+     * @return a <code>String</code> representation of this object.
+     */
+    @Override
+    public String toString() {
+        final String TAB = "    ";
+
+        String retValue = "";
+
+        retValue = "Configuration ( "
+                + super.toString() + TAB
+                + "userName = " + this.userName + TAB
+                + "password = " + this.password + TAB
+                + "url = " + this.url + TAB
+                + "metrics = " + this.metrics + TAB
+                + "reporters = " + this.reporters + TAB
+                + "refreshInterval = " + this.refreshInterval + TAB
+                + " )";
+
+        return retValue;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getClassloadingSubmetrics() {
+        return classloadingSubmetrics;
+    }
+
+    /**
+     * @param classloadingSubmetrics
+     */
+    public void setClassloadingSubmetrics(List<String> classloadingSubmetrics) {
+        this.classloadingSubmetrics = classloadingSubmetrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getCompileSubmetrics() {
+        return compileSubmetrics;
+    }
+
+    /**
+     * @param compileSubmetrics
+     */
+    public void setCompileSubmetrics(List<String> compileSubmetrics) {
+        this.compileSubmetrics = compileSubmetrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getRuntimeSubmetrics() {
+        return runtimeSubmetrics;
+    }
+
+    /**
+     * @param runtimeSubmetrics
+     */
+    public void setRuntimeSubmetrics(List<String> runtimeSubmetrics) {
+        this.runtimeSubmetrics = runtimeSubmetrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getMemoryPoolSubmetrics() {
+        return memoryPoolSubmetrics;
+    }
+
+    /**
+     * @param memoryPoolSubmetrics
+     */
+    public void setMemoryPoolSubmetrics(List<String> memoryPoolSubmetrics) {
+        this.memoryPoolSubmetrics = memoryPoolSubmetrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getMemorySubmetrics() {
+        return memorySubmetrics;
+    }
+
+    /**
+     * @param memorySubmetrics
+     */
+    public void setMemorySubmetrics(List<String> memorySubmetrics) {
+        this.memorySubmetrics = memorySubmetrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getMemorymanagerSubmetrics() {
+        return memorymanagerSubmetrics;
+    }
+
+    /**
+     * @param memorymanagerSubmetrics
+     */
+    public void setMemorymanagerSubmetrics(List<String> memorymanagerSubmetrics) {
+        this.memorymanagerSubmetrics = memorymanagerSubmetrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getThreadSubmetrics() {
+        return threadSubmetrics;
+    }
+
+    /**
+     * @param threadSubmetrics
+     */
+    public void setThreadSubmetrics(List<String> threadSubmetrics) {
+        this.threadSubmetrics = threadSubmetrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getGarbageSubmetrics() {
+        return garbageSubmetrics;
+    }
+
+    /**
+     * @param garbageSubmetrics
+     */
+    public void setGarbageSubmetrics(List<String> garbageSubmetrics) {
+        this.garbageSubmetrics = garbageSubmetrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getOsSubmetrics() {
+        return osSubmetrics;
+    }
+
+    /**
+     * @param osSubmetrics
+     */
+    public void setOsSubmetrics(List<String> osSubmetrics) {
+        this.osSubmetrics = osSubmetrics;
+    }
+
+    /**
+     * @return
+     */
+    public List<MetricsEnum> getMetricsEnum() {
+
+        if (metricsEnum == null) {
+            metricsEnum = new ArrayList<MetricsEnum>();
+
+            for (String metric : metrics) {
+                metricsEnum.add(MetricsEnum.getEnum(metric));
+            }
+        }
+
+        return metricsEnum;
+    }
+
+    /**
+     * @return
+     */
+    public String getAppname() {
+        return appname;
+    }
+
+    /**
+     * @param appname
+     */
+    public void setAppname(String appname) {
+        this.appname = appname;
+    }
+
+    /**
+     * @return
+     */
+    public List<String> getAppSubmetrics() {
+        return appSubmetrics;
+    }
+
+    /**
+     * @param appSubmetrics
+     */
+    public void setAppSubmetrics(List<String> appSubmetrics) {
+        this.appSubmetrics = appSubmetrics;
+    }
+
+    /**
+     * @return optionETLAdapter
+     */
+    public boolean sendtoETLAdapter() {
+        if (optionETLAdapter.equalsIgnoreCase("false")) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param optionETLAdapter
+     */
+    public void setOptionETLAdapter(String optionETLAdapter) {
+        this.optionETLAdapter = optionETLAdapter;
+    }
+
+    /**
+     * @param optionETLAdapter
+     */
+    public void setCustomerID(String customerID) {
+        this.customerID = customerID;
+    }
+
+    /**
+     * get cutomerID from Propery
+     */
+    public String getCustomerID() {
+        return customerID;
+    }
+}

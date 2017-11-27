@@ -1,0 +1,139 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package AV_Action;
+import Model.*;
+import controller.LogWriter;
+import java.sql.*;
+import java.io.IOException;
+import org.apache.log4j.Logger;
+/**
+ *
+ * @author gopal
+ */
+public class AV_GetgroupSecuritylevels extends AV_Model{
+    
+     static Logger log = Logger.getLogger(AV_GetgroupSecuritylevels.class);
+
+public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "groupsecurities";
+        String szrespStr=null;
+        StringBuffer result = null;
+        ResultSet rs = null;
+        Connection con = null;
+        PreparedStatement statement3 = null;
+        Integer ISecurityUsers = 1;
+        String username = null;
+        StringBuffer szRoleBuff = null;
+        String szGroupname ="";
+        try
+        {
+          
+            szGroupname = request.getParameter("group");
+        } catch (Exception k)
+        {
+            k.printStackTrace();
+            log.error("error while reading request parameters", k);
+            
+            AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+        }
+      
+            try
+            {
+                result = new StringBuffer("<group>");
+                result.append(szGroupname);
+                result.append("</group>");
+                con = DatabaseConnection.getAVSAConnection(request);
+             
+                log.info("connected to database");
+                String szRoleTemp = "";
+                boolean bRowExists = false;
+                if (con != null)
+                {
+
+                    if (ISecurityUsers.intValue() == 1)
+                    {
+                        if (szGroupname.equalsIgnoreCase("All"))
+                        {
+                            statement3 = con.prepareStatement("SELECT name from gasecuritylevels where level != 1");
+                        } else
+                        {
+                            statement3 = con.prepareStatement("SELECT role from gagrouproles where groupname = '" + szGroupname + "' ORDER BY \"role\"");
+                        }
+                        rs = statement3.executeQuery();
+                        System.out.println("Query to get Roles-->" + statement3);
+
+                        while (rs.next())
+                        {
+                            bRowExists = true;
+                            szRoleTemp = (String) rs.getString(1);
+
+                        }
+                        rs.close();
+                        statement3.close();
+                    } else
+                    {
+                       
+                        AV_Constants.opStatus=AV_Constants.SECURITYLEVEL_FAIL;
+                    }
+                }
+
+                if (bRowExists)
+                {
+
+                    String szTemp[] = szRoleTemp.split(",");
+                    for (int j = 0; j < szTemp.length; j++)
+                    {
+                        result.append("<role>" + szTemp[j] + "</role>");
+                    }
+                }
+                
+                AV_Constants.opStatus=AV_Constants.SUCCESS;
+            } catch (Exception ex)
+            {
+                
+                AV_Constants.opStatus=AV_Constants.FAILURE;
+                ex.printStackTrace();
+            } finally
+            {
+                try
+                {
+                    if (con != null)
+                    {
+                        con.close();
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    log.error("error while closing connection", e);
+                }
+            }
+    
+        try
+        {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,result,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            log.error("error while writing output", e);
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                szopration=null;
+                result = null;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error while removing strings", e);
+            }
+        }
+}
+}

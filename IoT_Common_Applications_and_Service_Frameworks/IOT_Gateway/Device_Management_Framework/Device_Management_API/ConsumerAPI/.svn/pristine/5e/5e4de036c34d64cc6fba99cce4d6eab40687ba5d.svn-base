@@ -1,0 +1,84 @@
+
+
+/**
+ * AddComments.java
+ *
+ * This file was auto-generated from WSDL
+ * by the Apache Axis2 version: 1.6.1  Built on : Aug 31, 2011 (12:22:40 CEST)
+ */
+
+    package addcomments;
+
+    /*
+     *  AddComments java interface
+     */
+
+    public interface AddComments {
+          
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param addCommentsLoginRequest1
+                
+         */
+
+         
+                     public addcomments.AddCommentsResponse addCommentsWithLogin(
+
+                        addcomments.AddCommentsLoginRequest addCommentsLoginRequest1)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param addCommentsLoginRequest1
+            
+          */
+        public void startaddCommentsWithLogin(
+
+            addcomments.AddCommentsLoginRequest addCommentsLoginRequest1,
+
+            final addcomments.AddCommentsCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param addCommentsRequest3
+                
+         */
+
+         
+                     public addcomments.AddCommentsResponse addTaskComments(
+
+                        addcomments.AddCommentsRequest addCommentsRequest3)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param addCommentsRequest3
+            
+          */
+        public void startaddTaskComments(
+
+            addcomments.AddCommentsRequest addCommentsRequest3,
+
+            final addcomments.AddCommentsCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        
+       //
+       }
+    

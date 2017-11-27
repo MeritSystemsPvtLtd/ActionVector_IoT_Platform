@@ -1,0 +1,81 @@
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+
+# Fitures of this Mangers
+    # Clean database
+    # start/stop adapters and Cep-Engines on the basis of signals
+    # Accepts Parameters On console based
+    #      Java <s:> <o:> <p:>
+    #     { like [start-stop] object}
+    #     { like [Object] parameters}
+    #     { like [Paramters]}
+    # Search the all engines|adapters|library|[optional: resources] in the Parent Folders
+    #
+    # it should start all the adapters and Engines As its Child-Thread with certain name
+    # it should check weather any ofthe Child-Thread is alive or not
+    # it should check Exception in child threads
+    # it should be able to reStart the child threads
+    # it should send the sms on the basis of Exception|live|or not running to certain no.
+    #
+#
+
+
+
+# CEP-Engine Configue
+# self-search in the current Folder
+# Engines
+#     - CepEngine Ganglia
+#     - CepEngine MailSearch
+#     - ...
+#     - ..
+#     - .
+# Adapters
+#     - DBMonitor Adapter
+#     - Ganglia Adapter
+#     - NetAgent
+#     - JavaMintor
+#     - ...
+#     - ..
+#     - .
+
+#################
+#
+# As a Child Thread[with Certain Name]-------CEP-Engine Ganglia    : Paramtere [start|stop]. [ClassPath]. [nohup]. [Java Parameter options: like-port,ssl, authenticatio]
+# As a Child Thread[with Certain Name]-------CEP-Engine MailSearch : Paramtere [start|stop]. [ClassPath]. [nohup]. [Java Parameter options: like-port,ssl, authenticatio]
+
+# As a Child Thread[with Certain Name]------- DBMonitor         Paramtere [start|stop]. [ClassPath]. [nohup]. [Java Parameter options: like-port,ssl, authenticatio]
+# As a Child Thread[with Certain Name]------- NetAgent-Monitor  Paramtere [start|stop]. [ClassPath]. [nohup]. [Java Parameter options: like-port,ssl, authenticatio]
+# As a Child Thread[with Certain Name]------- JVMMonitor        Paramtere [start|stop]. [ClassPath]. [nohup]. [Java Parameter options: like-port,ssl, authenticatio]
+# As a Child Thread[with Certain Name]------- Ganglia Adapter   Paramtere [start|stop]. [ClassPath]. [nohup]. [Java Parameter options: like-port,ssl, authenticatio]
+
+########################################
+# SMS  and Restarting the child-thread #
+########################################
+# check threads is living or dead
+# check Exception occured in threads is living or dead
+# SMS to Some No.
+
+
+
+
+
+########################################
+## program needed                     ##
+########################################
+#
+# starting Java Process as a thread
+# stop Java Process as a thread
+# stop Java Process as a thread
+# cheaking thead live or dead
+# restart it's child  threads
+# check Exception in child thread
+# send SMS to some no.
+#
+
+################################################################################
+## Configuratio for SMS NO. and Meassage needed                               ##
+################################################################################
+#
+#
+#
+#

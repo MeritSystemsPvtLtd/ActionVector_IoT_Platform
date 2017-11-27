@@ -1,0 +1,43 @@
+package OrderDetails;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Properties;
+
+
+public class JsonGetCustomers extends AwareImplementer {
+
+    //static Logger log = Logger.getLogger(JsonGetUserTasktypes.class);
+    String responseStr = null;
+    // static Properties props = null;
+    //String APIURL = "SA-DeskAdminAPIURL.properties";
+    //private String APIUrl;
+    
+
+    public void JsonCustomers() {
+
+        try {
+            //log.info("=============== Getting the UserDetails ===============");
+           
+            
+            String customerlistURL = APIUrl.GetVendorAPIURL("getCustomersURL");
+
+            System.out.println("customerList in JsonCustomers==>>" + customerlistURL);
+            responseStr = HttpRequestPoster.sendGetRequest(customerlistURL, null);
+            System.out.println(responseStr);
+            // public void setCustomers(String Customers) {
+
+            String jsonString = responseStr.replaceAll("null\\(\'", "");
+            jsonString = jsonString.replaceAll("\'\\)", "");
+            this.responseStr = jsonString;
+            System.out.println("Removing null" + this.responseStr);
+            servletResponse.getWriter().write(this.responseStr);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            //log.error("=============== ERROR ==============", ex);
+        }
+
+    }
+}

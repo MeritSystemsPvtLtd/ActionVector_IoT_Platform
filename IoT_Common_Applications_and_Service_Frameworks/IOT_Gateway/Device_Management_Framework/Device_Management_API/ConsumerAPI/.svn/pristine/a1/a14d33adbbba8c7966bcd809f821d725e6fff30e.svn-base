@@ -1,0 +1,226 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class Getgrouplist extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(Getgrouplist.class);
+    Connection con = null;
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        response.setContentType("text/xml");
+        StringBuffer results = new StringBuffer("<grouplist>");
+        StringBuffer result = null;
+        boolean bFLAG = false;
+        HttpSession HSSessions = null;
+        boolean sessioncheck = true;
+        Object OUser1;
+        String szUsers;
+        Integer ISecurityUsers = 1;
+        boolean bFlag1 = false;
+        boolean bFlag2 = true;
+        String szFromAdminLogin = "";
+        Statement statement1 = null;
+        Statement statement2 = null;
+        String opStatus = "";
+        String opDescription = "";
+        String sessionid = null;
+        String username = null;
+        String customerid = "";
+        try
+        {
+            HSSessions = request.getSession(true);
+            OUser1 = HSSessions.getValue("user");
+            szFromAdminLogin = (String) HSSessions.getAttribute("FromAdminLogin");
+            customerid = request.getParameter("customerid");
+        //sessionid=request.getParameter("sessionid");
+        //username=request.getParameter("username");
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            System.out.println("Invaid session Login again");
+            log.error("invalid session");
+        }
+        if (sessioncheck)
+        {
+            try
+            {
+               
+                con = DatabaseConnection.getGuiDatabaseConnection(request);
+                log.info("connected to database");
+
+                //getting proChara groups
+                if (con != null)
+                {
+                    if (ISecurityUsers.intValue() == 1)
+                    {
+                        bFLAG = true;
+                        String szGroupName = "";
+                        System.out.println("inside security check");
+                        try
+                        {
+
+                            statement1 = con.createStatement();
+                            ResultSet rs1 = statement1.executeQuery("SELECT groupname from " + DBConstants.GROUPNAME_TABLE + " order by groupname");
+                            while (rs1.next())
+                            {
+                                bFlag1 = true;
+                            }
+                            rs1.close();
+                            statement1.close();
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            System.out.println("Database operation failed");
+                            log.error("EXCEPTION : SQL Getting the values from gagroupname	:", e);
+                        }
+                        if (!bFlag1)
+                        {
+                            bFlag2 = false;
+                        }
+
+                        if (bFlag2)
+                        {
+
+                            try
+                            {
+                                result = new StringBuffer("<groups>\n");
+                                statement2 = con.createStatement();
+                                ResultSet rs2 = statement1.executeQuery("SELECT * from " + DBConstants.GROUPNAME_TABLE + " order by groupname");
+
+                                while (rs2.next())
+                                {
+
+                                    szGroupName = rs2.getString("groupname");
+                                    if (szGroupName.startsWith("L"))
+                                    {
+                                        result.append("<group>");
+                                        //result.append(szgroup_name);
+                                        result.append(szGroupName);
+                                        result.append("</group>\n");
+                                    }
+
+                                }
+                                rs2.close();
+                                opStatus = "0";
+                                opDescription = "Group list get successfully";
+                                log.info("group list get successfully");
+                                result.append("</groups>");
+                            } catch (Exception e)
+                            {
+                                e.printStackTrace();
+                                System.out.println("exception while showing list of groups");
+                                log.error("EXCEPTION : While Showing the list of Groups	", e);
+                            } finally
+                            {
+                                try
+                                {
+
+                                    statement2.close();
+                                } catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
+                            }
+                        } else
+                        {
+                            opStatus = "107";
+                            opDescription = "Currently, no groups are configured";
+                            log.info("no data found");
+
+                        }
+                    } else
+                    {
+                        opStatus = "103";
+                        opDescription = "Not a valid user(Admin)";
+                        log.info("not a valid user");
+
+                    }
+                } else
+                {
+                    opStatus = "101";
+                    opDescription = "Database Connection failed";
+                    log.info("failed to connect database");
+
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error while performing request action", e);
+
+
+            } finally
+            {
+                try
+                {
+                    if (con != null)
+                    {
+                        con.close();
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    log.error("error while closing connection", e);
+                }
+            }
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid session Login again";
+            log.info("invalid session");
+
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            if (!(result == null))
+            {
+                   results.append(result);
+            }
+            results.append("</grouplist>");
+            response.getWriter().write(results.toString());
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+        }
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
+            IOException
+    {
+        processRequest(request, response);
+    }
+}
+

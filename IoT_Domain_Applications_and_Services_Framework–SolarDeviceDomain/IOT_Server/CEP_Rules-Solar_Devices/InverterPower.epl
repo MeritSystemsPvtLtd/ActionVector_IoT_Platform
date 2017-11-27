@@ -1,0 +1,11 @@
+module com.prokosha.cep.inverterpower.v1;
+create variable float INV_POW_THR=100;
+create variable string INV_ACRO_POW="[INV_POW]";
+
+@Name("com.prokosha.cep.inverterpower.dispatch.1")
+      select  "Inverter" as EventType,   ("Low Power ").concat((PowerNow).toString().concat(Unit).concat(INV_ACRO_POW)) as EventDesc,
+    "Power is Low" as EventSymptoms,"InverterAlert" as AlertType,
+    HostName,resourceType,resourceId,CustomerID
+    from InverterPowerStream where (PowerNow < INV_POW_THR)
+    group by HostName
+    output first every 12 hours;

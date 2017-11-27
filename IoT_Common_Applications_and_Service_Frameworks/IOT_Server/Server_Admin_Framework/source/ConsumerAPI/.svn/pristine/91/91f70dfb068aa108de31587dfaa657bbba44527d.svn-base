@@ -1,0 +1,207 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package businessmodel;
+
+import java.util.*;
+import Model.*;
+import controller.CommandTask;
+import controller.DBConstants;
+import controller.LogWriter;
+import java.util.ArrayList;
+import java.sql.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jun 19, 2012, 11:55:20 AM
+ */
+public class AddGroup
+{
+
+    static Logger log = Logger.getLogger(AddGroup.class);
+
+    public static boolean addNewGroup(String customerid, ArrayList<String> groupnames, javax.servlet.http.HttpServletRequest request)
+    {
+        CommandTask commandinsert = new CommandTask();
+        boolean bFLAG = true;
+        String szGroupName = "";
+        String szDescription = "";
+        String szUserGroup = "";
+        String szActions = "";
+        //String customerid = "";
+        String szAssigneeRequired = "";
+        String szDefaultUserView = "";
+        String szDefUserChecked = "";
+        String szContactDetails = "";
+        String szParameter1 = "NONE";
+        String szParameter2 = "NONE";
+        int iParameter3 = -1;
+        Connection con = null;
+        int groupcount = 0;
+        int i=0;
+        try
+        {
+            if (customerid != null && !customerid.equalsIgnoreCase(""))
+            {
+                con = DatabaseConnection.getDbConnection(request, customerid);
+            } else
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+            }
+            System.out.println("connection get successfully");
+            //String szServerName = request.getServerName();
+            String szServerName="192.168.1.21";
+            if (con != null)
+            {
+                groupcount=groupnames.size();
+                Iterator it = groupnames.iterator();
+                while (it.hasNext())
+                {
+                    szGroupName=(String)it.next();
+                    boolean checkgroup = checkGroup(szGroupName, con);
+                    if (!checkgroup)
+                    {
+                        // To check the Group liescence
+                        try
+                        {
+                            PreparedStatement statement10 = con.prepareStatement("SELECT count(groupname) from " + DBConstants.GROUPNAME_TABLE + " ");
+                            ResultSet rs10 = statement10.executeQuery();
+                            int iCount = 0;
+                            String sCount = "";
+                            while (rs10.next())
+                            {
+                                sCount = rs10.getString(1);
+                            }
+                            rs10.close();
+                            statement10.close();
+
+                            iCount = Integer.parseInt(sCount);
+
+                            //if (KeyDecode.getGroup_Lic() >= iCount)
+                            //{
+
+                            PreparedStatement statement = con.prepareStatement("INSERT INTO " + DBConstants.GROUPNAME_TABLE + " VALUES(?,?,?,?,?,?,?,?)");
+                            statement.setString(1, szGroupName);
+                            statement.setString(2, szDescription);
+                            if (!"".equalsIgnoreCase(szAssigneeRequired) && szAssigneeRequired != null)
+                            {
+                                statement.setString(3, "Yes");
+                            } else
+                            {
+                                statement.setString(3, "Yes");
+                            }
+                            statement.setInt(4, 1);
+                            if (!"".equalsIgnoreCase(szDefaultUserView) && szDefaultUserView != null)
+                            {
+                                statement.setString(5, "Yes");
+                            } else
+                            {
+                                statement.setString(5, "No");
+                            }
+                            statement.setString(6, szGroupName);
+                            statement.setString(7, "NONE");
+                            statement.setInt(8, 0);
+
+                            statement.executeUpdate();
+                            System.out.println("insert data into group name table  ");
+                            statement.close();
+
+                            // LogWriter.writeDebug("The usergroup is ..." + szUserGroup, 3, Hsessions);
+                            if (!"".equalsIgnoreCase(szUserGroup) && szUserGroup != null)
+                            {
+                                System.out.println("UserGroup:" + szUserGroup);
+                                System.out.println(" inside loop");
+                                PreparedStatement statement1 = con.prepareStatement("UPDATE " + DBConstants.DOMAIN_INFO_TABLE + " set usergroup = ? where domainname = ?");
+                                statement1.setString(1, szGroupName);
+                                statement1.setString(2, szServerName);
+                                statement1.executeUpdate();
+                                System.out.println(" updated domain info table successfully in new group");
+                                statement1.close();
+                                PreparedStatement statement2 = con.prepareStatement("UPDATE " + DBConstants.USER_GROUP_TABLE + "  set groupname = ?");
+                                statement2.setString(1, szGroupName);
+                                statement2.executeUpdate();
+                                System.out.println(" user group updated in new ");
+                                statement2.close();
+
+                            }
+                            szActions = "Added New Group " + szGroupName;
+                            //boolean check = commandinsert.CommandTask(con, Hsessions.getId(), szUsers, szActions);
+
+                            System.out.println("group added successfully new");
+                            szGroupName=null;
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            System.out.println("database problem new");
+
+                        }
+                    //}
+                    }//if
+                    else
+                    {
+
+                        System.out.println("group name already exist new ");
+                    }
+                    i++;
+                }
+            }//if
+            else
+            {
+
+                System.out.println("connection failed  new");
+                log.info("connection failed");
+            }
+
+        } catch (Exception ex)
+        {
+            log.error("exception while performing request action", ex);
+            ex.printStackTrace();
+        //Logger.getLogger(CreateGroup.class.getName()).log(Level.SEVERE, null, ex);
+        } finally
+        {
+            try
+            {
+                con.close();
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error while closing connection", e);
+            }
+        }
+        if(groupcount==i)
+        return true;
+        else
+            return false;
+    }
+
+    public static boolean checkGroup(String szgroupname, Connection con)
+    {
+        try
+        {
+
+            PreparedStatement statement3 = con.prepareStatement("select * from " + DBConstants.GROUPNAME_TABLE + " where groupname=?");
+            statement3.setString(1, szgroupname);
+            ResultSet rs = statement3.executeQuery();
+            while (rs.next())
+            {
+                if (szgroupname.equalsIgnoreCase(rs.getString("groupname")))
+                {
+                    return true;
+                }
+
+            }
+            statement3.close();
+            rs.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+
+        }
+        return false;
+    }
+}

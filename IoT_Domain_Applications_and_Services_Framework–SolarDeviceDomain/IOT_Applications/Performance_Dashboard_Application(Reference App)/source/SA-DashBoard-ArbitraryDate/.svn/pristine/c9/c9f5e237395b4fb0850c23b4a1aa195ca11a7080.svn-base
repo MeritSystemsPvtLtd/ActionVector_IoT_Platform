@@ -1,0 +1,444 @@
+
+/**
+ * *********************************************************************
+ * Software Developed by Merit Systems Pvt. Ltd., No. 42/1, 55/c, Nandi Mansion,
+ * 40th Cross, Jayanagar 8th Block Bangalore - 560 070, India Work Created for
+ * Merit Systems Private Limited All rights reserved
+ *
+ * THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT LAWS AND TREATIES
+ * NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED, DISTRIBUTED,
+ * REVISED, MODIFIED, TRANSLATED, ABRIDGED, CONDENSED, EXPANDED, COLLECTED,
+ * COMPILED, LINKED, RECAST, TRANSFORMED OR ADAPTED WITHOUT THE PRIOR WRITTEN
+ * CONSENT ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION COULD
+ * SUBJECT THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ * *********************************************************************
+ */
+
+
+package com.merit.dashboard.bizlogic;
+
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.merit.dashboard.ServletContextListener;
+import com.merit.dashboard.DBUtil.DBUtilHelper;
+
+public class BizLogic {
+	public static Logger log = Logger.getLogger(BizLogic.class);
+	/**
+	 * **************************************************************************************************
+	 * This method is returning the JSON and sending this json to Generate Chart after
+	 * Combining Metric information and Availability information by using Json info
+	 * @param  mapServicemetric LinkedHashMap having metric Health information
+	 * @param metricAvail String having Availability information
+	 * @return map_ServiceMetricAvail Combined Result of Metric,Availability as JSON
+	 * **************************************************************************************************
+	 */
+	@SuppressWarnings("rawtypes")
+	private LinkedHashMap<String,String> getUniqueKey(LinkedHashMap<String,String> mapServicemetric,String metricAvail ){
+		LinkedHashMap<String, String> map_ServiceMetricAvail = new LinkedHashMap<String, String>();
+		JSONObject temp = null;
+		String tempKey = "";
+		String mValue = "";
+		String combineMetricAvail="";
+		JSONObject mTempJObj = null;
+		JSONObject combinedValue = null;
+		JSONArray arrJobj=null;
+
+		if (!metricAvail.equals("[]")) {
+			try {
+				 arrJobj = new JSONArray(metricAvail);
+				 if(arrJobj.length()>= mapServicemetric.size()){
+				for (int p = 0; p < arrJobj.length(); p++) {
+					temp = null;
+					temp = arrJobj.getJSONObject(p);
+					tempKey = "";
+					tempKey =temp.getString("ServiceName") + ","+ temp.getString("ServerName") + ","+ temp.getString("ResourceID");
+					mValue = null;
+					mValue = mapServicemetric.get(tempKey);
+					if (mValue != null) {
+						mTempJObj = new JSONObject("{" + mValue + "}");
+						if(temp.get("Health").equals("CRITICAL")){
+							mTempJObj.accumulate("ResourceNames", "Availability");
+							mTempJObj.accumulate("Health", "CRITICAL");
+						}
+					}
+					else
+						mTempJObj=new JSONObject("{"+"\"ServiceName\":\""+temp.getString("ServiceName")+"\",\"ResourceType\":\""+temp.getString("ResourceType")+"\",\"ServerName\":\""+temp.getString("ServerName")+"\",\"ResourceNames\":[\"Availability\"],\"Health\":[\""+temp.getString("Health")+"\"],\"ResourceSubType\":[\"0\",\"1\"],\"ResourceChartType\":[\"0\",\"1\"],\"ResourceID\":\""+temp.getString("ResourceID")+"\""+"}");
+
+
+					  combineMetricAvail=mTempJObj.toString().substring(1,mTempJObj.toString().length()-1);
+					  map_ServiceMetricAvail.put(tempKey,combineMetricAvail);
+				}
+				 arrJobj=null;
+				 mTempJObj=null;
+				 }
+				 else{
+					Iterator itr= mapServicemetric.entrySet().iterator();
+					String combineMetricAvail1="";
+					while(itr.hasNext()){
+						String ServiceName="";
+						String ResourceType="";
+						String ServerName="";
+						String ResourceName="";
+						String Health="";
+						String resourcesubtype="";
+						String resourceChartType="";
+						String ResourceID="";
+						boolean flag=false;
+
+						Map.Entry pairs = (Map.Entry) itr.next();
+						 arrJobj = new JSONArray(metricAvail);
+						 mTempJObj = new JSONObject("{" + (String)pairs.getValue() + "}");
+
+						for (int p = 0; p < arrJobj.length(); p++) {
+							temp = arrJobj.getJSONObject(p);
+							if(temp.get("ServiceName").equals(mTempJObj.get("ServiceName")) && temp.get("ServerName").equals(mTempJObj.get("ServerName")) && temp.get("ResourceID").equals(mTempJObj.get("ResourceID"))){
+								 ServiceName=temp.get("ServiceName").toString();
+								 ResourceType=temp.get("ResourceType").toString();
+								 ServerName=temp.get("ServerName").toString();
+								 String rname="";
+								 if(!temp.get("ResourceNames").toString().replace("[", "").replace("]", "").equals(""))
+								  rname=","+temp.get("ResourceNames").toString().replace("[", "").replace("]", "");
+								 ResourceName=mTempJObj.get("ResourceNames").toString().substring(1).replace("]", "")+rname;
+								 Health=mTempJObj.get("Health").toString().substring(1).replace("]", "")+",\""+temp.get("Health")+"\"";
+								 resourcesubtype=mTempJObj.get("ResourceSubType").toString();
+								 if(!resourcesubtype.contains("\""))
+									 resourcesubtype="\""+resourcesubtype+"\"";
+								 String AvailLineIndex="";
+								 if(temp.get("Health").toString().contains("CRITICAL")){
+									 String resourceChartType1=mTempJObj.get("ResourceChartType").toString().substring(1).replace("]","");
+									 AvailLineIndex=ServletContextListener.getIndexOfLocationGroupType(ResourceType,"TimeLineAvailability")+",";
+									 resourceChartType="["+AvailLineIndex+resourceChartType1+"]";
+								 }
+								 else{
+									 resourceChartType=mTempJObj.get("ResourceChartType").toString();
+								 }
+								 ResourceID=temp.get("ResourceID").toString();
+								 flag=true;
+								 break;
+							}
+
+					}
+						if(!flag){
+							 ServiceName=mTempJObj.get("ServiceName").toString();
+							 ResourceType=mTempJObj.get("ResourceType").toString();
+							 ServerName=mTempJObj.get("ServerName").toString();
+							 ResourceName=mTempJObj.get("ResourceNames").toString().substring(1).replace("]", "");
+							 Health=mTempJObj.get("Health").toString().substring(1).replace("]", "");
+							 resourcesubtype=mTempJObj.get("ResourceSubType").toString();
+							 if(!resourcesubtype.contains("\""))
+								 resourcesubtype="\""+resourcesubtype+"\"";
+							 resourceChartType=mTempJObj.get("ResourceChartType").toString();
+							 ResourceID=mTempJObj.get("ResourceID").toString();
+						}
+						combineMetricAvail=	"\"ServiceName\":\""+ServiceName+"\",\"ResourceType\":\""+ResourceType+"\",\"ServerName\":\""+ServerName+"\",\"ResourceNames\":["+ResourceName+"],\"Health\":["+Health+"],\"ResourceSubType\":["+resourcesubtype+"],\"ResourceChartType\":"+resourceChartType+",\"ResourceID\":\""+ResourceID+"\"";
+					  map_ServiceMetricAvail.put((String)pairs.getKey(),combineMetricAvail);
+				 }
+				 }
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				log.error("DashBoard getUniqueKey from combined Availability and metric info \n"+e.getMessage());
+			}
+		}
+		else
+			return mapServicemetric;
+		return map_ServiceMetricAvail;
+
+	}
+
+	/**
+	 * **************************************************************************************************
+	 * This method is returning the JSON and sending this json to Generate Chart after
+	 * Combining Metric information and Ticket information by using LinkedHashMap
+	 * @param  serviceMetricInfo LinkedHashMap having metric Health information and Availability info
+	 * @param ticketInfo LinkedHashMap having Ticket Alert information
+	 * @return szMetricTypeValueJson Combined Result of Metric,Ticket,Availability as JSON
+	 * **************************************************************************************************
+	 */
+
+	@SuppressWarnings("rawtypes")
+	private String combineTwoMap(LinkedHashMap<String, String> serviceMetricInfo, LinkedHashMap<String, String> ticketInfo){
+		 try {
+			 String szMetricTypeValueJson = "";
+			String createJsonWithMap = "";
+			String combinedCritical="";
+			String combinedJsonOK="";
+			String combinedJsonWithoutOK="";
+			String combined_BothCritical="";
+			Iterator<?> it = serviceMetricInfo.entrySet().iterator();
+			boolean flag=false;
+			while (it.hasNext()) {
+				Map.Entry pairs = (Map.Entry) it.next();
+				String szTicket = "";
+
+				if (ticketInfo.get("DefaultMapValue") != null) {
+					szTicket = "\"hstdwnstatus\":[\"OK\"]";
+				}
+				else if (ticketInfo.get(pairs.getKey()) == null) {
+					szTicket = "\"hstdwnstatus\":[\"OK\"]";
+				}
+				else {
+					szTicket = ticketInfo.get(pairs.getKey());
+				}
+				createJsonWithMap = ",{" + pairs.getValue() + "," + szTicket+ "}";
+				JSONObject mTempJObj = new JSONObject("{" + pairs.getValue() + "}");
+				if(pairs.getValue().toString().contains("CRITICAL") && szTicket.contains("CRITICAL"))
+					if(mTempJObj.get("Health").toString().endsWith("CRITICAL\"]"))
+						combined_BothCritical += createJsonWithMap;
+					else
+						combined_BothCritical += createJsonWithMap;
+				else if(createJsonWithMap.contains("CRITICAL"))
+					if(mTempJObj.get("Health").toString().endsWith("CRITICAL\"]"))
+						combinedCritical += createJsonWithMap;
+					else
+						combinedCritical += createJsonWithMap;
+				else if(mTempJObj.get("Health").toString().contains("OK"))
+					combinedJsonOK += createJsonWithMap;
+				else
+					combinedJsonWithoutOK += createJsonWithMap;
+			}
+			if(!combinedCritical.isEmpty()){
+				flag=true;
+				createJsonWithMap=combinedCritical.substring(1)+combinedJsonOK+combinedJsonWithoutOK;
+			}
+			else if(!combinedJsonOK.isEmpty()){
+				flag=true;
+				createJsonWithMap=combinedJsonOK.substring(1)+combinedJsonWithoutOK;
+			}
+			else if(!combinedJsonWithoutOK.isEmpty()){
+				flag=true;
+				createJsonWithMap=combinedJsonWithoutOK.substring(1);
+			}
+
+			if(!combined_BothCritical.isEmpty() && flag)
+				createJsonWithMap=combined_BothCritical.substring(1)+","+createJsonWithMap;
+			else if(!combined_BothCritical.isEmpty())
+				createJsonWithMap=combined_BothCritical.substring(1);
+
+			if (!createJsonWithMap.isEmpty())
+				szMetricTypeValueJson = "[" + createJsonWithMap+ "]";
+			else
+				szMetricTypeValueJson = "[]";
+
+				return szMetricTypeValueJson;
+		 }
+		 catch (Exception e) {
+			e.printStackTrace();
+			log.error("DashBoard combineTwoMap Metric and Ticket to generate Json \n"+e.getMessage());
+		}
+		 return "[]";
+	}
+	/**
+	 * **************************************************************************************************
+	 * This method is returning the JSON and sending this json to Generate Chart after
+	 * Combining Metric information and Ticket information by using LinkedHashMap
+	 * @param  serviceMetricInfo LinkedHashMap having metric Health information
+	 * @param ticketInfo LinkedHashMap having Ticket Alert information
+	 * @param szAvailJson String having Availability information
+	 * @return combinedJson Combined Result of Metric,Ticket,Availability as JSON
+	 * **************************************************************************************************
+	 */
+
+	 public  String generateJsonFromCombinedTable(LinkedHashMap<String,String> serviceMetricInfo,LinkedHashMap<String,String> ticketInfo,String szAvailJson){
+		LinkedHashMap<String, String> map_UniqueKey = getUniqueKey(serviceMetricInfo, szAvailJson);
+		String szCombinedJson = combineTwoMap(map_UniqueKey, ticketInfo);
+		map_UniqueKey=null;
+		return szCombinedJson;
+	}
+	 /**
+	   * ************************************************************************************************
+	   * Here we are Concatenating two Json Object into one Json Object
+	   * @param obj1 JSONObject First JsonArray to be Combined
+	   * @param obj2 JSONObject Second JsonArray to be Combined
+	   * @return obj1 JSONObject Combined json Array
+	   * ************************************************************************************************
+	   * */
+
+	  public static JSONObject accumulateJson(JSONObject obj1, JSONObject obj2){
+			try {
+
+				String keyarr[] = JSONObject.getNames(obj2);
+				Object val = "";
+				for (String key : keyarr) {
+					if (!key.equals("ServerName") && !key.equals("ResourceType") && !key.equals("ServiceName") && !key.equals("ResourceID") ) {
+						val = obj2.get(key);
+						obj1.accumulate(key, val);
+					}
+				}
+				return obj1;
+			} catch (Exception e) {
+				e.printStackTrace();
+				log.error("DashBoard accumulateJson two Json Object \n"+e.getMessage());
+			}
+			return null;
+		}
+
+	  /**
+	   * ************************************************************************************************
+	   * Here we are converting Metric Name Written in DataBase to User Defined Easily
+	   * readable format accessing from Property File
+	   * @param dbMetricName  String MetricName spell in DataBase to be changed in Readable format
+	   * @return propertyMetricName String Readable format as written in external property file
+	   * ************************************************************************************************
+	   * */
+	  public String ChangeMetricNameAsPropertyname(String dbMetricName) {
+
+			String propertyMetricName = "";
+			String[] dbMetricNameArray = dbMetricName.replaceAll("\"", "").split(",");
+			for (int i = 0; i < dbMetricNameArray.length; i++) {
+				propertyMetricName = propertyMetricName+ ",\""+ DBUtilHelper.getMetrics_mapping_properties().getProperty(dbMetricNameArray[i]) + "\"";
+			}
+			propertyMetricName = "["+propertyMetricName.substring(1) + "]";
+			return propertyMetricName;
+
+		}
+
+	  public String getChartType(String resourceType,String dbMetricName,String Critical) {
+
+			String propertyMetricName = "";
+
+			String[] metrictypeArray = dbMetricName.replaceAll("\"", "").split(",");
+			String[] MetricCritical=Critical.replace("[", "").replace("]", "").split(",");
+			try{
+			for (int i = 0; i < metrictypeArray.length; i++) {
+				String criticalMetrictypeIndex="";
+				if(!metrictypeArray[i].equals("default")){
+				String criticalChartType1=ServletContextListener.getLocationGroupType(resourceType,metrictypeArray[i]);
+				if(criticalChartType1!=null && criticalChartType1.contains("TimeLine"))
+					criticalMetrictypeIndex=ServletContextListener.getIndexOfLocationGroupType(resourceType,criticalChartType1);
+				if(!propertyMetricName.contains(criticalMetrictypeIndex) && MetricCritical[i].contains("CRITICAL"))
+					propertyMetricName=propertyMetricName+ ",\""+criticalMetrictypeIndex+"\"";
+				}
+			}
+			if(!propertyMetricName.equals("")){
+				String criticalChartType="\"0\",\"1\"";
+				String CriticalCount[]=propertyMetricName.substring(1).split(",");
+				if(CriticalCount.length==1 && !propertyMetricName.substring(1).equals("0")){
+					criticalChartType=propertyMetricName.substring(1)+",\"0\"";
+				}
+				else if(CriticalCount.length==1 && !propertyMetricName.substring(1).equals("1")){
+					criticalChartType=propertyMetricName.substring(1)+",\"1\"";
+				}
+				else
+					criticalChartType=propertyMetricName.substring(1);
+			propertyMetricName = "["+criticalChartType+ "]";
+			}
+			else
+				propertyMetricName = "[\"0\",\"1\"]";
+			}
+			catch(Exception e){
+				e.printStackTrace();
+				propertyMetricName = "[\"0\",\"1\"]";
+			}
+			return propertyMetricName;
+
+		}
+
+
+	  /**
+		 * **********************************************************************************************
+		 * Here We are Passing two map serviceMetricInfo and ticketInfo for combining into one Json
+		 * @param serviceMetricInfo LinkedHashMap having metric Health information
+		 * @param ticketInfo LinkedHashMap having Ticket Alert information
+		 * @return szMetricTypeValueJson String Combined Json of serviceMetricInfo,ticketInfo
+		 * **********************************************************************************************
+		 */
+
+	  	@SuppressWarnings("rawtypes")
+		public String  generateDefaultServiceResourcetypeJson(LinkedHashMap<String,String> serviceMetricInfo,LinkedHashMap<String,String> ticketInfo){
+				String szMetricTypeValueJson = "";
+
+					String createJsonWithMap = "";
+					String combinedCritical="";
+					String combinedJsonOK="";
+					String combined_BothCritical="";
+			 try {
+					Iterator it = serviceMetricInfo.entrySet().iterator();
+
+					 createJsonWithMap = "";
+					 boolean flag=false;
+					while (it.hasNext()) {
+						Map.Entry pairs = (Map.Entry) it.next();
+						String szTicket = "";
+						/*if(pairs.getKey().toString().contains(",null")){
+							String metricKey=pairs.getKey().toString();
+							String firstPartOfKey=metricKey.substring(0,metricKey.indexOf(","));
+
+							if(ticketInfo.get(firstPartOfKey+",Desktop")!=null)
+							szTicket = ticketInfo.get(firstPartOfKey+",Desktop");
+							else if(ticketInfo.get(firstPartOfKey+",server")!=null)
+								szTicket = ticketInfo.get(firstPartOfKey+",server");
+							else if(ticketInfo.get(firstPartOfKey+",DataBase")!=null)
+								szTicket = ticketInfo.get(firstPartOfKey+",DataBase");
+							else if(ticketInfo.get(firstPartOfKey+",Network")!=null)
+								szTicket = ticketInfo.get(firstPartOfKey+",Network");
+							else if(ticketInfo.get(firstPartOfKey+",JVM")!=null)
+								szTicket = ticketInfo.get(firstPartOfKey+",JVM");
+						}
+						else*/ if (ticketInfo.get(pairs.getKey()) == null) {
+							szTicket ="\"Alert\":\"Default\"" ;
+						}
+						else
+							szTicket = ticketInfo.get(pairs.getKey());
+
+						createJsonWithMap += ",{" + pairs.getValue() +","+ szTicket+ "}";
+
+
+					createJsonWithMap = ",{" + pairs.getValue() + "," + szTicket+ "}";
+					JSONObject mTempJObj = new JSONObject("{" + pairs.getValue() + "}");
+					if(pairs.getValue().toString().contains("CRITICAL") && szTicket.contains("CRITICAL"))
+						if(mTempJObj.get("Health").toString().endsWith("CRITICAL\"]"))
+							combined_BothCritical += createJsonWithMap;
+						else
+							combined_BothCritical += createJsonWithMap;
+					else if(createJsonWithMap.contains("CRITICAL"))
+						if(mTempJObj.get("Health").toString().endsWith("CRITICAL\"]"))
+							combinedCritical += createJsonWithMap;
+						else
+							combinedCritical += createJsonWithMap;
+					else if(!createJsonWithMap.contains("CRITICAL") && !createJsonWithMap.contains("OK") )
+							combinedCritical += createJsonWithMap;
+					else if(createJsonWithMap.contains("OK"))
+						combinedJsonOK += createJsonWithMap;
+					else
+						combinedJsonOK += createJsonWithMap;
+				}
+				if(!combinedCritical.isEmpty()){
+					flag=true;
+					createJsonWithMap=combinedCritical.substring(1)+combinedJsonOK;
+				}
+				else if(!combinedJsonOK.isEmpty()){
+					flag=true;
+					createJsonWithMap=combinedJsonOK.substring(1);
+				}
+
+				if(!combined_BothCritical.isEmpty() && flag)
+					createJsonWithMap=combined_BothCritical.substring(1)+","+createJsonWithMap;
+				else if(!combined_BothCritical.isEmpty())
+					createJsonWithMap=combined_BothCritical.substring(1);
+
+				if (!createJsonWithMap.isEmpty())
+					szMetricTypeValueJson = "[" + createJsonWithMap+ "]";
+				else
+					szMetricTypeValueJson = "[]";
+
+					return szMetricTypeValueJson;
+					/*if (!createJsonWithMap.isEmpty())
+						szMetricTypeValueJson = "[" + createJsonWithMap.substring(1)+ "]";
+					else
+						szMetricTypeValueJson = "[]";*/
+				 }
+				 catch (Exception e) {
+					e.printStackTrace();
+					log.error("DashBoard generateDefaultServiceResourcetypeJson \n"+e.getMessage());
+				}
+				 return szMetricTypeValueJson;
+			 }
+}

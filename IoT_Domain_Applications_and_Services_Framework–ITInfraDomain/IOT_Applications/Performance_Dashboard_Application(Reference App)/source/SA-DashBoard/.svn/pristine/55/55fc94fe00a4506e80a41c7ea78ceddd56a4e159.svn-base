@@ -1,0 +1,86 @@
+[
+   {
+      "text":"Select Graph",
+      "value":"Options",
+      "items":[
+         {
+            "text":"Health",
+            "id":"Health_id",
+            "value":"Health",
+            "items":[
+               {
+                  "text":"Availability",
+                  "value":"Availability",
+                  "filename":"/Network/NetworkAvail.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":["Availability"],
+                  "index":"0"
+               },
+               {
+                  "text":"Network Traffic Metrics",
+                  "value":"Network Traffic Metrics",
+                  "filename":"/Network/NetworkMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":["PKTIn1","PKTOut1"],
+                  "index":"1"
+               },
+                {
+                        "value": "Time Line Availability",
+                        "text": "Time Line Availability",
+                        "filename": "/Network/NetworkLineChartAvailability.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                     "Availability"],
+                        "index": "2"
+                    },
+                {
+                        "value": "Time Line Network Traffic Metrics",
+                        "text": "Time Line Network Traffic Metrics",
+                        "filename": "/Network/NetworkLineChartBatteryByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": ["PKTIn1","PKTOut1"],
+                        "index": "3"
+                    }
+
+            ]
+         },
+         {
+            "text":"Alert",
+            "value":"Alert",
+            "items":[
+               {
+                  "text":"Alerts By Assignee",
+                  "value":"Alerts By Assignee",
+                  "filename":"/Network/NetworkAssignee.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[],
+                  "index":"0"
+               },
+               {
+                  "text":"Alerts By Status",
+                  "value":"Alerts By Status",
+                  "filename":"/Network/NetworkStatus.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[],
+                  "index":"1"
+               },
+               {
+                  "text":"Critical Alerts",
+                  "value":"Critical Alerts",
+                  "filename":"/Network/NetworkAlertCount.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":["OutPktExceded","InPktExceded","NET_HSTDWN"],
+                  "index":"2"
+               }
+            ]
+         }
+      ]
+   }
+]

@@ -1,0 +1,223 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+import java.util.logging.Level;
+
+/**
+ *
+ * @author gopal
+ */
+public class GetTasktypestatus extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(GetTasktypestatus.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+
+        StringBuffer results = new StringBuffer("<tasktype-status>");
+        ResultSet rs = null;
+        Connection con = null;
+        boolean bFLAG = false;
+        boolean checksession = true;
+        HttpSession HSSessions;
+        Object OUser1;
+        String szUsers;
+        Integer ISecurityUsers = 1;
+        String szTaskType = "";
+        String opStatus = null;
+        String opDescription = null;
+        StringBuffer result = new StringBuffer("<tasktype>");
+        String username = null;
+        String sessionid = null;
+        String customerid=null;
+        try
+        {
+            HSSessions = request.getSession(true);
+            OUser1 = HSSessions.getValue("user");
+            //szUsers = OUser1.toString();
+            //ISecurityUsers = (Integer) HSSessions.getValue("ints");
+            //username=request.getParameter("username");
+            //sessionid=request.getParameter("sessionid");
+        } catch (Exception k)
+        {
+            //checksession = false;
+            k.printStackTrace();
+            log.error("error while reading the request parameters", k);
+        }
+        if (checksession)
+        {
+            try
+            {
+                customerid=request.getParameter("customerid");
+                szTaskType = request.getParameter("task_type");
+
+            } catch (Exception e)
+            {
+                opStatus = "108";
+                opDescription = "Invalid Input";
+                LogWriter.writeDebug("EXCEPTION : Getting the request.getParameter() value 'task_type'", 1);
+            }
+            try
+            {
+                con = DatabaseConnection.getRefDatabaseConnection(request);
+                if (con != null)
+                {
+                    if (ISecurityUsers.intValue() == 1)
+                    {
+                        try
+                        {
+                            result.append(szTaskType);
+                            result.append("</tasktype>");
+                            PreparedStatement statement5 = con.prepareStatement("SELECT status from " + DBConstants.STATUS_TABLE + " where task_type = ?");
+                            statement5.setString(1, szTaskType);
+                            ResultSet rs5 = statement5.executeQuery();
+                            while (rs5.next())
+                            {
+                                result.append("<status>");
+                                result.append(rs5.getString("status"));
+                                result.append("</status>");
+
+                            }
+                            rs5.close();
+                            statement5.close();
+                            opStatus = "0";
+                            opDescription = "Operation Success";
+
+
+
+                        } catch (Exception sqle)
+                        {
+
+                            opStatus = "101";
+                            opDescription = "Database Problem";
+
+                            LogWriter.writeDebug("EXCEPTION : Getting the status at Priority", 1);
+                            sqle.printStackTrace();
+                            LogWriter.writeDebug("EXCEPTION : Stack Trace	:", 1);
+                            log.error("error while performing database action", sqle);
+                        }
+                    }
+
+                } else
+                {
+                    opStatus = "101";
+                    opDescription = "Database Connection failed";
+                    log.info("error while connecting database");
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                opStatus = "106";
+                opDescription = "Unable to process the requst";
+                LogWriter.writeDebug("EXCEPTION : While Performing OPeration 'AddPriority'	" + 1);
+
+            } finally
+            {
+                try
+                {
+                    if (con != null)
+                    {
+                        con.close();
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    log.error("error while closing connection", e);
+                }
+            }
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid Session";
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            if (!(result == null))
+            {
+
+                results.append(result);
+
+            }
+            results.append("</tasktype-status>");
+            response.getWriter().write(results.toString());
+
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                results = null;
+                result = null;
+            } catch (Exception e)
+            {
+                log.info("error deleting connection");
+            }
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

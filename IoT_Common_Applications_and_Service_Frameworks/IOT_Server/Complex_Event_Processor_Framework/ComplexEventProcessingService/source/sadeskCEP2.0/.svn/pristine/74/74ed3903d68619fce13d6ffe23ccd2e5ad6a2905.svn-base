@@ -1,0 +1,34 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.FilterNode.v2;
+
+// *** Entry point for MemcachePerfMonitor ***
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.1")
+//insert into MemcacheMonitor
+//    select HostIP as MemcacheClient, MemcacheServer, MemcachePort, ElapsedTime as Latency
+//    from MemcacheReadLatencyEvent(MemcacheServer='10.10.10.10', MemcachePort='1121');
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.2")
+//insert into LoadAvgMonitor
+//    select LoadAverage1 as Load1, LoadAverage5 as Load5, LoadAverage15 as Load15
+//    from LoadAverageEvent(HostIP='10.10.10.10');
+
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.1")
+//insert into MSE
+//	select MemUsed as ServerMemUsed, Mem-max 
+//	from MemoryStatsEvent(HostIP='1.1.1.1');
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.2")
+insert into LAE
+	select Load1 as ServerLoad1, Load5 as ServerLoad5, Load15 as ServerLoad15
+	from LoadAverageEvent(HostIP='1.1.1.1');
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.3")
+insert into MRLE
+	select HostIP as MemcClient, MemcacheServer as MemcServer, MemcachePort as MemcPort, ElapsedTime as MemcLatency
+	from MemcacheReadLatencyEvent(HostIP='1.1.1.1');
+
+//@Name("com.prokosha.sadeskCeP.FilterNode.istream.6")
+insert into SSE
+	select SwapUsage as ServerSwapUsed, MaxSwaps as ServerSwapMax
+	from SwapStatsEvent(HostIP='1.1.1.1');

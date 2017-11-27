@@ -1,0 +1,46 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.FilterNode.v1;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.1")
+select "Correlated Event" as EventType,
+	"Testing PerfData Adapter::MemoryStatsEvent" as EventDesc,
+	"Testing PerfData adapter with simulated events" as EventSymptoms,
+        HostName, TimeStamp, ResourceID, RealUsage, MemUsed, MemMax, Cache, Swap, SwapUsed, SwapMax, Buffer, Utilization
+    from MemoryStatsEvent;
+
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.2")
+select "Correlated Event" as EventType,
+	"Testing PerfData Adapter::LoadAverageEvent" as EventDesc,
+	"Testing PerfData adapter with simulated events" as EventSymptoms,
+        HostName, TimeStamp, ResourceID, Load1, Load5, Load15
+	from LoadAverageEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.3")
+select "Correlated Event" as EventType,
+	"Testing PerfData Adapter::MemoryReadLatencyEvent" as EventDesc,
+	"Testing PerfData adapter with simulated events" as EventSymptoms,
+        HostName, TimeStamp, ResourceID, ElapsedTime, MemcacheServer, MemcachePort
+	from MemcacheReadLatencyEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.4")
+select "Correlated Event" as EventType,
+	"Testing PerfData Adapter::HTTPResponseTimeEvent" as EventDesc,
+	"Testing PerfData adapter with simulated events" as EventSymptoms,
+        HostName, TimeStamp, ResourceID, ResponseTime
+	from HTTPResponseTimeEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.5")
+select "Correlated Event" as EventType,
+	"Testing PerfData Adapter::ConcurrentProcessesEvent" as EventDesc,
+	"Testing PerfData adapter with simulated events" as EventSymptoms,
+        HostName, TimeStamp, ResourceID, ConcurrentProcesses
+	from ConcurrentProcessesEvent;
+
+@Name("com.prokosha.sadeskCeP.FilterNode.dispatch.6")
+select "Correlated Event" as EventType,
+	"Testing PerfData Adapter::SwapStatsEvent" as EventDesc,
+	"Testing PerfData adapter with simulated events" as EventSymptoms,
+        HostName, TimeStamp, ResourceID, SwapUsage, MaxSwaps
+	from SwapStatsEvent;
+

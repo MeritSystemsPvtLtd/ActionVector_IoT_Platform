@@ -1,0 +1,240 @@
+package com.meritsystems.monitor;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.meritsystems.core.MetricsEnum;
+
+/**
+ * @author shashi
+ *
+ */
+public class SubMetrics implements Serializable, Cloneable {
+
+    public static final String STRING = "string";
+    public static final String INT32 = "int32";
+    public static final String DOUBLE = "double";
+    public static HashMap<String, SubMetrics> classloadingsubmetricsmap = null;
+    public static HashMap<String, SubMetrics> compilesubmetricsmap = null;
+    public static HashMap<String, SubMetrics> garbagecollectionsubmetricsmap = null;
+    public static HashMap<String, SubMetrics> memorymanagersubmetricsmap = null;
+    public static HashMap<String, SubMetrics> memoryPoolsubmetricsmap = null;
+    public static HashMap<String, SubMetrics> memorysubmetricsmap = null;
+    public static HashMap<String, SubMetrics> operatingsystemsubmetricsmap = null;
+    public static HashMap<String, SubMetrics> runtimesubmetricsmap = null;
+    public static HashMap<String, SubMetrics> threadsubmetricsmap = null;
+    public static HashMap<String, SubMetrics> appsubmetricsmap = null;
+    public static HashMap<MetricsEnum, Map<String, SubMetrics>> metricssubmetricsmapper = null;
+
+    static {
+        classloadingsubmetricsmap = new HashMap<String, SubMetrics>();
+
+        classloadingsubmetricsmap.put("LoadedClassCount", new SubMetrics("LoadedClassCount", INT32, "Number of classes that are currently loaded in the Java virtual machine", "", "loadedClassCount"));
+        classloadingsubmetricsmap.put("TotalLoadedClassCount", new SubMetrics("TotalLoadedClassCount", INT32, "total Number of classes that have been loaded since the Java virtual machine has started execution", "", "totalLoadedClassCount"));
+        classloadingsubmetricsmap.put("UnloadedClassCount", new SubMetrics("UnloadedClassCount", INT32, "Total number of classes unloaded since the Java virtual machine has started execution", "", "unloadedClassCount"));
+
+
+        compilesubmetricsmap = new HashMap<String, SubMetrics>();
+        compilesubmetricsmap.put("Name", new SubMetrics("Name", STRING, "Name of the Just-in-time (JIT) compiler", "", "name"));
+        compilesubmetricsmap.put("TotalCompilationTime", new SubMetrics("TotalCompilationTime", DOUBLE, "Approximate accumlated elapsed time (in milliseconds) spent in compilation", "milliseconds", "totalCompilationTime"));
+
+        garbagecollectionsubmetricsmap = new HashMap<String, SubMetrics>();
+        garbagecollectionsubmetricsmap.put("Name", new SubMetrics("Name", STRING, "Name representing this memory manager", "", "name"));
+        garbagecollectionsubmetricsmap.put("CollectionCount", new SubMetrics("CollectionCount", INT32, "Total number of collections that have occurred. Returns -1 if the collection count is undefined for this collector", "", "collectionCount"));
+        garbagecollectionsubmetricsmap.put("CollectionTime", new SubMetrics("CollectionCount", INT32, "Approximate accumulated collection elapsed time in milliseconds. Eeturns -1 if the collection elapsed time is undefined for this collector", "milliseconds", "collectionTime"));
+        garbagecollectionsubmetricsmap.put("MemoryPoolNames", new SubMetrics("MemoryPoolNames", STRING, "Name of memory pools that this memory manager manages", "", "memoryPoolNames"));
+
+        memorymanagersubmetricsmap = new HashMap<String, SubMetrics>();
+        memorymanagersubmetricsmap.put("Name", new SubMetrics("Name", STRING, "Name representing this memory manager", "", "name"));
+        memorymanagersubmetricsmap.put("MemoryPoolNames", new SubMetrics("MemoryPoolNames", STRING, "Name of memory pools that this memory manager manages", "", "memoryPoolNames"));
+
+        memorysubmetricsmap = new HashMap<String, SubMetrics>();
+        memorysubmetricsmap.put("HeapMemoryUsage.Used", new SubMetrics("Used HeapMemoryUsage", INT32, "Amount of memory in bytes that the Java virtual machine initially requests from the operating system for memory management", "bytes", "heapMemoryUsage.used"));
+        memorysubmetricsmap.put("HeapMemoryUsage.Committed", new SubMetrics("Commited HeapMemoryUsage", INT32, "Maximum amount of memory in bytes that can be used for memory management", "bytes", "heapMemoryUsage.committed"));
+        memorysubmetricsmap.put("HeapMemoryUsage.Init", new SubMetrics("Init HeapMemoryUsage", INT32, "Amount of used memory in bytes", "bytes", "heapMemoryUsage.init"));
+        memorysubmetricsmap.put("HeapMemoryUsage.Max", new SubMetrics("Max HeapMemoryUsage", INT32, "Amount of memory in bytes that is committed for the Java virtual machine to use. This amount of memory is guaranteed for the Java virtual machine to use", "bytes", "heapMemoryUsage.max"));
+        memorysubmetricsmap.put("NonHeapMemoryUsage.Used", new SubMetrics("Used NonHeapMemoryUsage", INT32, "Amount of memory in bytes that the Java virtual machine initially requests from the operating system for memory management", "bytes", "nonHeapMemoryUsage.used"));
+        memorysubmetricsmap.put("NonHeapMemoryUsage.Committed", new SubMetrics("Committed NonHeapMemoryUsage", INT32, "Maximum amount of memory in bytes that can be used for memory management", "bytes", "nonHeapMemoryUsage.committed"));
+        memorysubmetricsmap.put("NonHeapMemoryUsage.Init", new SubMetrics("Init NonHeapMemoryUsage", INT32, "Amount of used memory in bytes", "bytes", "nonHeapMemoryUsage.init"));
+        memorysubmetricsmap.put("NonHeapMemoryUsage.Max", new SubMetrics("Max NonHeapMemoryUsage", INT32, "Amount of memory in bytes that is committed for the Java virtual machine to use. This amount of memory is guaranteed for the Java virtual machine to use", "bytes", "nonHeapMemoryUsage.max"));
+
+
+        memoryPoolsubmetricsmap = new HashMap<String, SubMetrics>();
+        memoryPoolsubmetricsmap.put("CollectionUsageThreshold", new SubMetrics("CollectionUsageThreshold", INT32, "Collection usage threshold value of this memory pool in bytes", "bytes", "collectionUsageThreshold"));
+        memoryPoolsubmetricsmap.put("CollectionUsageThresholdCount", new SubMetrics("CollectionUsageThresholdCount", INT32, "Number of times that the Java virtual machine has detected that the memory usage has reached or exceeded the collection usage threshold", "", "collectionUsageThresholdCount"));
+        memoryPoolsubmetricsmap.put("UsageThreshold", new SubMetrics("UsageThreshold", INT32, "Threshold of this memory pool to the given threshold value if this memory pool supports the usage threshold", "", "usageThreshold"));
+        memoryPoolsubmetricsmap.put("UsageThresholdCount", new SubMetrics("UsageThresholdCount", INT32, "Number of times that the memory usage has crossed the usage threshold", "", "usageThresholdCount"));
+        memoryPoolsubmetricsmap.put("CollectionUsage.Init", new SubMetrics("Init CollectionUsage", INT32, "Amount of memory in bytes that the Java virtual machine initially requests from the operating system for memory management", "bytes", "collectionUsage.init"));
+        memoryPoolsubmetricsmap.put("CollectionUsage.Max", new SubMetrics("Max CollectionUsage", INT32, "Maximum amount of memory in bytes that can be used for memory management", "bytes", "collectionUsage.max"));
+        memoryPoolsubmetricsmap.put("CollectionUsage.Used", new SubMetrics("Used CollectionUsage", INT32, "Amount of used memory in bytes", "bytes", "collectionUsage.used"));
+        memoryPoolsubmetricsmap.put("CollectionUsage.Committed", new SubMetrics("Committed CollectionUsage.Committed", INT32, "Amount of memory in bytes that is committed for the Java virtual machine to use. This amount of memory is guaranteed for the Java virtual machine to use", "bytes", "collectionUsage.committed"));
+        memoryPoolsubmetricsmap.put("MemoryManagerNames", new SubMetrics("MemoryManagerNames", INT32, "", "", "memoryManagerNames"));
+        memoryPoolsubmetricsmap.put("PeakUsage.Init", new SubMetrics("Init PeakUsage", INT32, "Amount of memory in bytes that the Java virtual machine initially requests from the operating system for memory management", "bytes", "peakUsage.init"));
+        memoryPoolsubmetricsmap.put("PeakUsage.Max", new SubMetrics("Max PeakUsage", INT32, "Maximum amount of memory in bytes that can be used for memory management", "bytes", "peakUsage.max"));
+        memoryPoolsubmetricsmap.put("PeakUsage.Used", new SubMetrics("Used PeakUsage", INT32, "Amount of used memory in bytes", "bytes", "peakUsage.used"));
+        memoryPoolsubmetricsmap.put("PeakUsage.Committed", new SubMetrics("Commited PeakUsage", INT32, "", "", "peakUsage.committed"));
+        memoryPoolsubmetricsmap.put("Usage.Init", new SubMetrics("Init Usage", INT32, "Amount of memory in bytes that the Java virtual machine initially requests from the operating system for memory management", "bytes", "usage.init"));
+        memoryPoolsubmetricsmap.put("Usage.Max", new SubMetrics("Max Usage", INT32, "Maximum amount of memory in bytes that can be used for memory management", "bytes", "usage.max"));
+        memoryPoolsubmetricsmap.put("Usage.Used", new SubMetrics("Used Usage", INT32, "Amount of used memory in bytes", "bytes", "usage.used"));
+        memoryPoolsubmetricsmap.put("Usage.Committed", new SubMetrics("Committed Usage", INT32, "Amount of memory in bytes that is committed for the Java virtual machine to use. This amount of memory is guaranteed for the Java virtual machine to use", "bytes", "usage.committed"));
+        memoryPoolsubmetricsmap.put("Name", new SubMetrics("Name", STRING, "name representing this memory pool", "bytes", "name"));
+
+        operatingsystemsubmetricsmap = new HashMap<String, SubMetrics>();
+        operatingsystemsubmetricsmap.put("Name", new SubMetrics("Name", STRING, "Operating system name", "", "name"));
+        operatingsystemsubmetricsmap.put("AvailableProcessors", new SubMetrics("AvailableProcessors", INT32, "Number of processors available to the Java virtual machine", "", "availableProcessors"));
+        operatingsystemsubmetricsmap.put("CommittedVirtualMemorySize", new SubMetrics("CommittedVirtualMemorySize", INT32, "", "", "committedVirtualMemorySize"));
+        operatingsystemsubmetricsmap.put("FreePhysicalMemorySize", new SubMetrics("FreePhysicalMemorySize", INT32, "", "", "freePhysicalMemorySize"));
+        operatingsystemsubmetricsmap.put("FreeSwapSpaceSize", new SubMetrics("FreeSwapSpaceSize", INT32, "", "", "freeSwapSpaceSize"));
+        operatingsystemsubmetricsmap.put("ProcessCpuTime", new SubMetrics("ProcessCpuTime", INT32, "", "", "processCpuTime"));
+        operatingsystemsubmetricsmap.put("SystemLoadAverage", new SubMetrics("SystemLoadAverage", DOUBLE, "System load average for the last minute", "", "systemLoadAverage"));
+        operatingsystemsubmetricsmap.put("TotalPhysicalMemorySize", new SubMetrics("TotalPhysicalMemorySize", INT32, "", "", "totalPhysicalMemorySize"));
+        operatingsystemsubmetricsmap.put("TotalSwapSpaceSize", new SubMetrics("TotalSwapSpaceSize", INT32, "", "", "totalSwapSpaceSize"));
+        operatingsystemsubmetricsmap.put("Version", new SubMetrics("Version", STRING, "Operating system version", "", "version"));
+
+        runtimesubmetricsmap = new HashMap<String, SubMetrics>();
+        runtimesubmetricsmap.put("ClassPath", new SubMetrics("ClassPath", STRING, "Java class path that is used by the system class loader to search for class files", "", "classPath"));
+        runtimesubmetricsmap.put("BootClassPath", new SubMetrics("BootClassPath", STRING, "Boot class path that is used by the bootstrap class loader to search for class files", "", "bootClassPath"));
+        runtimesubmetricsmap.put("LibraryPath", new SubMetrics("LibraryPath", STRING, "Java library path", "", "libraryPath"));
+        runtimesubmetricsmap.put("ManagementSpecVersion", new SubMetrics("ManagementSpecVersion", STRING, "Version of the specification for the management interface implemented by the running Java virtual machine", "", "managementSpecVersion"));
+        runtimesubmetricsmap.put("Name", new SubMetrics("Name", STRING, "Name representing the running Java virtual machine", "", "name"));
+        runtimesubmetricsmap.put("SpecName", new SubMetrics("SpecName", STRING, "Java virtual machine specification name", "", "specName"));
+        runtimesubmetricsmap.put("SpecVendor", new SubMetrics("SpecVendor", STRING, "Java virtual machine specification vendor", "", "specVendor"));
+        runtimesubmetricsmap.put("SpecVersion", new SubMetrics("SpecVersion", STRING, "Java virtual machine specification version", "", "specVersion"));
+        runtimesubmetricsmap.put("StartTime", new SubMetrics("StartTime", DOUBLE, "Start time of the Java virtual machine in milliseconds", "milliseconds", "startTime"));
+        runtimesubmetricsmap.put("Uptime", new SubMetrics("Uptime", INT32, "Uptime of the Java virtual machine in milliseconds", "milliseconds", "uptime"));
+        runtimesubmetricsmap.put("VmName", new SubMetrics("VmName", STRING, "Java virtual machine implementation name This method is equivalent to System.getProperty(java.vm.name)", "", "vmName"));
+        runtimesubmetricsmap.put("VmVendor", new SubMetrics("VmVendor", STRING, "Java virtual machine implementation vendor", "", "vmVendor"));
+        runtimesubmetricsmap.put("VmVersion", new SubMetrics("VmVersion", STRING, "Java virtual machine implementation version", "", "vmVersion"));
+        runtimesubmetricsmap.put("InputArguments", new SubMetrics("InputArguments", STRING, "Input arguments passed to the Java virtual machine which does not include the arguments to the main method", "", "inputArguments"));
+        runtimesubmetricsmap.put("SystemProperties", new SubMetrics("SystemProperties", STRING, "Map of names and values of all system properties", "", "systemProperties"));
+
+        threadsubmetricsmap = new HashMap<String, SubMetrics>();
+        threadsubmetricsmap.put("CurrentThreadUserTime", new SubMetrics("CurrentThreadUserTime", INT32, "CPU time that the current thread has executed in user mode in nanoseconds", "nanoseconds", "currentThreadUserTime"));
+        threadsubmetricsmap.put("DaemonThreadCount", new SubMetrics("DaemonThreadCount", INT32, "Current number of live daemon threads", "", "daemonThreadCount"));
+        threadsubmetricsmap.put("PeakThreadCount", new SubMetrics("PeakThreadCount", INT32, "Peak live thread count since the Java virtual machine started or peak was reset", "", "peakThreadCount"));
+        threadsubmetricsmap.put("ThreadCount", new SubMetrics("ThreadCount", INT32, "Current number of live threads including both daemon and non-daemon threads", "", "threadCount"));
+        threadsubmetricsmap.put("TotalStartedThreadCount", new SubMetrics("TotalStartedThreadCount", INT32, "Total number of threads created and also started since the Java virtual machine started", "", "totalStartedThreadCount"));
+        threadsubmetricsmap.put("AllThreadIds", new SubMetrics("AllThreadIds", STRING, "Returns all live thread IDs", "", "allThreadIds"));
+
+
+        appsubmetricsmap = new HashMap<String, SubMetrics>();
+        appsubmetricsmap.put("alive", new SubMetrics("Alive", STRING, "JVM Alive", "", "alive"));
+        appsubmetricsmap.put("clustername", new SubMetrics("Clustername", STRING, "Name of Cluster", "", "clustername"));
+        appsubmetricsmap.put("HostName", new SubMetrics("HostName", STRING, "Name of Host", "", "HostName"));
+        appsubmetricsmap.put("time", new SubMetrics("Time", STRING, "Time of connection", "", "time"));
+        appsubmetricsmap.put("jmxurl", new SubMetrics("JMX URL", STRING, "URL of JMX", "", "jmxurl"));
+        appsubmetricsmap.put("hostipaddress", new SubMetrics("IP Address", STRING, "Host IP Address", "", "hostipaddress"));
+
+
+        metricssubmetricsmapper = new HashMap<MetricsEnum, Map<String, SubMetrics>>();
+
+        metricssubmetricsmapper.put(MetricsEnum.CLASSLOADING_MXBEAN, classloadingsubmetricsmap);
+        metricssubmetricsmapper.put(MetricsEnum.COMPILATION_MXBEAN, compilesubmetricsmap);
+        metricssubmetricsmapper.put(MetricsEnum.MEMORY_MXBEAN, memorysubmetricsmap);
+        metricssubmetricsmapper.put(MetricsEnum.MEMORYMANAGER_MXBEAN, memorymanagersubmetricsmap);
+        metricssubmetricsmapper.put(MetricsEnum.MEMORYPOOL_MXBEAN, memoryPoolsubmetricsmap);
+        metricssubmetricsmapper.put(MetricsEnum.GARBAGECOLLECTOR_MXBEAN, garbagecollectionsubmetricsmap);
+        metricssubmetricsmapper.put(MetricsEnum.OPERATINGSYSTEM_MXBEAN, operatingsystemsubmetricsmap);
+        metricssubmetricsmapper.put(MetricsEnum.RUNTIME_MXBEAN, runtimesubmetricsmap);
+        metricssubmetricsmapper.put(MetricsEnum.THREAD_MXBEAN, threadsubmetricsmap);
+        metricssubmetricsmapper.put(MetricsEnum.APP_MXBEAN, appsubmetricsmap);
+    }
+    /**
+     *
+     */
+    private static final long serialVersionUID = -6293856347194712922L;
+    private String title;
+    private String type;
+    private String description;
+    private String unit;
+    private Object value;
+    private String beanproperty;
+
+    public SubMetrics() {
+    }
+
+    /**
+     * @param title
+     */
+    public SubMetrics(String title, String type, String description, String unit, String beanproperty) {
+        super();
+        this.title = title;
+        this.type = type;
+        this.description = description;
+        this.unit = unit;
+        this.beanproperty = beanproperty;
+    }
+
+    /**
+     * @return
+     */
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * @return
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * @return
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * @return
+     */
+    public String getUnit() {
+        return unit;
+    }
+
+    /**
+     * @return
+     */
+    public Object getValue() {
+        return value;
+    }
+
+    /**
+     * @param value
+     */
+    public void setValue(Object value) {
+        this.value = value;
+    }
+    /* (non-Javadoc)
+     * @see java.lang.Object#clone()
+     */
+
+    public SubMetrics clone() {
+        return new SubMetrics(this.title, this.type, this.description, this.unit, this.beanproperty);
+    }
+
+    /**
+     * @return
+     */
+    public String getBeanproperty() {
+        return beanproperty;
+    }
+
+    /**
+     * Constructs a
+     * <code>String</code> with all attributes in name = value format.
+     *
+     * @return a <code>String</code> representation of this object.
+     */
+    public String toString() {
+        final String TAB = "    ";
+
+        String retValue = "";
+
+        retValue = "SubMetrics ( " + super.toString() + TAB + "title = " + this.title + TAB + "type = " + this.type + TAB + "description = " + this.description + TAB + "unit = " + this.unit + TAB + "value = " + this.value + TAB + "beanproperty = " + this.beanproperty + TAB + " )";
+
+        return retValue;
+    }
+}

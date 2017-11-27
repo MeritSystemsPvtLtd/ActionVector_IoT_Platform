@@ -1,0 +1,29 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.HttpMonitorStream;
+
+// Declare other module(s) that this module depends on
+//uses org.myorganization.common;
+
+// Import any Java/.NET classes in an application package
+//import org.myorganization.events.*;
+
+// Declare an event type based on a Java class in the package that was imported as above
+//create schema MySwitchEvent as MySwitchEventPOJO;
+
+//Statements
+insert into HitRateStream
+    select host, (Type20X + Type30X + Type403 + Type404 + Type40X + Type500 + Type503 + Type50X) as totalHits,
+    (Type403 + Type404 + Type40X) as type4XXErrors,
+    (Type500 + Type503 + Type50X) as type5XXErrors
+    from HttpMonitorStream;
+
+insert into ReportRateStream
+    select host, sum(totalHits) as totalHits,
+        sum(type4XXErrors) as Type4XXErrorSum, sum(type5XXErrors) as Type5XXErrorSum
+    from HitRateStream.win:length_batch(9) group by host;
+
+@Name("com.prokosha.sadeskCeP.HttpMonitorStream.dispatch.1")
+select "Http error rate report" as Msg, host, totalHits,
+        ((Type4XXErrorSum/totalHits)*100) as Type4XXErrorRate,
+        ((Type5XXErrorSum/totalHits)*100) as Type5XXErrorRate
+    from ReportRateStream;

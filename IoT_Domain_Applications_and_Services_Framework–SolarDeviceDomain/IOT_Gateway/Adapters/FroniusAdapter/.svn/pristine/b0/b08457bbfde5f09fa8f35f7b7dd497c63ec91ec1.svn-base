@@ -1,0 +1,40 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.froniusadapter;
+
+import com.prokosha.froniusadapter.configuration.AdapterProperties;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author rekhas
+ */
+public class FroniusError {
+
+    private static Logger logger = Logger.getLogger(FroniusError.class.getName());
+
+    public static boolean sendErrorEvent(String error, String cause) {
+        String szErrorEvt = null;
+        try {
+            String installation = AdapterProperties.getInstallationID();
+            szErrorEvt = "stream=FroniusErrorEvent";
+            szErrorEvt += ",CustomerID=" + AdapterProperties.getCustomerID();
+            szErrorEvt += ",HostName=FroniusAdapter-"+installation;
+            szErrorEvt += ",HostAddress=FroniusAdapter-"+installation;
+            szErrorEvt += ",resourceId=FroniusAdapter-"+installation;
+            szErrorEvt += ",Error=" + error;
+            szErrorEvt += ",Cause=" + cause;
+            szErrorEvt += ",resourceType=FroniusAdapter";
+            szErrorEvt += ",resourceSubType=FroniusAdapter";
+            szErrorEvt += ",cCustomer=" + AdapterProperties.getcCustomerID();
+            
+            FroniusAdapter.FrontControllerSSLClient.sendMessage(szErrorEvt);
+        } catch (Exception e) {
+            logger.error("Error while sending error event to CEP==>>" + e.toString());
+            e.printStackTrace();
+        }
+        return false;
+    }
+}

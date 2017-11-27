@@ -1,0 +1,112 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package AV_Action;
+import Model.*;
+import controller.LogWriter;
+import org.apache.axis2.AxisFault;
+import userlogout.*;
+import org.apache.log4j.Logger;
+import java.util.logging.Level;
+/**
+ *
+ * @author gopal
+ */
+public class AV_LogoutAction extends AV_Model{
+ static Logger log = Logger.getLogger(AV_LogoutAction.class);
+ public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+     response.setContentType("text/xml;charset=UTF-8");
+       
+        boolean checkparam = false;
+        String szopration = "logoutcheck";
+        String szrespStr=null;
+        String customerid=null;
+        String output = "";
+        UserLogoutStub logoutStub =null;
+
+        try
+        {
+            log.info("------------I m in START of calling Logout service from Client----------------");
+
+            String szUserName = (String) request.getParameter("szusername");
+            String szSession = (String) request.getParameter("szsessionid");
+            customerid=request.getParameter("customerid");
+            checkparam = true;
+
+            if (checkparam)
+            {
+
+                System.out.println("   FOR USER      " + szUserName + "PROCHARA SESSION ID IS======>" + szSession);
+                int szPortNum = request.getServerPort();
+                String szServerName = request.getServerName();
+                String szContextPath = request.getContextPath();
+                String sztarget=TargetEndpoint.getTargetEndpoint(request);
+                String targetEndpoint = sztarget+ "/proChara/services/UserLogout";
+                logoutStub = new UserLogoutStub(targetEndpoint);
+                LogoutUserRequest inputLogout = new LogoutUserRequest();
+                inputLogout.setSzUserName(szUserName);
+                inputLogout.setSzSession(szSession);
+                LogoutUserResponse respLogout = logoutStub.logoutUser(inputLogout);
+                output = respLogout.getSzLogout();
+                log.info(szUserName + "$$$$$$$$$$$$$$$$$$$$$" + szSession);
+                System.out.println("LOGGED OUT  " + output + "     " + szSession);
+                log.info(szUserName + "$$$$$$$$$$$$$$$$$$$$$" + szSession);
+
+            } else
+            {
+                
+                AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+            }
+            if (output!=null)
+            {
+                
+                AV_Constants.opStatus=AV_Constants.SUCCESS;
+            } else
+            {
+               
+                AV_Constants.opStatus=AV_Constants.INVALID_RESPONSE;
+            }
+
+
+        } catch (Exception e)
+        {
+            
+            AV_Constants.opStatus=AV_Constants.FAILURE;
+           java.util.logging.Logger.getLogger(AV_LogoutAction.class.getName()).log(Level.SEVERE, null, e);
+            log.debug("catching Exception");
+        } finally
+        {
+            log.info("am logging out");
+            System.out.println("AM LOGGING OUT SUCCESSFULLY");
+            if(logoutStub!=null){
+                try {
+                    logoutStub.cleanup();
+                } catch (AxisFault ex) {
+                    java.util.logging.Logger.getLogger(AV_LogoutAction.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        try
+        {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+        }finally{
+            try{
+                szopration=null;
+                szopration=null;
+                szrespStr=null;
+            }catch(Exception e){
+                java.util.logging.Logger.getLogger(AV_LogoutAction.class.getName()).log(Level.SEVERE, null, e);
+
+            }
+
+        }
+
+ }
+}

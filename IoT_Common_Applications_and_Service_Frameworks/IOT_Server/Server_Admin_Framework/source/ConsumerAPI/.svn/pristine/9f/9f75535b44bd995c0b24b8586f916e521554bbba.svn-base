@@ -1,0 +1,185 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package Model;
+
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import java.sql.*;
+
+/**
+ *
+ * @author raghu
+ */
+public class UserSpecifications {
+
+     
+     
+
+    public ArrayList GetUserTasktype(String username,Connection con) {
+        
+        Statement stat = null;
+        ResultSet rs=null;
+        ArrayList UserTasktypes=null;
+         boolean setuserauthentication=false;
+         
+          
+            String userid=username;
+            System.out.println("USER ID IS=====>"+userid);
+            try{    
+            stat = con.createStatement();
+            try{
+        
+             rs=stat.executeQuery("select security_level from gaoperator where lower(user_id)=lower('"+userid+"')");
+               while(rs.next()){
+                   String security_level=rs.getString("security_level");
+                   if(security_level.equalsIgnoreCase("Admin")){
+                       setuserauthentication=true;
+                   }
+               }
+}catch(Exception ex){
+    ex.printStackTrace();
+    System.out.println("ERROR OCCURING WHILE CHECKING  ADMIN LEVEL USERS");
+}
+
+
+            try{
+            UserTasktypes=new ArrayList();
+                 if(setuserauthentication==false){
+                     //authentication="no";
+                 System.out.println("Getting tasktypes for commonlevel users and reports authentication is====>NO" );
+                 rs = stat.executeQuery("select distinct (tasktype) from gatasktypegroup where groupname in (select groupname from gaagentgroup where  lower(userid)=lower('"+userid+"'))");
+                System.out.println("select distinct (tasktype) from gatasktypegroup where groupname in (select groupname from gaagentgroup where  lower(userid)=lower('"+userid+"'))");
+                
+                    while (rs.next())
+                {
+
+                    String task_type = rs.getString("tasktype");
+                    UserTasktypes.add(task_type);
+
+
+                }
+
+
+
+
+                 } else if(setuserauthentication==true){
+                     //authentication="yes";
+                     System.out.println("Getting tasktypes for adminlevel users and reports authentication is====> yes" );
+                     rs = stat.executeQuery("select task_type  from gatasktype");
+
+                     System.out.println("select distinct(task_type)  from gatasktype");
+                      while (rs.next())
+                {
+
+                    String task_type = rs.getString("task_type");
+                    UserTasktypes.add(task_type);
+
+
+                }
+
+
+                 }
+
+            }catch(Exception ex){
+                ex.printStackTrace();
+            }
+
+            }catch(Exception ex){
+                ex.printStackTrace();
+                System.out.println("ERROR WHILE CREATING STATEMENT");
+            }finally{
+            try {
+                
+                stat.close();
+                if(rs!=null){
+                    rs.close();
+                }
+               
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.getLogger(UserSpecifications.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            }
+
+
+        return UserTasktypes;
+    }
+
+
+
+   
+public String getDuration(String username,Connection con){
+         
+        Statement stat = null;
+        ResultSet rs=null;
+        String duration=null;
+        
+
+            String userid1=username;
+            try{
+                stat=con.createStatement();
+
+
+     try{
+               System.out.println("select duration from gausertaskfilter where lower(user_id)=lower('"+userid1+"')");
+
+
+              rs=stat.executeQuery("select duration from gausertaskfilter where lower(user_id)=lower('"+userid1+"')");
+
+                duration=null;
+              while (rs.next())
+                {
+
+
+                     duration=rs.getString("duration");
+
+
+
+                }
+
+
+
+         
+
+
+
+
+
+}catch(Exception ex){
+    ex.printStackTrace();
+    duration="5";
+}
+            }catch(Exception ex){
+                ex.printStackTrace();
+                System.out.println("Cannot create statement while getting user duration");
+            }finally{
+                try {
+                    
+               // con.close();
+                stat.close();
+                if(rs!=null){
+                    rs.close();
+                }
+               
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.getLogger(UserSpecifications.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            }
+
+    return duration;
+}
+
+
+
+
+
+
+
+
+}

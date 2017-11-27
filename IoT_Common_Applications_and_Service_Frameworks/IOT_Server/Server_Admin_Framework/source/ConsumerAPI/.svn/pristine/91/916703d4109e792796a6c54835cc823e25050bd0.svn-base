@@ -1,0 +1,84 @@
+
+
+/**
+ * TaskList.java
+ *
+ * This file was auto-generated from WSDL
+ * by the Apache Axis2 version: 1.6.1  Built on : Aug 31, 2011 (12:22:40 CEST)
+ */
+
+    package tasklist;
+
+    /*
+     *  TaskList java interface
+     */
+
+    public interface TaskList {
+          
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param getTaskidsRequest1
+                
+         */
+
+         
+                     public tasklist.GetActionsResponse getActions(
+
+                        tasklist.GetTaskidsRequest getTaskidsRequest1)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param getTaskidsRequest1
+            
+          */
+        public void startgetActions(
+
+            tasklist.GetTaskidsRequest getTaskidsRequest1,
+
+            final tasklist.TaskListCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param getTaskidsRequest3
+                
+         */
+
+         
+                     public tasklist.GetTaskidsResponse getTaskids(
+
+                        tasklist.GetTaskidsRequest getTaskidsRequest3)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param getTaskidsRequest3
+            
+          */
+        public void startgetTaskids(
+
+            tasklist.GetTaskidsRequest getTaskidsRequest3,
+
+            final tasklist.TaskListCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        
+       //
+       }
+    

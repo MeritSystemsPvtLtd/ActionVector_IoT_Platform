@@ -1,0 +1,453 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package controller;
+
+import java.io.*;
+import java.lang.*;
+import java.util.*;
+
+/**
+ *
+ * @author gopal
+ * Created on Apr 25, 2012, 1:13:18 PM
+ */
+public class KeyDecode {
+
+    protected String v1key1;
+	protected String v1key2;
+
+	protected String sKey1;
+	protected String sKey2;
+
+	protected String  sSmtpaddress;
+	protected int     iSmtpport;
+	protected String  sSmtpuser;
+	protected String  sSmtppassword;
+	protected String  sSmtpsender;
+	protected boolean bWebmodule;
+	protected boolean bEmailmodule;
+	protected boolean bChatmodule;
+	protected boolean bFaxmodule;
+	protected boolean bSmsmodule;
+	protected boolean bDiscussionmodule;
+	protected boolean bKnowledgebasemodule;
+	protected boolean bReportmodule;
+	protected boolean bCustomercontactmodule;
+	protected boolean bPurchasehistorymodule;
+	protected boolean bVoicemodule;
+	protected String  sDistString;
+	protected String  sSerialNumber;
+	protected int     iTasktypelic;
+	protected int     iAgentlic;
+	protected int     iGrouplic;
+	StringBuffer KeyString = new StringBuffer();
+
+	/*public void GA_DecodeKeys(String key1,String key2)
+	{
+		GA_KEY_INFORMATION KEY_INFORMATION = new GA_KEY_INFORMATION();
+
+		StringBuffer szKey1Buffer = new StringBuffer(key1);
+		StringBuffer szKey2Buffer = new StringBuffer(key2);
+
+		KEY_INFORMATION.szKey1 = szKey1Buffer;
+		KEY_INFORMATION.szKey2 = szKey2Buffer;
+
+		GA_CreateKeys ck2 = new GA_CreateKeys();
+
+		int i = ck2.XXXValidateKeys(KEY_INFORMATION,1);
+
+		KeyString = KEY_INFORMATION.szTotalKey;
+		KeyString.setLength(32);
+
+		//System.out.println(" KeyString is...."+KeyString);
+
+		setKey1(key1);
+		setKey2(key2);
+
+		GetKeyValues();
+	}
+
+	public static void main(String args[])
+	{
+		GA_KeyDecode check = new GA_KeyDecode();
+//		check.GA_DecodeKeys("41149997pZ997619","9241992979999999");
+		check.GA_DecodeKeys("0534994ppF997613","3633333333333333");
+	}
+
+	public void SendMail(String szDomainname,String szName,String szDesignation,String szOrganization,String szAddress,String szCity,String szState,String szCountry, String szZip,String szPhone, String szFax,String szEmail)
+	{
+		String sMailbody = "Dear Support, \n \t The GIFTask Registration information for Domain "+szDomainname+" is as follows : \n";
+		sMailbody = sMailbody + szName +"\n" + szDesignation + "\n" + szOrganization + "\n" + szAddress + "\n" + szCity + "\n" + szState + "\n" + szCountry + "\n" + szZip + "\n" + szPhone + "\n" + szFax + "\n" + szEmail;
+		GA_mailmodule Mailsend = new GA_mailmodule();
+		Mailsend.GA_Regmail(getSmtpsender(), "support@meritsystems.com", "GIFTask Registration",sMailbody,getSmtpaddress(),getSmtpport(),getSmtpuser(),getSmtppassword(),getKey1(),getKey2());
+	}
+
+	public void SendSyncMail(String szDomainname,int iTasktype,int iAgent,int iGroups)
+	{
+		GA_mailmodule Mailsend = new GA_mailmodule();
+		Mailsend.GA_Syncmail(getSmtpsender(),"support@meritsystems.com","GIFTask Synchronization","Synchronization Mail",getSmtpaddress(),getSmtpport(),getSmtpuser(),getSmtppassword(),getKey1(),getKey2(),iTasktype,iAgent,iGroups);
+	}
+
+	public void GetKeyValues()
+	{
+		String module_string = KeyString.substring(0,5);
+		int int_hex = Integer.parseInt(module_string,16);
+		//System.out.println(" module is ..."+int_hex);
+
+		int iwebmodule = int_hex%2;
+		//System.out.println(" web module..."+iwebmodule);
+		if(iwebmodule == 1)
+			setWebmodule(true);
+		else
+			setWebmodule(false);
+
+		int itempemailmodule = int_hex >> 1;
+		int iemailmodule = itempemailmodule%2;
+		//System.out.println(" email module..."+iemailmodule);
+		if(iemailmodule == 1)
+			setEmailmodule(true);
+		else
+			setEmailmodule(false);
+
+		int itempchatmodule = int_hex >> 2;
+		int ichatmodule = itempchatmodule%2;
+		//System.out.println(" chat module..."+ichatmodule);
+		if(ichatmodule == 1)
+			setChatmodule(true);
+		else
+			setChatmodule(false);
+
+		int itempdiscussionmodule = int_hex >> 3;
+		int idiscussionmodule = itempdiscussionmodule%2;
+		//System.out.println(" disussion module..."+idiscussionmodule);
+		if(idiscussionmodule == 1)
+			setDiscussionmodule(true);
+		else
+			setDiscussionmodule(false);
+
+
+		int itempknowledgemodule = int_hex >> 4;
+		int iknowledgemodule = itempknowledgemodule%2;
+		//System.out.println(" knowledge module..."+iknowledgemodule);
+		if(iknowledgemodule == 1)
+			setKnowledgebasemodule(true);
+		else
+			setKnowledgebasemodule(false);
+
+		int itempfaxmodule = int_hex >> 5;
+		int ifaxmodule = itempfaxmodule%2;
+		//System.out.println(" fax module...."+ifaxmodule);
+		if(ifaxmodule == 1)
+			setFaxmodule(true);
+		else
+			setFaxmodule(false);
+
+		int itempsmsmodule = int_hex >> 6;
+		int ismsmodule = itempsmsmodule%2;
+		//System.out.println(" sms module..."+ismsmodule);
+		if(ismsmodule == 1)
+			setSmsmodule(true);
+		else
+			setSmsmodule(false);
+
+		int itempreportmodule = int_hex >> 7;
+		int ireportmodule = itempreportmodule%2;
+		//System.out.println(" report module is..."+ireportmodule);
+		if(ireportmodule == 1)
+			setReportmodule(true);
+		else
+			setReportmodule(false);
+
+		int itempcustomercontactmodule = int_hex >> 8;
+		int icustomercontactmodule = itempcustomercontactmodule%2;
+		//System.out.println(" Customer contact module is.."+icustomercontactmodule);
+		if(icustomercontactmodule == 1)
+			setCustomercontactmodule(true);
+		else
+			setCustomercontactmodule(false);
+
+		int itemppurchasehistorymodule = int_hex >> 9;
+		int ipurchasehistorymodule = itemppurchasehistorymodule%2;
+		//System.out.println(" Purchase history module..."+ipurchasehistorymodule);
+		if(ipurchasehistorymodule == 1)
+			setPurchasehistorymodule(true);
+		else
+			setPurchasehistorymodule(false);
+
+		int itempvoicemodule = int_hex >> 10;
+		int ivoicemodule = itempvoicemodule%2;
+		//System.out.println(" Voice module is.."+ivoicemodule);
+		if(ivoicemodule == 1)
+			setVoicemodule(true);
+		else
+			setVoicemodule(false);
+
+		String dist_string = KeyString.substring(5,6);
+		//System.out.println(" dist is ..."+dist_string);
+
+		setDistrubution(dist_string);
+
+		String serial_string = KeyString.substring(6,11);
+		//System.out.println(" serial string is..."+serial_string);
+
+		setSerialNo(serial_string);
+
+		String tasktype_string = KeyString.substring(11,14);
+		//System.out.println(" tasktype string is..."+tasktype_string);
+		int tasktype_int = Integer.parseInt(tasktype_string);
+
+		setTasktype_Lic(tasktype_int);
+//  Note here that the code to check keys for agent and group are misleading but the working is OK.
+		String agent_string = KeyString.substring(14,17);
+		//System.out.println(" Group string is..."+agent_string);
+		int group_int = Integer.parseInt(agent_string);
+
+
+		String group_string = KeyString.substring(17,20);
+		//System.out.println(" Agent string is ..."+group_string);
+		int agent_int = Integer.parseInt(group_string);
+
+		setGroup_Lic(group_int);
+		setAgent_Lic(agent_int);
+
+		String reserve1_string = KeyString.substring(20,23);
+		//System.out.println(" reserve1 string..."+reserve1_string);
+
+		String reserve2_string = KeyString.substring(23,26);
+		//System.out.println(" reserve2 string is..."+reserve2_string);
+	}*/
+
+	public void setSmtpaddress(String aSmtpaddress)
+	{
+		sSmtpaddress = aSmtpaddress;
+	}
+
+	public String getSmtpaddress()
+	{
+		return sSmtpaddress;
+	}
+
+	public void setSmtpport(int aSmtpport)
+	{
+		iSmtpport = aSmtpport;
+	}
+
+	public int getSmtpport()
+	{
+		return iSmtpport;
+	}
+
+	public void setSmtpuser(String aSmtpuser)
+	{
+		sSmtpuser = aSmtpuser;
+	}
+
+	public String getSmtpuser()
+	{
+		return sSmtpuser;
+	}
+
+	public void setSmtppassword(String aSmtppassword)
+	{
+		sSmtppassword = aSmtppassword;
+	}
+
+	public String getSmtppassword()
+	{
+		return sSmtppassword;
+	}
+
+	public void setSmtpsender(String aSmtpsender)
+	{
+		sSmtpsender= aSmtpsender;
+	}
+
+	public String getSmtpsender()
+	{
+		return sSmtpsender;
+	}
+
+	public void setWebmodule(boolean aWebmodule)
+	{
+		bWebmodule = aWebmodule;
+	}
+
+	public boolean getWebmodule()
+	{
+		return bWebmodule;
+	}
+
+	public void setEmailmodule(boolean aEmailmodule)
+	{
+		bEmailmodule = aEmailmodule;
+	}
+
+	public boolean getEmailmodule()
+	{
+		return bEmailmodule;
+	}
+
+	public void setChatmodule(boolean aChatmodule)
+	{
+		bChatmodule = aChatmodule;
+	}
+
+	public boolean getChatmodule()
+	{
+		return bChatmodule;
+	}
+
+	public void setFaxmodule(boolean aFaxmodule)
+	{
+		bFaxmodule = aFaxmodule;
+	}
+
+	public boolean getFaxmodule()
+	{
+		return bFaxmodule;
+	}
+
+	public void setSmsmodule(boolean aSmsmodule)
+	{
+		bSmsmodule = aSmsmodule;
+	}
+
+	public boolean getSmsmodule()
+	{
+		return bSmsmodule;
+	}
+
+	public void setDiscussionmodule(boolean aDiscussionmodule)
+	{
+		bDiscussionmodule = aDiscussionmodule;
+	}
+
+	public boolean getDiscussionmodule()
+	{
+		return bDiscussionmodule;
+	}
+
+
+	public void setKnowledgebasemodule(boolean aKnowledgebasemodule)
+	{
+		bKnowledgebasemodule = aKnowledgebasemodule;
+	}
+
+	public boolean getKnowledgebasemodule()
+	{
+		return bKnowledgebasemodule;
+	}
+
+	public void setReportmodule(boolean aReportmodule)
+	{
+		bReportmodule = aReportmodule;
+	}
+
+	public boolean getReportmodule()
+	{
+		return bReportmodule;
+	}
+
+	public void setCustomercontactmodule(boolean aCustomercontactmodule)
+	{
+		bCustomercontactmodule = aCustomercontactmodule;
+	}
+
+	public boolean getCustomercontactmodule()
+	{
+		return bCustomercontactmodule;
+	}
+
+	public void setPurchasehistorymodule(boolean aPurchasehistorymodule)
+	{
+		bPurchasehistorymodule = aPurchasehistorymodule;
+	}
+
+	public boolean getPurchasehistorymodule()
+	{
+		return bPurchasehistorymodule;
+	}
+
+	public void setVoicemodule(boolean aVoicemodule)
+	{
+		bVoicemodule = aVoicemodule;
+	}
+
+	public boolean getVoicemodule()
+	{
+		return bVoicemodule;
+	}
+
+	public void setDistrubution(java.lang.String aDistString)
+	{
+		sDistString = aDistString;
+	}
+
+	public String getDistrubution()
+	{
+		return sDistString;
+	}
+
+	public void setSerialNo(java.lang.String aSerialNumber)
+	{
+		sSerialNumber = aSerialNumber;
+	}
+
+	public String getSerialNo()
+	{
+		return sSerialNumber;
+	}
+
+	public void setTasktype_Lic(int aTasktypelic)
+	{
+		iTasktypelic = aTasktypelic;
+	}
+
+	public int getTasktype_Lic()
+	{
+		return iTasktypelic;
+	}
+
+	public void setAgent_Lic(int aAgentlic)
+	{
+		iAgentlic = aAgentlic;
+	}
+
+	public int getAgent_Lic()
+	{
+		return iAgentlic;
+	}
+
+	public void setGroup_Lic(int aGrouplic)
+	{
+		iGrouplic = aGrouplic;
+	}
+
+	public int getGroup_Lic()
+	{
+		return iGrouplic;
+	}
+
+	public void setKey1(String aKey1)
+	{
+		sKey1 = aKey1;
+	}
+
+	public String getKey1()
+	{
+		return sKey1;
+	}
+
+	public void setKey2(String aKey2)
+	{
+		sKey2 = aKey2;
+	}
+
+	public String getKey2()
+	{
+		return sKey2;
+	}
+}

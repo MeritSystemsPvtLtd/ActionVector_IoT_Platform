@@ -1,0 +1,11 @@
+jsonSource =C:\\Documents and Settings\\Administrator.WIN2003STDR2SP2\\Desktop\\merit.actionvector.com\\
+periods=Day
+Instances=SriGroup:Sricity:Inverter,SriGroup:Sricity:Sensor,SriGroup:Sripower:Inverter,SriGroup:Sripower:Sensor
+#IISC:IISCInst:Inverter,IISC:IISCInst:Sensor,IITChennai:IITChennaiInst:Inverter,IITChennai:IITChennaiInst:Sensor,MasaPowerTech:MasaPowerTechInst1:Inverter,MasaPowerTech:MasaPowerTechInst1:Sensor,MasaPowerTech:MasaPowerTechInst2:Inverter,MasaPowerTech:MasaPowerTechInst2:Sensor,MasaPowerTech:MasaPowerTechInst3:Inverter,MasaPowerTech:MasaPowerTechInst3:Sensor,Pashupathinath:PashupathinathInst:Inverter,Pashupathinath:PashupathinathInst:Sensor,SriGroup:Sricity:Inverter,SriGroup:Sricity:Sensor,SriGroup:Sripower:Inverter,SriGroup:Sripower:Sensor
+xlsxTemplatePath=C:\\Documents and Settings\\Administrator.WIN2003STDR2SP2\\Desktop\\ReportXL\\
+#directoryPath=C:\\Documents and Settings\\Administrator.WIN2003STDR2SP2\\Desktop\\DiretoryStructure\\
+dashBoardReports=C:\\Documents and Settings\\Administrator.WIN2003STDR2SP2\\Desktop\\DahBoard\\
+#InstallationLevelMetrics=ActualEnergy
+latest=DayEnergy,YearEnergy,TotalEnergy,ActualEnergy
+average=ACPower,ACVoltage,ACCurrent,DCCurrent,ACFrequency,DCVoltage,DCCurrent
+intervel=1440

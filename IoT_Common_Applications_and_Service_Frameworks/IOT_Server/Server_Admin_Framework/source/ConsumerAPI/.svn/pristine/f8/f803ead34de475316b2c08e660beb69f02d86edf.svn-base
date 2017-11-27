@@ -1,0 +1,133 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package businessmodel;
+
+import Model.*;
+import java.sql.*;
+import java.util.*;
+import controller.CommandTask;
+import controller.DBConstants;
+
+/**
+ *
+ * @author gopal
+ * Created on Jun 26, 2012, 4:32:01 PM
+ */
+public class AddCategory
+{
+
+    public static boolean addNewCategories(String customerid, ArrayList<String> taskList, javax.servlet.http.HttpServletRequest request)
+    {
+        Connection con = null;
+        boolean FLAG = true;
+        int iDefaultCategory = 0;
+        String szCategory = "";
+        String szTasktype = "";
+        String szCategoryid = "";
+        String szDefaultCategory = "";
+        String categories = "";
+        boolean bCategoryflag = false;
+        String categoryarr[] = null;
+        int i = 0;
+        try
+        {
+            if (customerid != null && !customerid.equalsIgnoreCase(""))
+            {
+                con = DatabaseConnection.getDbConnection(request, customerid);
+            } else
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+            }
+
+
+            if (con != null)
+            {
+
+                Properties config = Configuration.initialize();
+                Iterator it = taskList.iterator();
+                while (it.hasNext())
+                {
+
+                    szTasktype = (String) it.next();
+                    System.out.println("Tasktype::" + szTasktype);
+                    categories = config.getProperty("category");
+                    categoryarr = categories.split(",");
+                    for (i = 0; i < categoryarr.length; i++)
+                    {
+                        szCategory = categoryarr[i];
+                        System.out.println("Category::" + szCategory);
+                        if (szCategory.equalsIgnoreCase("Normal"))
+                        {
+                            szDefaultCategory = "Yes";
+                        } else
+                        {
+                            szDefaultCategory = "No";
+                        }
+                        szCategoryid = szTasktype + szCategory;
+                        System.out.println("CategoryId::" + szCategoryid);
+                        PreparedStatement statement2 = con.prepareStatement("SELECT * from " + DBConstants.CATEGORY_TABLE + " where task_type=? and default_category = ?");
+                        statement2.setString(1, szTasktype);
+                        statement2.setInt(2, 1);
+                        ResultSet rs2 = statement2.executeQuery();
+                        while (rs2.next())
+                        {
+                            bCategoryflag = true;
+                        }
+                        rs2.close();
+                        statement2.close();
+                        PreparedStatement statement = con.prepareStatement("INSERT INTO " + DBConstants.CATEGORY_TABLE + " VALUES(?,?,?,?)");
+                        statement.setString(1, szCategoryid);
+                        statement.setString(2, szTasktype);
+                        statement.setString(3, szCategory);
+                        if ("Yes".equalsIgnoreCase(szDefaultCategory))
+                        {
+                            if (!bCategoryflag)
+                            {
+                                statement.setInt(4, 1);
+                            } else
+                            {
+                                statement.setInt(4, 0);
+                            }
+                        } else
+                        {
+                            statement.setInt(4, 0);
+                        }
+                        statement.executeUpdate();
+                        statement.close();
+                        szDefaultCategory = "";
+                        bCategoryflag=false;
+                    }//for
+                    categoryarr = null;
+
+                }//while
+            } else
+            {
+                System.out.println("Database Connection failure");
+            //log.info("The Connection is NULL here");
+
+            }
+        } catch (Exception sqle)
+        {
+            System.out.println("EXCEPTION : While Adding the category");
+            sqle.printStackTrace();
+
+        //GALogwriter.writeDebug("EXCEPTION : While Adding the category  "+SWriter,1,session);
+        //FLAG = false;
+
+        } finally
+        {
+            try
+            {
+                con.close();
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            //log.error("error while closing connection", e);
+            }
+        }
+        return false;
+    }
+}
+

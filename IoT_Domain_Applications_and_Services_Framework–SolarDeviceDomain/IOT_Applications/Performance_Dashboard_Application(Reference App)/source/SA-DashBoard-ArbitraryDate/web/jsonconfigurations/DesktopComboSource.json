@@ -1,0 +1,198 @@
+[
+    {
+        "text": "Select Graph",
+        "value": "Options",
+        "items": [
+            {
+                "text": "Health",
+                "id": "Health_id",
+                "value": "Health",
+                "items": [
+                	 {
+                        "value": "Availability",
+                        "text": "Availability",
+                        "filename": "/Desktop/DesktopAvailability.json",
+                        "charttype": "column",
+                        "category": "health",
+                        "metricType": ["downtime"],
+                        "index": "0"
+                    },
+                    {
+                        "value": "Battery Metrics",
+                        "text": "Battery Metrics",
+                        "filename": "/Desktop/DesktopBatteryMetrics.json",
+                        "charttype": "column",
+                        "category": "health",
+                        "metricType": ["ChargeRemaining"],
+                        "index": "1"
+                    },
+                    {
+                        "value": "CPU Disk Mem Metrics",
+                        "text": "CPU Disk Mem Metrics",
+                        "filename": "/Desktop/DesktopMetrics.json",
+                        "charttype": "column",
+                        "category": "health",
+                        "metricType": [ "CPUUtil","DskUsgBoot", "Memusg"],
+                        "index": "2"
+                    },
+                    {
+                        "value": "Disk Error Metrics",
+                        "text": "Disk Error Metrics",
+                        "filename": "/Desktop/DesktopDiskErrorMetrics.json",
+                        "charttype": "column",
+                        "category": "health",
+                        "metricType": ["ReadErrRate", "SeekErrRate"],
+                        "index": "3"
+                    },
+                    {
+                        "value": "Fan Speed Metrics",
+                        "text": "Fan Speed Metrics",
+                        "filename": "/Desktop/DesktopCPUFanSpeedMetrics.json",
+                        "charttype": "column",
+                        "category": "health",
+                        "metricType": ["AuxFan","Fan4","CPUFan","CaseFan"],
+                        "index": "4"
+                    },
+                    {
+                        "value": "System App Error Count",
+                        "text": "System App Error Count",
+                        "filename": "/Desktop/DesktopSysAppErrorCount.json",
+                        "charttype": "column",
+                        "category": "health",
+                        "metricType": ["ApplicationError","SystemError"],
+                        "index": "5"
+                    },
+                    {
+                        "value": "Temp Metrics",
+                        "text": "Temp Metrics",
+                        "filename": "/Desktop/DesktopCPUTempMetrics.json",
+                        "charttype": "column",
+                        "category": "health",
+                        "metricType": ["CurrentDiskTmp","AuxTemp","SysTemp","CPUTemp"],
+                        "index": "6"
+                    },
+                     {
+                        "value": "Time Line Availability",
+                        "text": "Time Line Availability",
+                        "filename": "/Desktop/DesktopAvailability.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": ["downtime"],
+                        "index": "7"
+                    },
+                    {
+                        "value": "Time Line Battery Metrics",
+                        "text": "Time Line Battery Metrics",
+                        "filename": "/Desktop/DesktopLineChartBatteryByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": ["ChargeRemaining"],
+                        "index": "8"
+                    },
+                      {
+                  "value":"Time Line CPU Utilization",
+                  "text":"Time Line CPU Utilization",
+                  "filename":"/Desktop/DesktopLineChartCpuUtilizationByTime.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[
+                     "CPUUtil"
+                  ],
+                  "index":"9"
+               },
+               {
+                  "value":"Time Line Disk Utilization",
+                  "text":"Time Line Disk Utilization",
+                  "filename":"/Desktop/DesktopLineChartDiscUtilizationByTime.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[
+                     "DskUsgBoot"
+                  ],
+                  "index":"10"
+               },
+               {
+                  "value":"Time Line Memory Utilization",
+                  "text":"Time Line Memory Utilization",
+                  "filename":"/Desktop/DesktopLineChartMemoryUtilizationByTime.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[
+                     "Memusg"
+                  ],
+                  "index":"11"
+               },
+                    {
+                        "value": "Time Line CPU Disk Error Metrics",
+                        "text": "Time Line CPU Disk Error Metrics",
+                        "filename": "/Desktop/DesktopLineChartDiskErrorByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": ["ReadErrRate","SeekErrRate"],
+                        "index": "12"
+                    },
+                    {
+                        "value": "Time Line CPU Temp Metrics",
+                        "text": "Time Line CPU Temp Metrics",
+                        "filename": "/Desktop/DesktopLineChartCPUTempByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": ["CurrentDiskTmp","AuxTemp","SysTemp","CPUTemp"],
+                        "index": "13"
+                    },
+                    {
+                        "value": "Time Line Error Metrics",
+                        "text": "Time Line Error Metrics",
+                        "filename": "/Desktop/DesktopLineChartFanSpeedByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": ["ApplicationError","SystemError"],
+                        "index": "14"
+                    },
+                    {
+                        "value": "Time Line Fan Speed Metrics",
+                        "text": "Time Line Fan Speed Metrics",
+                        "filename": "/Desktop/DesktopLineChartFanSpeedByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": ["AuxFan","Fan4","CPUFan","CaseFan"],
+                        "index": "15"
+                    }
+                ]
+            },
+            {
+                "text": "Alert",
+                "value": "Alert",
+                "items": [
+                    {
+                        "value": "Alerts By Assignee",
+                        "text": "Alerts By Assignee",
+                        "filename": "/Desktop/DesktopAssignee.json",
+                        "charttype": "column",
+                        "category": "alert",
+                        "metricType": [],
+                        "index": "0"
+                    },
+                    {
+                        "value": "Alerts By Status",
+                        "text": "Alerts By Status",
+                        "filename": "/Desktop/DesktopStatus.json",
+                        "charttype": "column",
+                        "metricType": [],
+                        "category": "alert",
+                        "index": "1"
+                    },
+                    {
+                        "value": "Critical Alerts",
+                        "text": "Critical Alerts",
+                        "filename": "/Desktop/DesktopAlertCount.json",
+                        "charttype": "column",
+                        "category": "alert",
+                        "metricType": ["CPUUTL","HSTDWN","DSKUTL","MEMUTL","CPUDBL","ORACON"],
+                        "index": "2"
+                    }
+                ]
+            }
+        ]
+    }
+]

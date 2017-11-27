@@ -1,0 +1,214 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.froniusadapter;
+
+import com.prokosha.froniusadapter.configuration.AdapterProperties;
+import com.prokosha.ssl.tcp.SSLClient;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
+/**
+ *
+ * @author naveen
+ */
+    public class FroniusFailedEventSender {
+
+    private static Logger logger = Logger.getLogger(FroniusFailedEventSender.class.getName());
+    private static Logger evtIdLogger = Logger.getLogger("eventsIdLogger");
+    private String propertyFile;
+    public static SSLClient FrontControllerSSLClient = null;
+    public static SSLClient WatchDogEventConnector = null;
+    public static String failedevents=null;
+  
+            public FroniusFailedEventSender(String propertyFileName) 
+            
+                {
+                    logger.debug("Constructing  FroniusAdapter of FroniusFailedEventSender...");
+                    this.propertyFile = propertyFileName;
+                }
+
+            public boolean initialize() 
+                
+                {
+
+                    logger.debug("Loading FroniusAdapter properties from property file: " + propertyFile);
+        
+                    try {
+            
+                            if (!AdapterProperties.loadProperties(propertyFile)) 
+                                 
+                                {
+                                    logger.error("*** ERROR *** Coould not load the adapter properties in FroniusFailedEventSender correctly...");
+                                    return false;
+                                }
+                            
+                            if (!FroniusMailModule.initialize()) 
+                            
+                                {
+                                
+                                    logger.error("*** ERROR *** Coould not initialize FroniusMailModule in FroniusFailedEventSender correctly...");
+                                    return false;
+                                  
+                                }
+                                
+                            logger.debug("FroniusAdapter properties in FroniusFailedEventSender, FroniusEventMapper and requests configuration loaded successfully!!");
+                            return true;
+
+                        } catch (Exception ex) {
+                            logger.error("*** ERROR **** error while loading adapter properties and requests configuration: \n" + ex);
+                            logger.error("Send msg and e-mail");
+                            FroniusMailModule.sendSMS("Fronius Error while loading adapter properties and "
+                                + "requests configuration in FroniusFailedEventSender " + ex.toString());
+
+                            String szSubject = "FroniusAdapterError";
+                            String szBody = "Fronius Error while loading adapter properties and requests configuration"
+                                + ex.toString();
+                            FroniusMailModule.sendMail(szSubject, szBody);
+
+                            ex.printStackTrace();
+                            return false;
+                    }
+
+        }
+          public void mainLoop() {
+
+                        logger.debug("Entering FroniusFailedEventSender mainloop...");
+                        FrontControllerSSLClient = new SSLClient();
+                        //set up the FrontController connector to package and send CEP events
+                        FrontControllerSSLClient.initialize(AdapterProperties.getSSLHost(), AdapterProperties.getSSLPort(), AdapterProperties.getNewline());
+
+                        if (AdapterProperties.sendToWatchDog()) 
+                        {
+                            WatchDogEventConnector = new SSLClient();
+                            WatchDogEventConnector.initialize(AdapterProperties.getWatchDogHost(), AdapterProperties.getWatchDogPort(), AdapterProperties.getNewline());
+                        }
+
+                        logger.debug("Connecting to FrontController....");
+                        
+                        if (!FrontControllerSSLClient.isServerReady()) 
+                        {
+                            logger.error("Some error occurred in FroniusFailedEventSender while connecting to FrontController. Will retry later...");
+                        }
+                            //reading file from adopter properties
+                        failedevents=AdapterProperties.getFailedEventsLog();
+          
+                        try{
+
+                            logger.info("FailedEvents read from file==>>"+failedevents);
+                          
+                            //Create object of FileReader
+                            FileReader failedFile = new FileReader(failedevents);
+                             
+                            //Instantiate the BufferedReader Class
+                            BufferedReader failedBReader = new BufferedReader(failedFile);
+                            
+                            String failedFileLine=null;
+                            
+                             boolean evntSent=false;
+                             
+                             boolean found=false;
+            
+                            // Read file line by line and print on the console
+                            while ((failedFileLine = failedBReader.readLine()) != null){
+                             
+                                    logger.info("line=====>"+failedFileLine);
+            
+                                    //splitting String to get eventId
+                                   String[] spliteEquals = failedFileLine.split("=");
+
+                                   String[] splite =spliteEquals[1].split(",");
+                                   
+                                   String eventId = splite[0]+"   ";
+                                       
+                                    //reading the eventId log file
+                                    FileReader filedIdFile = new FileReader("eventIdlog/froniuseventsid.log"); 
+           
+                                    BufferedReader failedIdBReader = new BufferedReader(filedIdFile);
+            
+                                        String eventLine;
+             
+                                        while(( eventLine= failedIdBReader.readLine()) != null) {
+                                        
+                                        int indexFound=eventLine.indexOf(eventId);
+                                    
+                                        if(indexFound>-1){
+                                    
+                                            found=true;
+                                        } 
+                                    }
+                              
+                                 if(found!=true)
+                                 {
+                                        //writing eventId into eventIdlog file
+                                      evtIdLogger.info(eventId);
+                                           
+                                  }   
+                                 
+                                 found=false;
+                                
+                                 logger.info("eventId==============>: "+eventId);
+                                 //reamoving date and in eventdata
+                                 String EvtString=failedFileLine.substring(47);
+                              
+                                 logger.info("Substring line=====>"+EvtString);
+                            
+                                 logger.info("Sending CEP event from FailedEventSender ==>>");
+         
+                                  evntSent = FrontControllerSSLClient.sendMessage(EvtString);
+                                    
+                                 //logger.info("File returnig from frontcontroller "+evntSent);
+                                 
+                                 if (evntSent) 
+                                 {
+                                 
+                                     logger.info("frontcontroller event sent successfully from FroniusFailedEventSender");
+                                 }
+                                 if (!evntSent) 
+                                 {
+                         
+                                     logger.info("frontcontroller event not sent, logging the event to send later from FroniusFailedEventSender");
+                                 
+                                  }
+                                //Close the buffer reader
+                                 filedIdFile.close();
+                                 failedIdBReader.close();
+                                
+                            }
+                        //Close the buffer reader
+                        failedBReader.close();
+                        failedFile.close();
+                        }
+                        catch(Exception e){
+                                System.out.println("Error while reading file line by line in FroniusFailedEventSender :" 
+                                + e.getMessage());
+                                e.printStackTrace();
+                        }
+                 finally{
+          
+                            FrontControllerSSLClient = null;
+                            WatchDogEventConnector = null;
+                            failedevents=null;
+                        }
+          
+        }
+      
+              
+          public static void main(String[] args) {
+
+                //setup the logger properties
+                PropertyConfigurator.configure("config/logger.properties");
+
+                //TODO: pass the property file name as a program argument
+                FroniusFailedEventSender fronius = new FroniusFailedEventSender("config/froniusadapter.properties");
+                if (fronius.initialize()) {
+                    fronius.mainLoop();
+                } else {
+                    logger.error("Could not start Fronius adapter in FroniusFailedEventSender properly. Exiting.....");
+                    System.exit(1);
+                }
+    }
+}

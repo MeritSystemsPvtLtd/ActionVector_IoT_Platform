@@ -1,0 +1,260 @@
+package com.prokosha.sadeskCeP;
+
+import java.io.Serializable;
+import creatingvalidtask.Attribute;
+import java.util.Date;
+
+public class TaskDetails implements Serializable
+{
+
+    private static final long serialVersionUID = 223832729866943032L;
+    private String szUserName;
+    private String szPassword;
+    private String szTaskId;
+    private String szTaskType;
+    private String szCreatedBy;
+    private String customer;
+    private String szPriority;
+    private String szCategory;
+    private String szTaskSummary;
+    private String szStatus;
+    private String szSla;
+    private String szActions;
+    private String szLastaction;
+    private String szParentId;
+    private Attribute a1;
+    private Attribute a2;
+    private Attribute a3;
+    private Attribute a4;
+    private Attribute a5;
+    private Attribute a6;
+    private Attribute a7;
+    private Attribute a8;
+
+    public Attribute getA8()
+    {
+        return a8;
+    }
+
+    public void setA8(Attribute a8)
+    {
+        this.a8 = a8;
+    }
+    
+    public Attribute getA6() {
+        return a6;
+    }
+
+    public void setA6(Attribute a6) {
+        this.a6 = a6;
+    }
+
+    public Attribute getA7() {
+        return a7;
+    }
+
+    public void setA7(Attribute a7) {
+        this.a7 = a7;
+    }
+    
+    public Attribute getA1()
+    {
+        return a1;
+    }
+
+    public void setA1(Attribute a1)
+    {
+        this.a1 = a1;
+    }
+
+    public Attribute getA2()
+    {
+        return a2;
+    }
+
+    public void setA2(Attribute a2)
+    {
+        this.a2 = a2;
+    }
+
+    public Attribute getA3()
+    {
+        return a3;
+    }
+
+    public void setA3(Attribute a3)
+    {
+        this.a3 = a3;
+    }
+
+    public Attribute getA4()
+    {
+        return a4;
+    }
+
+    public void setA4(Attribute a4)
+    {
+        this.a4 = a4;
+    }
+
+    public Attribute getA5()
+    {
+        return a5;
+    }
+
+    public void setA5(Attribute a5)
+    {
+        this.a5 = a5;
+    }
+
+    public String getCustomer()
+    {
+        return customer;
+    }
+
+    public void setCustomer(String customer)
+    {
+        this.customer = customer;
+    }
+
+    public String getSzActions()
+    {
+        return szActions;
+    }
+
+    public void setSzActions(String szActions)
+    {
+        this.szActions = szActions;
+    }
+
+    public String getSzCategory()
+    {
+        return szCategory;
+    }
+
+    public void setSzCategory(String szCategory)
+    {
+        this.szCategory = szCategory;
+    }
+
+    public String getSzCreatedBy()
+    {
+        return szCreatedBy;
+    }
+
+    public void setSzCreatedBy(String szCreatedBy)
+    {
+        this.szCreatedBy = szCreatedBy;
+    }
+
+    public String getSzLastaction()
+    {
+        return szLastaction;
+    }
+
+    public void setSzLastaction(String szLastaction)
+    {
+        this.szLastaction = szLastaction;
+    }
+
+    public String getSzParentId()
+    {
+        return szParentId;
+    }
+
+    public void setSzParentId(String szParentId)
+    {
+        this.szParentId = szParentId;
+    }
+
+    public String getSzPassword()
+    {
+        return szPassword;
+    }
+
+    public void setSzPassword(String szPassword)
+    {
+        this.szPassword = szPassword;
+    }
+
+    public String getSzPriority()
+    {
+        return szPriority;
+    }
+
+    public void setSzPriority(String szPriority)
+    {
+        this.szPriority = szPriority;
+    }
+
+    public String getSzSla()
+    {
+        return szSla;
+    }
+
+    public void setSzSla(String szSla)
+    {
+        this.szSla = szSla;
+    }
+
+    public String getSzStatus()
+    {
+        return szStatus;
+    }
+
+    public void setSzStatus(String szStatus)
+    {
+        this.szStatus = szStatus;
+    }
+
+    public String getSzTaskType()
+    {
+        return szTaskType;
+    }
+
+    public void setSzTaskType(String szTaskType)
+    {
+        this.szTaskType = szTaskType;
+    }
+
+    public String getSzTaskId()
+    {
+        return szTaskId;
+    }
+
+    public void setSzTaskId(String szTaskId)
+    {
+        this.szTaskId = szTaskId;
+    }
+
+    public String getSzTaskSummary()
+    {
+        return szTaskSummary;
+    }
+
+    public void setSzTaskSummary(String szTaskSummary)
+    {
+        this.szTaskSummary = szTaskSummary;
+    }
+
+    public String getSzUserName()
+    {
+        return szUserName;
+    }
+
+    public void setSzUserName(String szUserName)
+    {
+        this.szUserName = szUserName;
+    }
+    
+
+
+    @Override
+    public String toString()
+    {
+
+        //return szTaskId+" "+new Date()+" a1 "+a1.getValue()+" a2 "+a2.getValue()+" a3 "+a3.getValue()+" a4 "+a4.getValue()+" a5 "+a5.getValue()+" a6 "+a6.getValue()+" a7 "+a7.getValue();
+        return szTaskId+" "+new Date()+" a1 "+a1.getValue()+" a4 "+a4.getValue()+" a5 "+a5.getValue()+" a6 "+a6.getValue()+" a7 "+a7.getValue()+" a8 "+a8.getValue();
+        
+    }
+}

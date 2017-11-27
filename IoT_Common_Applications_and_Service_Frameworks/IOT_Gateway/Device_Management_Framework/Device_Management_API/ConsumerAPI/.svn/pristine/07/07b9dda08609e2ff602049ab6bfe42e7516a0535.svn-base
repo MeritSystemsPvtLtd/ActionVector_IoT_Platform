@@ -1,0 +1,403 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/* -------------------------------------------------------------------------
+ *
+ *                           Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *      #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *         THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ * --------------------------------------------------------------------------
+ */
+package businessmodel;
+
+import Model.*;
+import controller.*;
+import java.sql.*;
+import java.util.*;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jul 12, 2012, 2:49:00 PM
+ */
+public class TaskTypeAdd
+{
+
+    static Logger log = Logger.getLogger(TaskTypeAdd.class);
+
+    public static boolean addNewTasktype(String szcustomerid, String sztaskType, String szgroup, String VGroupVector[], String szassignmentType, String Assignee_Array[], HttpServletRequest request)
+    {
+        Connection con = null;
+        boolean bFlag = false;
+
+        Object OUser;
+        String szUsers;
+        Integer ISecurityUsers = 1;
+        boolean bFlag1 = false;
+        boolean bFlag2 = true;
+
+        String szTaskType1 = "None";
+        String sAOtherGroupArray[] = new String[1024];
+
+        //String Assignee_Array[] = new String[1024];
+        String szAssignmentType = "None";
+        String szEscalate_email = "";
+        String szTask_prefix = "";
+        String sgroupvector = "";
+        String szSerialNum = "";
+        int iSerialNum = 0;
+        String szMailboxAddress = "";
+        String szMBServerAddress = "";
+        String szMBName = "";
+        String szMBPassword = "";
+        String szPrimary_Group = "";
+        String szBusinessUnit = "";
+        String szContactDetails = "";
+        String szStatusGroups = "";
+        String szTaskSummary = "";
+        HashMap<String, String> taskgroups = new HashMap<String, String>();
+        java.util.Vector VAssociateParentTasktype = null;
+        //String OtherGroups_Array[] = new String[1024];
+        //String VGroupVector[] = OtherGroups_Array;
+        String sAAssociateParentTasktype[] = new String[1024];
+        PreparedStatement statement9 = null;
+        PreparedStatement statement = null;
+        PreparedStatement statement2 = null;
+        int iCount;
+        String username = null;
+        //OtherGroups_Array=null;
+        boolean fpriority = false;
+
+        /* try
+        {
+        customerid = request.getParameter("customerid");
+        System.out.println("Before reading request parameters");
+        Assignee_Array = request.getParameterValues("assignee");
+
+
+        szTaskType1 = request.getParameter("task_type");
+        szTaskType1 =sztaskType;
+        szEscalate_email = request.getParameter("escalate_email");
+
+        szTask_prefix = request.getParameter("task_prefix");
+        szSerialNum = request.getParameter("serial_no");
+
+        log.info(" The Serial No===" + iSerialNum);
+        szMailboxAddress = request.getParameter("mailbox_address");
+        szMBServerAddress = request.getParameter("mailserver_address");
+        szMBName = request.getParameter("mailbox_name");
+        szMBPassword = request.getParameter("mailbox_password");
+        szAssignmentType = request.getParameter("assignment_type");
+        log.info(" Assignment is .." + szAssignmentType);
+        szPrimary_Group = request.getParameter("primary_group");
+
+
+        VGroupVector = request.getParameterValues("other_groups");
+        szBusinessUnit = request.getParameter("other_businessunits");
+        szContactDetails = request.getParameter("contact_details");
+        szTaskSummary = request.getParameter("task_summary");
+
+
+        sAAssociateParentTasktype = request.getParameterValues("associate_parent_tasktype");
+        log.info("request parameters read successfully");
+        System.out.println("request parameters read successfully");
+        } catch (Exception e)
+        {
+
+        log.error("invalid inputs");
+        }*/
+        try
+        {
+            System.out.println("Connecting to database");
+            if (szcustomerid != null && !szcustomerid.equalsIgnoreCase(""))
+            {
+                con = DatabaseConnection.getDbConnection(request, szcustomerid);
+            } else
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+            }
+            log.info("database connected");
+            if (con != null)
+            {
+                szTaskType1 = sztaskType;
+                Properties config = Configuration.initialize();
+                szTask_prefix = config.getProperty(szTaskType1 + "prefix");
+                System.out.println("tasktypeserialno::" + szTaskType1 + "serial");
+                szSerialNum = config.getProperty(szTaskType1 + "serial");
+                System.out.println("Serial number::" + szSerialNum);
+                iSerialNum = Integer.parseInt(szSerialNum);
+                szMailboxAddress = config.getProperty("Mailboxaddress");
+                szMBServerAddress = config.getProperty("Mailboxserver");
+                szMBName = config.getProperty("Mailboxname");
+                szMBPassword = config.getProperty("Mailboxpassword");
+                //Assignee_Array =szAssignee;
+                szAssignmentType = szassignmentType;
+                szPrimary_Group = szgroup;
+                sAAssociateParentTasktype = config.getProperty("Parenttasktype").split(",");
+
+                if (ISecurityUsers.intValue() == 1)
+                {
+                    System.out.println("Security level checked");
+                    bFlag = true;
+                    try
+                    {
+                        iCount = 0;
+                        String szCount = "";
+                        try
+                        {
+                            PreparedStatement statement10 = con.prepareStatement("SELECT count(task_type) from " + DBConstants.TASKTYPE_TABLE + " ");
+                            ResultSet rs10 = statement10.executeQuery();
+                            while (rs10.next())
+                            {
+                                szCount = rs10.getString(1);
+                            }
+                            System.out.println(" szcount is..." + szCount);
+                            log.info("The No of TaskTypes Present	:" + szCount);
+                            rs10.close();
+                            statement10.close();
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.info("EXCEPTION : Getting task_type from GATaskType	");
+                        }
+                        iCount = Integer.parseInt(szCount);
+
+
+                        if (!szAssignmentType.equalsIgnoreCase("None"))
+                        {
+
+                            //System.out.println("Inserting data into Task type table");
+                            log.info("Inserting data into Task type table");
+
+                            statement = con.prepareStatement("INSERT INTO " + DBConstants.TASKTYPE_TABLE + " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                            statement.setString(1, szTaskType1);
+                            if (szAssignmentType.equalsIgnoreCase("Default Assignment"))
+                            {
+                                statement.setString(2, Assignee_Array[0]);
+                            } else
+                            {
+                                statement.setString(2, "None");
+                            }
+                            statement.setInt(3, 0);
+                            statement.setString(4, szEscalate_email);
+                            statement.setString(5, szTask_prefix);
+                            statement.setInt(6, iSerialNum);
+                            statement.setString(7, szMailboxAddress);
+                            statement.setString(8, szMBServerAddress);
+                            statement.setString(9, szMBName);
+                            statement.setString(10, szMBPassword);
+                            statement.setString(11, szAssignmentType);
+                            statement.setInt(12, 0);
+                            statement.setInt(13, 0);
+                            statement.setString(14, szContactDetails);
+                            statement.setString(15, szTaskSummary);
+                            statement.executeUpdate();
+                            //System.out.println("length of associate parenttask type::" + sAAssociateParentTasktype.length);
+                            log.info("length of associate parenttask type::" + sAAssociateParentTasktype.length);
+
+                            for (int i = 0; i < sAAssociateParentTasktype.length && sAAssociateParentTasktype[i] != null; i++)
+                            {
+                                System.out.println("Inserting data into gaparenttasktype table");
+                                statement9 = con.prepareStatement("INSERT INTO gaparenttasktype values(?,?)");
+                                statement9.setString(1, szTaskType1);
+                                statement9.setString(2, (String) sAAssociateParentTasktype[i]);
+                                statement9.executeUpdate();
+                            }
+                            statement9.close();
+                            if (sAAssociateParentTasktype.length != 0)
+                            {
+                                System.out.println("Inserting data into gatasktypeattributevalueconfig table");
+                                PreparedStatement statement7 = con.prepareStatement("INSERT INTO gatasktypeattributevalueconfig VALUES(?,?,?,?,?,?,?,?)");
+                                statement7.setString(1, szTaskType1);
+                                statement7.setString(2, "customerid");
+                                statement7.setString(3, "gatask");
+                                statement7.setString(4, "Customer");
+                                statement7.setString(5, "task_id");
+                                statement7.setString(6, "Equals");
+                                statement7.setString(7, "All");
+                                statement7.setString(8, "pattribute");
+                                statement7.executeUpdate();
+                                statement7.close();
+                            }
+                            System.out.println("Inserting data into tasktype group table");
+                            statement2 = con.prepareStatement("INSERT INTO " + DBConstants.TASKTYPE_GROUP_TABLE + " values(?,?,?)");
+                            statement2.setString(1, szTaskType1);
+                            statement2.setString(2, szPrimary_Group);
+                            statement2.setString(3, "Yes");
+                            statement2.executeUpdate();
+
+                            PreparedStatement statement4 = con.prepareStatement("INSERT into " + DBConstants.TASKTYPE_GROUP_TABLE + " values(?,?,?)");
+
+                            if (VGroupVector != null)
+                            {
+                                //System.out.println("Length of vGroupVector::" + VGroupVector.length);
+                                log.info("Length of vGroupVector::" + VGroupVector.length);
+
+                                for (int i = 0; i < VGroupVector.length; i++)
+                                {
+
+                                    sgroupvector = (String) VGroupVector[i];
+                                    //System.out.println("SGroupVector ele:::" + sgroupvector);
+                                    log.info("SGroupVector ele:::" + sgroupvector);
+
+                                    if ((sgroupvector != null) && (!sgroupvector.equalsIgnoreCase("")))
+                                    {
+                                        if (!sgroupvector.equalsIgnoreCase(szPrimary_Group))
+                                        {
+                                            statement4.setString(1, szTaskType1);
+                                            statement4.setString(2, sgroupvector);
+                                            statement4.setString(3, "No");
+                                            statement4.executeUpdate();
+                                        }
+                                    }
+                                    sgroupvector = "";
+                                }
+                            }
+                            statement4.close();
+                            if (szAssignmentType.equalsIgnoreCase("Task Creation Time"))
+                            {
+                                System.out.println("inserting data into gatasktypeattributevalueconfig table assignment type is task creation time");
+                                PreparedStatement statement7 = con.prepareStatement("INSERT INTO gatasktypeattributevalueconfig VALUES(?,?,?,?,?,?,?,?)");
+                                statement7.setString(1, szTaskType1);
+                                statement7.setString(2, "Group Name");
+                                statement7.setString(3, "gagroupname");
+                                statement7.setString(4, "groupname");
+                                statement7.setString(5, "None");
+                                statement7.setString(6, "None");
+                                statement7.setString(7, "None");
+                                statement7.setString(8, "None");
+                                statement7.executeUpdate();
+                                statement7.close();
+                                PreparedStatement statement8 = con.prepareStatement("INSERT INTO gatasktypeattributevalueconfig VALUES(?,?,?,?,?,?,?,?)");
+                                statement8.setString(1, szTaskType1);
+                                statement8.setString(2, "Assignee");
+                                statement8.setString(3, "gaagentgroup");
+                                statement8.setString(4, "userid");
+                                statement8.setString(5, "groupname");
+                                statement8.setString(6, "Equals");
+                                statement8.setString(7, "GroupName");
+                                statement8.setString(8, "attribute");
+                                statement8.executeUpdate();
+                                statement8.close();
+                            }
+                            if (!szAssignmentType.equalsIgnoreCase("Default Assignment") && !szAssignmentType.equalsIgnoreCase("Task Creation Time"))
+                            {
+                                System.out.println("Not default and taskcreation assignment");
+                                //System.out.println("inserting data into gatasktypeattributevalueconfig table assignment type is" + szAssignmentType);
+                                log.info("inserting data into gatasktypeattributevalueconfig table assignment type is" + szAssignmentType);
+                                PreparedStatement statement7 = con.prepareStatement("insert into " + DBConstants.TASK_ASSIGNEE_TABLE + " values(?,?,?)");
+                                //System.out.println("Assignee Array length::" + Assignee_Array.length);
+                                log.info("Assignee Array length::" + Assignee_Array.length);
+                                for (int i = 0; i < Assignee_Array.length; i++)
+                                {
+                                    statement7.setInt(1, i + 1);
+                                    statement7.setString(2, szTaskType1);
+                                    statement7.setString(3, Assignee_Array[i]);
+                                    System.out.println("Assignee::" + Assignee_Array[i]);
+                                    statement7.executeUpdate();
+                                }
+                                statement7.close();
+                                System.out.println("Updating tasktype table");
+                                PreparedStatement statement8 = con.prepareStatement("update " + DBConstants.TASKTYPE_TABLE + " set rr_seq=?,nousers=? where task_type =?");
+                                statement8.setInt(1, 1);
+                                statement8.setInt(2, Assignee_Array.length);
+                                statement8.setString(3, szTaskType1);
+                                statement8.executeUpdate();
+                            }
+                            PreparedStatement statement5 = con.prepareStatement("INSERT into " + DBConstants.TASKTYPE_BUSINESSUNIT_TABLE + " values(?,?)");
+                            statement5.setString(1, szTaskType1);
+                            statement5.setString(2, szBusinessUnit);
+                            statement5.executeUpdate();
+                            statement5.close();
+                        }
+                        System.out.println("Going to add tasktype priority");
+                        log.info("Going to add tasktype priority");
+                        fpriority = TasktypePriority.addTaskPriories(con, szTaskType1, request);
+
+                        szStatusGroups = szPrimary_Group;
+                        for (String is : VGroupVector)
+                        {
+                            szStatusGroups += "," + is;
+                        }
+                        taskgroups.put(szTaskType1, szStatusGroups);
+                        System.out.println("Going to add Tasktype Statuses");
+                        log.info("Going to add Tasktype Statuses");
+                        boolean fStatus = AddStatuses.addNewStatus(szcustomerid, taskgroups, request);
+                        taskgroups = null;
+                        szStatusGroups = "";
+
+                        if (fpriority && fStatus)
+                        {
+
+                            bFlag = true;
+                        }
+
+                        log.info("operation success");
+                    } catch (Exception sqle)
+                    {
+                        sqle.printStackTrace();
+                        bFlag = false;
+                        bFlag2 = false;
+
+                        log.info("record already exits");
+
+                    }
+
+
+                } else
+                {
+                    System.out.println("insufficient privileges");
+                    log.info("insufficient privileges");
+                }
+            }
+        } catch (Exception e)
+        {
+            bFlag = false;
+            e.printStackTrace();
+
+            log.error("error while processing request", e);
+        } finally
+        {
+            try
+            {
+                if (con != null)
+                {
+                    con.close();
+                //statement.close();
+                //statement2.close();
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error while closing connection");
+            }
+        }
+
+        return bFlag;
+    }
+}

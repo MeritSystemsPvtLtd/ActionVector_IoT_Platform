@@ -1,0 +1,135 @@
+<html>
+<head>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+</head>
+<body>
+	<div id="loader"
+		style="position: absolute; left: 60%; top: 50%; z-index: 100"></div>
+	<div id="example0" class="k-content">
+		<div id="listView"></div>
+		<table id="diagram1" width="100%">
+			<tr>
+				<td valign="top" width="50%">
+					<div id="charthead">
+						<table width="100%">
+							<tr>
+								<td valign="top" width="36%">
+									<ul id="input" />
+								</td>
+								<td><input id="srvchartname" type="text" class="k-textbox"
+									readonly="readonly" />
+									<button class="k-button" id="svrRTButton"
+										onclick="generateLiveLineChart(this.id)">
+										<font size=2>Live</font>
+									</button></td>
+							</tr>
+						</table>
+					</div>
+					<div id="chart" style="border: 0"></div>
+				</td>
+				<td valign="top" width="50%">
+					<div id="charthead2">
+						<table width="100%">
+							<tr>
+								<td valign="top" width="36%">
+									<ul id="input2" />
+								</td>
+								<td><input id="srvchartname2" type="text" class="k-textbox"
+									readonly="readonly" />
+									<button class="k-button" id="svrRTButton2"
+										onclick="generateLiveLineChart(this.id)">
+										<font size=2>Live</font>
+									</button></td>
+							</tr>
+						</table>
+					</div>
+					<div id="chart2" style="border: 0"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div id="charthead3">
+						<table width="100%">
+							<tr>
+								<td valign="top" width="36%">
+									<ul id="input3" />
+								</td>
+								<td><input id="srvchartname3" type="text" class="k-textbox"
+									readonly="readonly" />
+									<button class="k-button" id="svrRTButton3"
+										onclick="generateLiveLineChart(this.id)">
+										<font size=2>Live</font>
+									</button></td>
+							</tr>
+						</table>
+
+					</div>
+					<div id="chart3" style="border: 0"></div>
+				</td>
+				<td valign="top" style="border: 1px solid #EEEEEE">
+					<div id="charthead4">
+						<table width="100%">
+							<tr>
+								<td valign="top" width="36%">
+									<ul id="input4" />
+								</td>
+								<td><input id="srvchartname4" type="text" class="k-textbox"
+									readonly="readonly" />
+									<button class="k-button" id="svrRTButton4"
+										onclick="generateLiveLineChart(this.id)">
+										<font size=2>Live</font>
+									</button></td>
+							</tr>
+						</table>
+					</div>
+					<div id="chart4" style="border: 0"></div>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<script type="text/javascript">
+		var chartheaddiv = [ "srvchartname", "srvchartname2", "srvchartname3",
+				"srvchartname4" ]
+
+		var combodiv = [ "#input", "#input2", "#input3", "#input4",
+				"#charthead", "#charthead2", "#charthead3", "#charthead4",
+				"#example0", "#diagram1", "#chart", "#chart2", "#chart3",
+				"#chart4", "#listView", "typeColumn", "typeColumn2",
+				"typeColumn3", "typeColumn4", "seriesType", "seriesType2",
+				"seriesType3", "seriesType4", "typeBar", "typeBar2",
+				"typeBar3", "typeBar4", "typeLine", "typeLine2", "typeLine3",
+				"typeLine4" ];
+		var headdiv = [ [ "typeColumn", "typeBar", "typeLine" ],
+				[ "typeColumn2", "typeBar2", "typeLine2" ],
+				[ "typeColumn3", "typeBar3", "typeLine3" ],
+				[ "typeColumn4", "typeBar4", "typeLine4" ] ];
+
+		var gridurl;
+		var combourl;
+		var gridtitle = "<font color=737C7D ><b>SERVER</b></font>";
+
+		$(document).ready(function() {
+			gridurl = customer + "/server/serverLeftGrid.json";
+			combourl = "jsonconfigurations/serverComboSource.json";
+
+			displayAdjust()
+
+			loadgrid(combodiv[14], gridurl, gridtitle);
+			$(window).resize(function() {
+				$(combodiv[14]).data("kendoGrid").refresh();
+				$(combodiv[10]).data("kendoChart").refresh();
+				$(combodiv[11]).data("kendoChart").refresh();
+				$(combodiv[12]).data("kendoChart").refresh();
+				$(combodiv[13]).data("kendoChart").refresh();
+				$(combodiv[0]).data("kendoComboBox").refresh();
+				$(combodiv[1]).data("kendoComboBox").refresh();
+				$(combodiv[2]).data("kendoComboBox").refresh();
+				$(combodiv[3]).data("kendoComboBox").refresh();
+			});
+
+		});
+	</script>
+
+</body>
+</html>

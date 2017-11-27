@@ -1,0 +1,53 @@
+
+
+/**
+ * GetComment.java
+ *
+ * This file was auto-generated from WSDL
+ * by the Apache Axis2 version: 1.6.1  Built on : Aug 31, 2011 (12:22:40 CEST)
+ */
+
+    package getcomment;
+
+    /*
+     *  GetComment java interface
+     */
+
+    public interface GetComment {
+          
+
+        /**
+          * Auto generated method signature
+          * 
+                    * @param getCommentsRequest0
+                
+         */
+
+         
+                     public getcomment.GetCommentsResponse getComments(
+
+                        getcomment.GetCommentsRequest getCommentsRequest0)
+                        throws java.rmi.RemoteException
+             ;
+
+        
+         /**
+            * Auto generated method signature for Asynchronous Invocations
+            * 
+                * @param getCommentsRequest0
+            
+          */
+        public void startgetComments(
+
+            getcomment.GetCommentsRequest getCommentsRequest0,
+
+            final getcomment.GetCommentCallbackHandler callback)
+
+            throws java.rmi.RemoteException;
+
+     
+
+        
+       //
+       }
+    

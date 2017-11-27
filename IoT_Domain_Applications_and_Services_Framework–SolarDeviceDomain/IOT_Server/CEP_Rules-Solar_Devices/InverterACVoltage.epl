@@ -1,0 +1,11 @@
+module com.prokosha.cep.inverteracvoltage.v1;
+create variable float INV_VOLT_THR=100;
+create variable string INV_ACRO_VOLT="[INV_VOLT]";
+
+@Name("com.prokosha.cep.inverteracvoltage.dispath.1")
+      select  "Inverter" as EventType,   ("Low AC Voltage ").concat((ACVoltageNow).toString().concat(Unit).concat(INV_ACRO_VOLT)) as EventDesc,
+    "AC Voltage is Low" as EventSymptoms,"InverterAlert" as AlertType,
+    HostName,resourceType,resourceId,CustomerID
+    from InverterACVoltageStream where (ACVoltageNow < INV_VOLT_THR)
+    group by HostName
+    output first every 12 hours;

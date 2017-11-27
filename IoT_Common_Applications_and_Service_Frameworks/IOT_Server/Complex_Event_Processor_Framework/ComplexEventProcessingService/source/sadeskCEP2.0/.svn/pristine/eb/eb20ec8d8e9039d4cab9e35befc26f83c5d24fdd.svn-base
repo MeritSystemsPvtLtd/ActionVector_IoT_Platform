@@ -1,0 +1,144 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.sadeskCeP;
+
+import com.espertech.esper.client.*;
+import com.espertech.esper.client.deploy.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
+import javax.xml.parsers.ParserConfigurationException;
+import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
+
+/**
+ *
+ * @author Abraham
+ */
+public class CepEngine {
+
+    private static final Logger log = Logger.getLogger(CepEngine.class.getName());
+    private String eventRegistry;
+    private String engineName;
+    private Configuration engineConfig;
+    private EPServiceProvider serviceProvider;
+    private String ruleRegistry;
+    private static EPAdministrator statementAdmin;
+    private static Boolean engineValid = false;
+    private Map<String, Properties> registeredEvents;
+
+    public CepEngine(String engineName, String eventRegistry) {
+
+        this.eventRegistry = eventRegistry;
+        this.engineName = engineName;
+
+        //Register the event schema
+        log.debug("Loading events schema from registry: " + this.eventRegistry);
+        engineConfig = new Configuration();
+        engineConfig.configure(new File(this.eventRegistry));
+
+        //store the event Map types for future reference
+        registeredEvents = engineConfig.getEventTypesMapEvents();
+
+        // get engine instance
+        log.debug("Creating engine with name: " + this.engineName);
+        serviceProvider = EPServiceProviderManager.getProvider(this.engineName, engineConfig);
+        serviceProvider.initialize();
+
+        //get administrator for statements/patterns loaded into engine
+        this.statementAdmin = serviceProvider.getEPAdministrator();
+        engineValid = true;
+    }
+
+    public Boolean loadRules(String ruleRegistry) throws ParserConfigurationException, SAXException, IOException, ParseException, DeploymentException {
+
+        log.debug("Loading rules into engine...");
+        try {
+
+            if (engineValid) {
+                this.ruleRegistry = ruleRegistry;
+
+                ModuleLoader loader = new ModuleLoader();
+                loader.loadModules(serviceProvider, this.ruleRegistry);
+
+                String stmtNames[] = statementAdmin.getStatementNames();
+                for (String sname : stmtNames) {
+                    if (sname.contains("dispatch")) {
+                        statementAdmin.getStatement(sname).addListener(new com.prokosha.sadeskCeP.DispatchNodeListener());
+                    } else if (sname.contains("istream")) {
+                        statementAdmin.getStatement(sname).addListener(new com.prokosha.sadeskCeP.DefaultEventListener());
+                    } else if (sname.contains("etl")) {
+                        //statementAdmin.getStatement(sname).addListener(new com.prokosha.sadeskCeP.ETLDispatcher());
+                        log.error("ETL dispatcher not supported");
+                    } else if (sname.contains("otrs")) {
+                        statementAdmin.getStatement(sname).addListener(new com.prokosha.sadeskCeP.OTRSDispatcher());
+                    } else if(sname.contains("autoclose")){
+                        statementAdmin.getStatement(sname).addListener(new com.prokosha.sadeskCeP.AutoCloseNodeListener());
+                    }
+                }
+                log.debug("Rules loaded into engine...");
+                return true;
+            } else {
+                log.error("** ERROR ** Attempt to load rules into invalid engine...");
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("** ERROR ** Attempt to load rules into invalid engine...");
+            return false;
+        }
+
+    }
+
+    public EPServiceProvider getProvider() {
+        log.debug("Returning the service provider...");
+        if (engineValid) {
+            return serviceProvider;
+        } else {
+            //TODO: Throw exception
+            log.error("** ERROR ** Attempt to service provider handle of invalid engine...");
+            return null;
+        }
+    }
+
+    public static EPAdministrator getEPAdministrator() {
+        log.debug("Returning the service provider...");
+        if (engineValid) {
+            return statementAdmin;
+        } else {
+            //TODO: Throw exception
+            log.error("** ERROR ** Attempt to service provider handle of invalid engine...");
+            return null;
+        }
+    }
+
+    public Boolean destroy() {
+        log.debug("Returning the service provider...");
+        if (engineValid) {
+            serviceProvider.destroy();
+            engineValid = false;
+            serviceProvider = null;
+            return true;
+        } else {
+            //TODO: Throw exception
+            log.error("** ERROR ** Attempt to destropy an invalid engine...");
+            return false;
+        }
+    }
+
+    public Boolean sendEvent(Map sadeskEvent, String eventName) {
+        log.debug("Sending event to to the engine...");
+        if (engineValid) {
+            EPRuntime runtime = serviceProvider.getEPRuntime();
+            runtime.sendEvent(sadeskEvent, eventName);
+            return true;
+        } else {
+            //TODO: Throw exception
+            log.error("** ERROR ** Attempt to send event to an invalid engine...");
+            return false;
+        }
+    }
+}

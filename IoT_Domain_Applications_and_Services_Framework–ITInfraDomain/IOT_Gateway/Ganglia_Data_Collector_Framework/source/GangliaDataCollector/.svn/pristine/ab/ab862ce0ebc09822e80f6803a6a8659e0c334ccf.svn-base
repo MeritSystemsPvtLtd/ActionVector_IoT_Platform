@@ -1,0 +1,18 @@
+#
+#Fri Nov 09 16:42:53 IST 2012
+CustomerID=merit
+ganglia.gmond-host=192.168.1.55
+eventRT.enable=false
+CEP.engine-port=7102
+ganglia.cep-event-mapper=config/eventmapper.xml
+ganglia.download-sleep=20
+ganglia.gmond-port=8649
+ganglia.xml-buffer-size=40
+adapter.loop-control=GANGLIA-CEP-LOG
+CEP.line-separator=\n
+ganglia.retry-count=2
+CEP.engine-host=192.168.1.177
+eventDelay=1
+WatchDog-host=192.168.1.46
+WatchDog-port=9898
+Send-WatchDog=false

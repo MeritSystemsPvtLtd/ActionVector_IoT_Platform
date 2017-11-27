@@ -1,0 +1,474 @@
+/***************************************************************************
+ *
+ *                            Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *     #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8th Block
+ *                          Bangalore - 560 070, India
+ *               Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *          THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ ***************************************************************************/
+package controller;
+
+import Model.*;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.log4j.Logger;
+import java.sql.*;
+import java.io.*;
+import java.util.Date;
+import java.text.*;
+
+/**
+ *
+ * @author gopal
+ */
+public class ChangeUseridPassword extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(ChangeUseridPassword.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+        StringBuffer results = new StringBuffer("<userpassword>");
+
+        Connection con = null;
+        Statement stat = null;
+        ResultSet rs = null;
+        String PasswordEncr = "";
+        String password = null;
+        StringBuffer szPassword1 = new StringBuffer();
+        String szSessionid = "";
+        String userid = "";
+        String newpass = "";
+        String opStatus = "";
+        String opDescription = "";
+        boolean checksession = false;
+
+        try
+        {
+            szSessionid = request.getParameter("szsessionid");
+            userid = request.getParameter("userid");
+            newpass = request.getParameter("newpassword");
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            log.debug("error while reading inputs", e);
+        }
+        if ((szSessionid != null && !szSessionid.equalsIgnoreCase("")) && (userid != null && !userid.equalsIgnoreCase("")) && (newpass != null && !newpass.equalsIgnoreCase("")))
+        {
+            checksession = CheckSession.checkSession(request, szSessionid);
+            if (checksession)
+            {
+                try
+                {
+                    con = DatabaseConnection.getAVSAConnection(request);
+                    if (con != null)
+                    {
+                        // Long szPasswordExpiry = (Long) session.getAttribute("passwordexpiry");
+                        //System.out.println(" USERIIIIIIDDDDDDDD:::: "+userid+"      newpass      "+newpass+"    szPasswordExpiry   "+szPasswordExpiry);
+
+                        if (!userid.equalsIgnoreCase("none"))
+                        {
+                            //StringBuffer results = new StringBuffer("<user>");
+                            try
+                            {
+                                stat = con.createStatement();
+                                String sqlquery = "select password from gaoperator where lower(user_id)=lower('" + userid + "')";
+                                System.out.println("SQL Query==== " + sqlquery);
+                                rs = stat.executeQuery("select password from gaoperator where lower(user_id)=lower('" + userid + "')");
+                                while (rs.next())
+                                {
+                                    results.append("<password>");
+                                    password = rs.getString("password");
+                                    StringBuffer get_pass_encrypt1 = new StringBuffer(password);
+                                    StringBuffer get_pass_decrypt1 = Decrypt_no(get_pass_encrypt1);
+                                    int a = 0;
+                                    for (int i = 0, j = 0; i < get_pass_decrypt1.length(); i++)
+                                    {
+                                        a = (int) get_pass_decrypt1.charAt(i);
+                                        if (a >= 33 && a <= 126)
+                                        {
+                                            szPassword1.insert(j, get_pass_decrypt1.charAt(i));
+                                            j++;
+                                        }
+                                    }
+                                    String szPasswordDecr = szPassword1.toString();
+                                    results.append(szPasswordDecr);
+                                    results.append("</password>");
+                                }
+                                results.append("</user>");
+                                response.setContentType("text/xml");
+                                response.getWriter().write(results.toString());
+                            } catch (Exception e)
+                            {
+                                try
+                                {
+                                    con.close();
+                                } catch (SQLException ex)
+                                {
+                                    log.debug("error while closing connection",ex);
+                                }
+                            }
+                        } else
+                        {
+                            try
+                            {
+                                //StringBuffer results = new StringBuffer("<userchangepassword>");
+                                //String username = (String) session.getAttribute("szUserName");
+                                newpass = request.getParameter("newpass");
+                                StringBuffer get_pass_encrypt1 = new StringBuffer(newpass);
+                                DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                                Date date = new Date();
+                                int iCheck = enc(get_pass_encrypt1, newpass);
+                                int ilen = get_pass_encrypt1.length();
+                                newpass = get_pass_encrypt1.toString();
+                                newpass = String.valueOf(get_pass_encrypt1);
+                                int a = 0;
+                                for (int i = 0, j = 0; i < get_pass_encrypt1.length(); i++)
+                                {
+                                    a = (int) get_pass_encrypt1.charAt(i);
+                                    if (a >= 33 && a <= 126)
+                                    {
+                                        //	get_pass_encrypt1 = get_pass_encrypt1.deleteCharAt(i);
+                                        szPassword1.insert(j, get_pass_encrypt1.charAt(i));
+                                        j++;
+                                    }
+                                }
+                                System.out.println("password======" + szPassword1);
+                                PasswordEncr = szPassword1.toString();
+                                System.out.println("passwordencr======" + PasswordEncr);
+                                stat = con.createStatement();
+                                //stat.executeUpdate("update gaoperator set password ='" + PasswordEncr + "',passwordtime = '" + dateFormat.format(date) + "' where lower(user_id)=lower('" + username + "')");
+                                //System.out.println("update gaoperator set password ='" + PasswordEncr + "',passwordtime = '" + dateFormat.format(date) + "' where lower(user_id)=lower('" + username + "')");
+                                results.append("</userchangepassword>");
+                                response.setContentType("text/xml");
+                                response.getWriter().write(results.toString());
+                            } catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            } finally
+                            {
+
+                                try
+                                {
+                                    if (rs != null)
+                                    {
+                                        con.close();
+                                    /*stat.close();
+                                    rs.close();*/
+                                    }
+                                } catch (SQLException ex)
+                                {
+                                    //java.util.logging.Logger.getLogger(UserIdPassword.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                        }
+                        opStatus = "0";
+                        opDescription = "Successfully changed password";
+                    } else
+                    {
+                        opStatus = "101";
+                        opDescription = "Database Connection failed";
+                    }
+                } catch (Exception e)
+                {
+                    opStatus = "106";
+                    opDescription = "unable to process the request action";
+                    e.printStackTrace();
+                    log.debug("Error while processing the request action " + e);
+                }
+            } else
+            {
+                opStatus = "102";
+                opDescription = "Invalid Session";
+            }
+        } else
+        {
+            opStatus = "108";
+            opDescription = "Invalid Inputs";
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</userpassword>");
+            response.getWriter().write(results.toString());
+        } catch (Exception e)
+        {
+            log.debug("exception while writing output", e);
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                results = null;
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+
+    public int enc(StringBuffer sznumber, String szEnctptd1)
+    {
+        int ai, aik, ilen, itemp, isum = 0, ikl = 0;
+        int icounter = 0;
+        int iCheck = 0;
+        char szEncoded1[] =
+        {
+            '9', '7', '8', '5', '6', '1', '0', '4', '2', '3', 'o', 'n', 'k', 'g', 'z', 'p', 'm', 'e', 'l', 's', 't', 'x', 'q', 'r', 'y', 'b', 'h', 'f', 'a', 'j', 'c', 'i', 'd', 'u', 'w', 'v'
+        };
+        char szb[] =
+        {
+            '0', '9', 'a', 'b', 'c'
+        };
+        if (icounter % 2 == 0)
+        {
+            sznumber.setLength(13);
+            sznumber.reverse();
+        }
+        ilen = sznumber.length();
+        for (ai = 0; ai <= ilen - 1; ai++)
+        {
+            char t = sznumber.charAt(ai);
+            aik = (int) t;
+
+            if (Character.isDigit(t))
+            {
+                ikl = ((aik - 48) + icounter) % 10;
+                sznumber.setCharAt(ai, szEncoded1[ikl]);
+                char d = szEncoded1[ikl];
+                itemp = (int) d;
+                isum += itemp - 48;
+            }
+            if (Character.isLetter(t) && Character.isLowerCase(t))
+            {
+                ikl = ((aik - 87) + icounter) % 36;
+                if (ikl <= 4)
+                {
+                    ikl += 10;
+                }
+                sznumber.setCharAt(ai, szEncoded1[ikl]);
+                char d = szEncoded1[ikl];
+                itemp = (int) d;
+                isum += itemp - 96;
+            }
+
+            if (Character.isLetter(t) && Character.isUpperCase(t))
+            {
+                ikl = ((aik - 55) + icounter) % 36;
+                if (ikl <= 4)
+                {
+                    ikl += 10;
+                }
+                sznumber.setCharAt(ai, (Character.toUpperCase(szEncoded1[ikl])));
+                char d = szEncoded1[ikl];
+                itemp = (int) d;
+                isum += itemp - 64;
+            }
+        }
+        iCheck = isum;
+        char h = szb[icounter];
+        sznumber.insert(0, h);
+        String abc = sznumber.toString();
+        int aln = abc.length();
+        /*
+        char ac;
+        for(int ch=0;ch<aln;ch++)
+        {
+        ac=abc.charAt(ch);
+        szEnctptd1.setCharAt(ch,ac);
+        }
+         */
+        icounter = (icounter + 1) % 5;
+        return (0);
+    }
+
+    public StringBuffer Decrypt_no(StringBuffer szEncrptd)
+    {
+        StringBuffer szDecrptd = new StringBuffer();
+        szEncrptd.setLength(14);
+        szDecrptd.setLength(14);
+        int ai, aik, ilen, ic = 0, ai1, iflag;
+        char ckl;
+        char szEncoded1[] =
+        {
+            '9', '7', '8', '5', '6', '1', '0', '4', '2', '3', 'o', 'n', 'k', 'g', 'z', 'p', 'm', 'e', 'l', 's', 't', 'x', 'q', 'r', 'y', 'b', 'h', 'f', 'a', 'j', 'c', 'i', 'd', 'u', 'w', 'v'
+        };
+        char szDecoded1[] =
+        {
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+        };
+
+        // 	get the length of the string to be encrypted
+        ilen = szEncrptd.length();
+
+        // 	separate the fist character from the string
+        ckl = szEncrptd.charAt(0);
+
+        // 	obtain the type of encryption
+
+        if (ckl >= '0' && ckl <= '8')
+        {
+            ic = 0;
+        }
+        if (ckl == '9')
+        {
+            ic = 1;
+        }
+        if (ckl == 'a')
+        {
+            ic = 2;
+        }
+        if (ckl == 'b')
+        {
+            ic = 3;
+        }
+        if (ckl == 'c')
+        {
+            ic = 4;
+        }
+
+        // 	read the string characterwise till the length of the string
+
+        for (ai = 1; ai <= ilen - 1; ai++)
+        {
+            ai1 = 0;
+            iflag = 0;
+            char t = szEncrptd.charAt(ai);
+            aik = (int) t;
+            if (Character.isLetter(t) && Character.isUpperCase(t))
+            {
+                szEncrptd.setCharAt(ai, Character.toLowerCase(t));
+            }
+            if ((aik <= 47) || (aik >= 91 && aik <= 96) || (aik >= 58 && aik <= 64) || (aik >= 123))
+            {
+                szEncrptd.setCharAt(ai - 1, szEncrptd.charAt(ai));
+                continue;
+            }
+            while (szEncoded1[ai1] != szEncrptd.charAt(ai))
+            {
+                ai1++;
+            }
+            if (szEncoded1[ai1] == szEncrptd.charAt(ai))
+            {
+                iflag = 1;
+            }
+            if (iflag == 0)
+            {
+                continue;
+            }
+            // 		check to see whether it is a digit
+            if (ai1 < 10)
+            {
+                ai1 -= ic;
+                // 		move to the end if necessary
+                if (ai1 < 0)
+                {
+                    ai1 += 10;
+                }
+            } else
+            // 		check to see whether it is an alphabet
+            {
+                ai1 -= ic;
+                // 		move to the end if necessary
+                if ((ai1 < 10) && (ai1 >= 6))
+                {
+                    ai1 += 26;
+                }
+
+            }
+            szEncrptd.setCharAt(ai - 1, szDecoded1[ai1]);
+            if (aik >= 65 && aik <= 90)
+            {
+                t = szEncrptd.charAt(ai - 1);
+                szEncrptd.setCharAt(ai - 1, Character.toUpperCase(t));
+            }
+        }
+
+        //		initialise end of string to null
+
+        String abc = szEncrptd.toString();
+        int aln = abc.length();
+        char ac;
+        for (int ab = 0; ab < aln; ab++)
+        {
+            ac = abc.charAt(ab);
+            szDecrptd.setCharAt(ab, ac);
+        }
+        // 	if the type of encryption is an even no reverse the string.
+        szDecrptd.deleteCharAt(13);
+
+        if (ic % 2 == 0)
+        {
+            szDecrptd.reverse();
+        }
+        szEncrptd.setLength(255);
+        return (szDecrptd);
+    }
+}

@@ -1,0 +1,47 @@
+module com.prokosha.cep.cpuloadmonitor.v1;
+
+//TUNING PARAMETERS
+create variable double CPU_LOAD_THRESHOLD=8.0; //threshold, which if the doubled CPU load exceeds, throws an alert
+create variable string ACRO_DBL="[CPUDBL]";
+
+//compute the CpuLoad
+insert into LoadMon
+        select (Load1) as CpuLoad, HostName, HostAddress,CustomerID,resourceType,resourceId
+        from ServerStateStream;
+
+@Name("com.prokosha.cep.cpuloadmonitor.etl.1")
+
+select * from ServerStateStream;
+
+//compute the 5 minute average of the load
+insert into AvgLoadMon
+    select avg(CpuLoad) as CurrentAvgLoad, HostName, HostAddress,CustomerID,resourceType,resourceId
+    from LoadMon.win:time(5 minutes)
+        group by HostName;
+
+//extract the begin avgLoad and end avgLoad for every 5 minute window
+insert into LoadIncreaseMon
+        select CurrentAvgLoad, first(CurrentAvgLoad) as PriorAvgLoad, HostName, HostAddress,CustomerID,resourceType,resourceId
+        from AvgLoadMon.win:time(5 minutes)
+        group by HostName;
+
+
+
+
+/**
+** Rule set1: Detect when the average CPU load has doubled over 5 minutes and has exceeded the threshold.
+** Alert once every 2 minutes for every distinct server
+**/
+@Name("com.prokosha.cep.cpuloadmonitor.istream.1")
+select  "Server" as EventType,
+    ("ALERT - CPU Load doubled and exceeded the threshold. CPULoad is ").concat((LIM.CurrentAvgLoad).toString().concat(ACRO_DBL)) as EventDesc
+,
+    "Average load has increased by over 100% in the past 5 minutes and exceeded the threshold" as EventSymptoms,
+    LIM.HostName as HostName, LIM.HostAddress as HostAddress,LIM.CustomerID as CustomerID ,resourceType,resourceId,
+    LIM.CurrentAvgLoad as CurrentAvgLoad, LIM.PriorAvgLoad as AvgLoadAtBegining
+    from LoadIncreaseMon.win:length(1) as LIM
+    where ((LIM.CurrentAvgLoad/LIM.PriorAvgLoad >= 2.0)
+            and (LIM.CurrentAvgLoad >= CPU_LOAD_THRESHOLD))
+    group by LIM.HostName
+    output first every 2 minutes;
+

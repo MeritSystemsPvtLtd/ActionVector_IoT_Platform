@@ -1,0 +1,90 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package businessmodel;
+
+import Model.DatabaseConnection;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author niteshc
+ */
+public class GetCustomers {
+
+    static Logger log = Logger.getLogger(GetCustomers.class);
+
+    public static String getCustomerInfo(javax.servlet.http.HttpServletRequest request) {
+
+        Connection con = null;
+        ResultSet rs = null;
+        Statement st = null;
+        String customer = null;
+        StringBuffer sbr = new StringBuffer("");
+        try {
+            con = DatabaseConnection.getAVSAConnection(request);
+            if (con != null) {
+                log.info("Connection is not null before getting resource configuration");
+                st = con.createStatement();
+                try {
+                    boolean recFound = false;
+                    String query = "select customername as customer from customerinfo";
+                    //System.out.println("Query==>" + query);
+                    rs = st.executeQuery(query);
+                    while (rs.next()) {
+                        recFound = true;
+                        customer = rs.getString("customer");
+                        sbr.append("{\"Customer\":\"" + customer + "\"},");
+                    }
+                    rs.close();
+                    if (recFound) {
+                        sbr.deleteCharAt(sbr.length() - 1);
+                    }
+                    //  System.out.println("List Of Customers==>" + sbr);
+                    if (!recFound) {
+                        sbr.append("null");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("Error while fetching the customers list in GetCustomers ", e);
+                }
+            } else {
+                return null;
+            }
+            con.close();
+            return sbr.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Error while establishing connection", e);
+            return null;
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                con = null;
+                if (rs != null) {
+                    rs.close();
+                }
+                rs = null;
+                if (st != null) {
+                    st.close();
+                }
+                st = null;
+                customer = null;
+                sbr = null;
+            } catch (NullPointerException npe) {
+                npe.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error("Error While Closing Connection ", e);
+            }
+
+        }
+    }
+}

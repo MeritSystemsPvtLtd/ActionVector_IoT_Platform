@@ -1,0 +1,47 @@
+[
+   {
+      "text":"Select Graph",
+      "value":"Options",
+      "items":[
+         {
+            "text":"Alert",
+            "id":"Alert_id",
+            "value":"Alert",
+            "items":[
+               {
+                  "text":"DataBase Total Alerts",
+                  "value":"DataBase Total Alerts",
+                  "filename":"/Business/BusinessDataBaseTotalAlertCount.json",
+                  "charttype":"pie",
+                  "metricType":"",
+                  "index":"0"
+               },
+               {
+                  "text":"JVM Total Alerts",
+                  "value":"JVM Total Alerts",
+                  "filename":"/Business/BusinessJVMTotalAlertCount.json",
+                  "charttype":"pie",
+                  "metricType":"",
+                  "index":"1"
+               },
+               {
+                  "text":"Network Total Alerts",
+                  "value":"Network Total Alerts",
+                  "filename":"/Business/BusinessNetworkTotalAlertCount.json",
+                  "charttype":"pie",
+                  "metricType":"",
+                  "index":"2"
+               },
+               {
+                  "text":"Server Total Alerts",
+                  "value":"Server Total Alerts",
+                  "filename":"/Business/BusinessserverTotalAlertCount.json",
+                  "charttype":"pie",
+                  "metricType":"",
+                  "index":"3"
+               }
+            ]
+         }
+      ]
+   }
+]

@@ -1,0 +1,38 @@
+// Declare the name for the module
+module com.prokosha.sadeskCeP.DataFeedStream;
+
+// Declare other module(s) that this module depends on
+//uses org.myorganization.common;
+
+// Import any Java/.NET classes in an application package
+//import org.myorganization.events.*;
+
+// Declare an event type based on a Java class in the package that was imported as above
+//create schema MySwitchEvent as MySwitchEventPOJO;
+
+//Statements
+insert into TicksPerSecond
+    select host, (time-prior(1,time)) as elapsedTime, (bytes-prior(1,bytes)) as totalBytes
+    from DataFeedStream.win:length(2) group by host;
+
+insert into RateMonitor
+    select host, elapsedTime, (totalBytes/elapsedTime) as currDataRate
+    from TicksPerSecond.win:length(2) group by host;
+
+insert into SlopeMonitor
+    select host, elapsedTime, currDataRate, prior(1,currDataRate) as prevDataRate
+    from RateMonitor.win:length(2) group by host;
+
+insert into SlopeRampMonitor
+    select host, currDataRate, prevDataRate, ((currDataRate-prevDataRate)/elapsedTime) as rateSlope
+    from SlopeMonitor group by host;
+
+@Name("com.prokosha.sadeskCeP.DataFeedStream.dispatch.1")
+select "Abnormal increase in data rate" as Msg, * from SlopeRampMonitor.win:length(3)
+        having (rateSlope >= 5.0);
+
+@Name("com.prokosha.sadeskCeP.DataFeedStream.dispatch.2")
+select "Data rate acceleration trend noticed" as Msg, host,
+    prior(5,currDataRate) as beginRate, currDataRate, avg(rateSlope) as trend
+            from SlopeRampMonitor.win:length(6)
+            having (avg(rateSlope) >= 5.0);

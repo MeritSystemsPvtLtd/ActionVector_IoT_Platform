@@ -1,0 +1,316 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class PriorityAdd extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(PriorityAdd.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+        String opStatus = "";
+        String opDescription = "";
+
+        StringBuffer results = new StringBuffer("<addpriority>");
+        boolean checksession = true;
+        HttpSession sessions;
+        Integer ISecurityUsers = 1;
+        String username = null;
+        String sessionid = null;
+        //String customerid=null;
+        try
+        {
+            sessions = request.getSession(true);
+        //username=request.getParameter("username");
+        //sessionid=request.getParameter("sessionid");
+        // ISecurityUsers = (Integer) sessions.getValue("ints");
+        } catch (Exception npe)
+        {
+            npe.printStackTrace();
+            opStatus = "102";
+            opDescription = "Invalid Session";
+            log.info("error while getting request parameters");
+
+        }
+
+        Connection con = null;
+        PreparedStatement statement = null;
+        boolean bFlag = true;
+        String szPriority = "";
+        String szTaskType = "";
+        String szPriorityid = "";
+        String szDefault_priority = "";
+        String szColor = "";
+        String szStatus = "";
+        String szCategory = "";
+        String szSummaryKeywords = "";
+        String customerid=null;
+        boolean bPriority_flag = false;
+        String sStatusArray[] = new String[1024];
+        String sCategoryArray[] = new String[1024];
+        PreparedStatement statement2 =null;
+
+        boolean check = true;
+
+        if (checksession)
+        {
+            try
+            {
+                customerid=request.getParameter("customerid");
+                szPriority = request.getParameter("priority");
+                szTaskType = request.getParameter("task_type");
+                szDefault_priority = request.getParameter("default_priority");
+                szColor = request.getParameter("color");
+                sStatusArray = request.getParameterValues("status");
+                sCategoryArray = request.getParameterValues("category");
+                szSummaryKeywords = request.getParameter("sumkeywords");
+                log.info("request parameters get successfully");
+
+                if (szSummaryKeywords == null || "".equalsIgnoreCase(szSummaryKeywords))
+                {
+                    szSummaryKeywords = "NONE";
+                }
+                if (sStatusArray != null)
+                {
+                    for (int i = 0; i < sStatusArray.length; i++)
+                    {
+                        if ("NONE".equalsIgnoreCase(sStatusArray[i]))
+                        {
+                            continue;
+                        }
+
+                        if (i == 0)
+                        {
+                            szStatus += sStatusArray[i];
+                        } else
+                        {
+                            szStatus += "," + sStatusArray[i];
+                        }
+
+                    }
+                } else
+                {
+                    szStatus = "NONE";
+                }
+
+
+                LogWriter.writeDebug("Status 		:" + szStatus, 3);
+                if (sCategoryArray != null)
+                {
+                    for (int i = 0; i < sCategoryArray.length; i++)
+                    {
+                        if ("NONE".equalsIgnoreCase(sCategoryArray[i]))
+                        {
+                            continue;
+                        }
+
+                        if (i == 0)
+                        {
+                            szCategory += sCategoryArray[i];
+                        } else
+                        {
+                            szCategory += "," + sCategoryArray[i];
+                        }
+
+                    }
+                } else
+                {
+                    szCategory = "NONE";
+                }
+
+
+
+                LogWriter.writeDebug("Category	:" + szCategory, 3);
+                LogWriter.writeDebug("Summary Keywords:" + szSummaryKeywords, 3);
+            } catch (Exception e)
+            {
+                System.out.println("Exception while reading inputs");
+                opStatus = "108";
+                opDescription = "Invalid Input";
+                check = false;
+
+
+                LogWriter.writeDebug("EXCEPTION : Getting the parameters  ", 1);
+            }
+            LogWriter.writeDebug("the default priority is ..." + szDefault_priority, 3);
+            if (ISecurityUsers.intValue() == 1 && check)
+            {
+                try
+                {
+                    szPriorityid = szTaskType + szPriority;
+                    con = DatabaseConnection.getDatabaseConnection(request);
+                    log.info("database connected");
+                    if (con != null)
+                    {
+                        statement2 = con.prepareStatement("SELECT * from " + DBConstants.PRIORITY_TABLE + " where task_type=? and default_priority = ?");
+                        statement2.setString(1, szTaskType);
+                        statement2.setInt(2, 1);
+                        ResultSet rs2 = statement2.executeQuery();
+                        while (rs2.next())
+                        {
+                            bPriority_flag = true;
+                        }
+                        statement2.close();
+                        statement = con.prepareStatement("INSERT INTO " + DBConstants.PRIORITY_TABLE + " VALUES(?,?,?,?,?,?,?,?)");
+                        statement.setString(1, szPriorityid);
+                        statement.setString(2, szTaskType);
+                        statement.setString(3, szPriority);
+                        if ("Yes".equalsIgnoreCase(szDefault_priority))
+                        {
+                            if (!bPriority_flag)
+                            {
+                                statement.setInt(4, 1);
+                            } else
+                            {
+                                statement.setInt(4, 0);
+                            }
+                        } else
+                        {
+                            statement.setInt(4, 0);
+                        }
+                        statement.setString(5, szColor);
+                        statement.setString(6, szStatus);
+                        statement.setString(7, szCategory);
+                        statement.setString(8, szSummaryKeywords);
+                        statement.executeUpdate();
+                        statement.close();
+                        opStatus = "0";
+                        opDescription = "Operation Success";
+                        log.info("operation success");
+
+                    } else
+                    {
+                        opStatus = "101";
+                        opDescription = "Database connection failed";
+                        log.info("database connection failed");
+                    }
+
+
+                } catch (Exception sqle)
+                {
+                    opStatus = "106";
+                    opDescription = "Unable to process the request";
+                    //GALogwriter.writeDebug("EXCEPTION : While Adding the priority  "+sqle.getMessage(),1,session);
+                    bFlag = false;
+                    log.error("error while processing request", sqle);
+                
+
+                }
+                finally{
+                    try{
+                        if(con!=null){
+                            con.close();
+
+                        }
+                    }catch(Exception e){
+                        e.printStackTrace();
+                        log.error("error while closing connection", e);
+                    }
+                }
+
+            } else
+            {
+
+                opStatus = "103";
+                opDescription = "Security level failed";
+                log.info("security level failed");
+            }
+
+
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid Session";
+            log.info("invalid session");
+        }
+
+
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</addpriority>");
+            response.getWriter().write(results.toString());
+        
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+        }
+        finally{
+            results=null;
+            //result=null;
+        }
+
+
+
+
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

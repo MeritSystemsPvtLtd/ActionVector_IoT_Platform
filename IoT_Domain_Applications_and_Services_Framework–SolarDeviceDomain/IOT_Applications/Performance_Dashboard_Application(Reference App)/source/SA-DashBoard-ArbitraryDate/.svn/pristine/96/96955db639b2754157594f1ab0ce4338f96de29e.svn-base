@@ -1,0 +1,95 @@
+[
+   {
+      "text":"Select Graph",
+      "value":"Options",
+      "items":[
+        {
+            "text":"Health",
+            "id":"Health_id",
+            "value":"Health",
+            "items":[
+               {
+                  "value":"Weather",
+                  "text":"Weather",
+                  "charttype":"table",
+                  "category":"health",
+                  "metricType":[
+                  ],
+                  "index":"0"
+               },
+              
+               {
+                  "value":"PerformanceRatioComparison",
+                  "text":"PerformanceRatioComparison",
+                  "filename":"/server/serverAlertCount.json",
+                  "charttype":"grouped",
+                  "category":"health",
+                  "metricType":["PerformanceRatio",
+				"EnergyPerRatedPower" ],
+                  "index":"1"
+               },
+
+               {
+                  "value":"PerformanceRatio",
+                  "text":"PerformanceRatio",
+                  "filename":"/server/serverAlertCount.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[ ],
+                  "index":"2"
+               },
+
+               {
+                  "value":"EnergyPerRatedPower",
+                  "text":"EnergyPerRatedPower",
+                  "filename":"/server/serverAlertCount.json",
+                  "charttype":"line",
+                  "category":"health",
+                  "metricType":[ ],
+                  "index":"3"
+               }
+
+           
+            ]
+         },
+         {
+            "text":"Alert",
+            "value":"Alert",
+            "items":[
+               {
+                  "value":"Alerts By Assignee",
+                  "text":"Alerts By Assignee",
+                  "filename":"/server/serverAssignee.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"0"
+               },
+               {
+                  "value":"Alerts By Status",
+                  "text":"Alerts By Status",
+                  "filename":"/server/serverStatus.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"1"
+               },
+               {
+                  "value":"Critical Alerts",
+                  "text":"Critical Alerts",
+                  "filename":"/server/serverAlertCount.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+                  ],
+                  "index":"2"
+               }
+            ]
+         }
+      ]
+   }
+]

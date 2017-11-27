@@ -1,0 +1,735 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AddInternalUser extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(AddInternalUser.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+
+        
+        HttpSession HSsessions = null;
+        Object OUser1;
+        String szUsers1 = null;
+        Integer ISecurityusers;
+        boolean checksession = true;
+        StringBuffer results = new StringBuffer("<adduser>");
+        String username = null;
+        String sessionid = null;
+        String opStatus = null;
+        String opDescription = null;
+        try
+        {
+            
+            checksession = true;
+        } catch (Exception npe)
+        {
+            npe.printStackTrace();
+            log.error("invalid session");
+        }
+
+       // LogWriter.writeDebug("At GA_InternalUserAdd.jsp", 1, HSsessions);
+        if (checksession)
+        {
+            Connection con = null;
+            PreparedStatement statement = null;
+            PreparedStatement statement2 = null;
+            boolean bFLAG = true;
+            String szUserId = "";
+            String szPassword = "";
+            String szChatPassword = "";
+            String szpasswordtime = "";
+            String szSecurityLevel = "";
+            String szUserNameString = "";
+            String szEmailString = "";
+            String szEmail2String = "";
+            String szAddressString = "";
+            String szCityString = "";
+            String szZipString = "";
+            String szStateString = "";
+            String szCountryString = "";
+            String szPhoneString = "";
+            String szFaxString = "";
+            String szUserCheck = "";
+            String szCustomerString = "";
+            String customerid="";
+            int iOpenTaskCount = 0;
+            String sAGroupArray[] = new String[255];
+            String szPrimaryGroup = "";
+            String szActions = "";
+            String szPasswordEncr = "";
+            StringBuffer szPassword1 = new StringBuffer();
+            Login userCheck=new Login();
+            try
+            {
+                szUserId = request.getParameter("user_id");
+                customerid=request.getParameter("customerid");
+                if ("".equalsIgnoreCase(szUserId) || szUserId == null)
+                {
+                    szUserId = "None";
+                }
+                szPassword = request.getParameter("password");
+                szChatPassword = szPassword;
+                if ("".equalsIgnoreCase(szPassword) || szPassword == null)
+                {
+                    szPassword = "None";
+                } else
+                {
+
+			String EncryptedString = new String(szPassword);
+                        System.out.println("Password Encrypting:::::::::"+EncryptedString);
+			StringBuffer get_pass_encrypt1= new StringBuffer(szPassword);
+                        System.out.println("String Buffer Encrypted::"+get_pass_encrypt1);
+			int iCheck = userCheck.enc(get_pass_encrypt1,EncryptedString);
+                        System.out.println("Password after usercheck::"+get_pass_encrypt1.toString());
+			int ilen = get_pass_encrypt1.length();
+			szPassword = get_pass_encrypt1.toString();
+			szPassword = String.valueOf(get_pass_encrypt1);
+                        System.out.println("Inside Else password ::::"+szPassword);
+			int a = 0;
+			for(int i=0,j=0;i<get_pass_encrypt1.length();i++)
+			{
+				a = (int)get_pass_encrypt1.charAt(i);
+				if(a >= 33 && a <= 126)
+				{
+				//	get_pass_encrypt1 = get_pass_encrypt1.deleteCharAt(i);
+					szPassword1.insert(j,get_pass_encrypt1.charAt(i));
+					j++;
+				}
+			}
+                }
+                szPasswordEncr = szPassword1.toString();
+                System.out.println("Encrypted Password::"+szPasswordEncr);
+                szSecurityLevel = request.getParameter("security_level");
+                if ("".equalsIgnoreCase(szSecurityLevel) || szSecurityLevel == null)
+                {
+                    szSecurityLevel = "None";
+                }
+                szUserNameString = request.getParameter("username");
+                //System.out.println("szUserNameString :"+szUserNameString);
+                if ("".equalsIgnoreCase(szUserNameString) || szUserNameString == null)
+                {
+                    szUserNameString = "None";
+                }
+                szEmailString = request.getParameter("email");
+                if ("".equalsIgnoreCase(szEmailString) || szEmailString == null)
+                {
+                    szEmailString = "None";
+                }
+                szEmail2String = request.getParameter("email2");
+                if ("".equalsIgnoreCase(szEmail2String) || szEmail2String == null)
+                {
+                    szEmail2String = "None";
+                }
+                szAddressString = request.getParameter("address");
+                if ("".equalsIgnoreCase(szAddressString) || szAddressString == null)
+                {
+                    szAddressString = "None";
+                }
+                szCityString = request.getParameter("city");
+                if ("".equalsIgnoreCase(szCityString) || szCityString == null)
+                {
+                    szCityString = "None";
+                }
+                szPhoneString = request.getParameter("phone");
+                if ("".equalsIgnoreCase(szPhoneString) || szPhoneString == null)
+                {
+                    szPhoneString = "None";
+                }
+                szFaxString = request.getParameter("fax");
+                if ("".equalsIgnoreCase(szFaxString) || szFaxString == null)
+                {
+                    szFaxString = "None";
+                }
+                szStateString = request.getParameter("state");
+                if ("".equalsIgnoreCase(szStateString) || szStateString == null)
+                {
+                    szStateString = "None";
+                }
+                szCountryString = request.getParameter("country");
+                if ("".equalsIgnoreCase(szCountryString) || szCountryString == null)
+                {
+                    szCountryString = "None";
+                }
+
+                szpasswordtime = request.getParameter("passwordtime");
+                DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                Date date = new Date();
+                System.out.println("Current date:" + date);
+                szpasswordtime = dateFormat.format(date);
+                System.out.println("check password time" + dateFormat);
+                if ("".equalsIgnoreCase(szpasswordtime) || szpasswordtime == null || szpasswordtime.equals("null"))
+                {
+                    szpasswordtime = "None";
+                    System.out.println("password checking inside");
+                }
+
+                sAGroupArray = request.getParameterValues("group");
+                szPrimaryGroup = request.getParameter("group");
+                log.info("The grouparray is ..." + sAGroupArray);
+                if (sAGroupArray != null)
+                {
+                    for (int i = 0; i < sAGroupArray.length; i++)
+                    {
+                        //LogWriter.writeDebug("The groups are...."+sAGroupArray[i],3,HSsessions);
+                    }
+                }
+                szZipString = request.getParameter("zip");
+                if ("".equalsIgnoreCase(szZipString) || szZipString == null)
+                {
+                    szZipString = "None";
+                }
+                szUserCheck = request.getParameter("user_check");
+                if ("".equalsIgnoreCase(szUserCheck) || szUserCheck == null)
+                {
+                    szUserCheck = "None";
+                }
+                szCustomerString = request.getParameter("customer");
+                if ("".equalsIgnoreCase(szCustomerString) || szCustomerString == null)
+                {
+                    szCustomerString = "Internal";
+                }
+
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("EXCEPTION : Getting Request values for UserAddition	:");
+            }
+            try
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+
+                if (con != null)
+                {
+
+                    boolean bUserExists = false;
+                    PreparedStatement statement3 = con.prepareStatement("SELECT user_id from " + DBConstants.OPERATOR_TABLE + " where user_id = ?");
+                    statement3.setString(1, szUserId);
+                    ResultSet rs3 = statement3.executeQuery();
+                    while (rs3.next())
+                    {
+                        bUserExists = true;
+                    }
+                    rs3.close();
+                    statement3.close();
+                    if (!bUserExists)
+                    {
+                        System.out.println("inside UserExitsts condition1");
+                        PreparedStatement statement4 = con.prepareStatement("SELECT user_id from " + DBConstants.USER_TABLE + " where user_id = ?");
+                        statement4.setString(1, szUserId);
+                        ResultSet rs4 = statement4.executeQuery();
+                        while (rs4.next())
+                        {
+                            bUserExists = true;
+                        }
+                        rs4.close();
+                        statement4.close();
+                        System.out.println("exiting userexitsts condition");
+
+                    }
+                    if (!bUserExists)
+                    {
+                        System.out.println("Inside UserExists condition");
+                        statement = con.prepareStatement("INSERT INTO " + DBConstants.OPERATOR_TABLE + " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                        statement.setString(1, szUserId);
+                        //		statement.setString(2,szPassword);
+                        statement.setString(2, szPasswordEncr);
+                        statement.setString(3, szSecurityLevel);
+                        statement.setString(4, szUserNameString);
+                        statement.setString(5, szEmailString);
+                        statement.setString(6, szEmail2String);
+                        statement.setString(7, szAddressString);
+                        statement.setString(8, szCityString);
+                        statement.setString(9, szZipString);
+                        statement.setString(10, szStateString);
+                        statement.setString(11, szCountryString);
+                        statement.setString(12, szPhoneString);
+                        statement.setString(13, szFaxString);
+                        statement.setInt(14, iOpenTaskCount);
+                        statement.setString(15, szCustomerString);
+                        statement.setString(16, "None");
+                        statement.setString(17, szpasswordtime);
+                        statement.setString(18, "off");
+
+                        statement.executeUpdate();
+
+                        statement.close();
+                        statement2 = con.prepareStatement("INSERT INTO " + DBConstants.AGENT_GROUP_TABLE + " values(?,?)");
+                        if (sAGroupArray != null)
+                        {
+                            System.out.println("Inside AgentGroupArray condition");
+                            for (int i = 0; i < sAGroupArray.length; i++)
+                            {
+                                statement2.setString(1, szUserId);
+                                statement2.setString(2, sAGroupArray[i]);
+
+                                statement2.executeUpdate();
+                            }
+                            statement2.close();
+                        }
+                        szActions = "Added New Internal User " + szUserId + " with Security Level " + szSecurityLevel;
+
+                        String szFirstChar = szUserId.substring(0, 1);
+                        String szUppercase = szFirstChar.toUpperCase();
+                        String szAddrTable = szUppercase + "AddressBook";
+                        String szPopTable = szUppercase + "PopAccounts";
+                        String szGrMembersTable = szUppercase + "GroupMembers";
+                        String szRulesTable = szUppercase + "Rules";
+                        String szCannedUserTable = szUppercase + "CannedResponse";
+
+                        log.info(" Address Book Table Name: " + szAddrTable);
+                        try
+                        {
+                            System.out.println("Inside UserOptions condition");
+                            String szHost = request.getServerName();
+                            String szQueryins = "INSERT INTO " + HG_DBConstants.USER_OPTIONS_TABLE + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                            PreparedStatement Pstatement = con.prepareStatement(szQueryins);
+                            Pstatement.setString(1, szUserId);
+                            Pstatement.setString(2, szPasswordEncr);
+                            Pstatement.setString(3, szUserId);
+                            Pstatement.setString(4, "Sent");
+                            Pstatement.setString(5, szUserId + "@" + szHost);
+                            Pstatement.setString(6, "NONE");
+                            Pstatement.setString(7, "NONE");
+                            Pstatement.setString(8, "NONE");
+                            Pstatement.setString(9, "NONE");
+                            Pstatement.setString(10, "NONE");
+                            Pstatement.setString(11, "Yes");
+                            Pstatement.setString(12, szUserId + "@" + szHost);
+                            Pstatement.setInt(13, 5);
+                            Pstatement.setInt(14, 10);
+                            Pstatement.setString(15, "No");
+                            Pstatement.setString(16, "descending");
+                            Pstatement.setInt(17, -1);
+                            Pstatement.setString(18, "forward");
+                            Pstatement.setString(19, "No");
+                            Pstatement.setString(20, szAddrTable);
+                            Pstatement.setString(21, szUserId + "@" + szHost);
+                            Pstatement.setString(22, "NONE");
+                            Pstatement.setString(23, "NONE");
+                            Pstatement.setString(24, "NONE");
+                            Pstatement.setString(25, "NONE");
+                            Pstatement.setString(26, "NONE");
+                            Pstatement.setString(27, "NONE");
+                            Pstatement.setString(28, "NONE");
+                            Pstatement.setString(29, "NONE");
+                            Pstatement.setString(30, "English");
+                            Pstatement.setString(31, "NONE");
+                            Pstatement.setString(32, "NONE");
+                            Pstatement.setString(33, "false");
+                            Pstatement.setString(34, "INBOX");
+                            Pstatement.setString(35, "Yes");
+                            int rowins = Pstatement.executeUpdate();
+                            System.out.println("Useroption query executes succfully");
+                            Pstatement.close();
+                        } catch (SQLException sqle)
+                        {
+                            sqle.printStackTrace();
+                            log.error("EXCEPTION Inserting to HGUserOptions		: ", sqle);
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.error("EXCEPTION Inserting to HGUserOptions		: ", e);
+                        }
+                        try
+                        {
+                            System.out.println("Inside cannedusertable create");
+                            String szCannedquery = " CREATE TABLE  " + szCannedUserTable + "(owner VARCHAR(255) NOT NULL,name VARCHAR(255),content TEXT,attachments VARCHAR(255),PRIMARY KEY(name) )";
+                            java.sql.Statement statementcan = con.createStatement();
+                            int rowins = statementcan.executeUpdate(szCannedquery);
+                            log.info("Canned Table Created -  SUCESSFULLY");
+                            statementcan.close();
+                            System.out.println("cannedusertable created succfully");
+                        } catch (SQLException sqle)
+                        {
+                            sqle.printStackTrace();
+                            log.info("Canned Table Creation -  Falied");
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.info("Canned Table Creation -  Falied");
+                        }
+
+                        try
+                        {
+                            System.out.println("Inside create poptable");
+                            String szPopquery = " CREATE TABLE  " + szPopTable + "(owner VARCHAR(255) NOT NULL,popserver VARCHAR(255),popport  INTEGER ,accountname VARCHAR(255),accountpassword VARCHAR(255),leavemessage VARCHAR(50) )";
+                            java.sql.Statement popstatement = con.createStatement();
+                            int rowins = popstatement.executeUpdate(szPopquery);
+                            log.info("POP Table Created - SUCESSFULLY");
+                            popstatement.close();
+                            System.out.println("Pop table created");
+                        } catch (SQLException sqle)
+                        {
+                            sqle.printStackTrace();
+                            log.info("POP Table Created - exception");
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.info("exception:POP Table Create");
+                        }
+
+                        valuestore directory = new valuestore();
+
+                        String szDataBaseName = "Postgresql";
+                        try
+                        {
+                            System.out.println("Inside Rules table create");
+                            String szRulesQuery = "";
+                            if ("Postgresql".equalsIgnoreCase(szDataBaseName))
+                            {
+                                szRulesQuery = " CREATE TABLE " + szRulesTable + " (owner VARCHAR(255) NOT NULL,rulename VARCHAR(255),description VARCHAR(255) , conditionfield VARCHAR(255), conditioncomparison VARCHAR(255), conditionvalue VARCHAR(255) , action VARCHAR(255),target VARCHAR(255),targetfile VARCHAR(255),targettext TEXT )";
+                            } else if ("MS Access".equalsIgnoreCase(szDataBaseName))
+                            {
+                                szRulesQuery = " CREATE TABLE " + szRulesTable + " (owner VARCHAR(255) NOT NULL,rulename VARCHAR(255),description VARCHAR(255) , conditionfield VARCHAR(255), conditioncomparison VARCHAR(255), conditionvalue VARCHAR(255) , action VARCHAR(255),target VARCHAR(255),targetfile VARCHAR(255),targettext MEMO )";
+                            } else
+                            {
+                                szRulesQuery = " CREATE TABLE " + szRulesTable + " (owner VARCHAR(255) NOT NULL,rulename VARCHAR(255),description VARCHAR(255) , conditionfield VARCHAR(255), conditioncomparison VARCHAR(255), conditionvalue VARCHAR(255) , action VARCHAR(255),target VARCHAR(255),targetfile VARCHAR(255),targettext TEXT )";
+                            }
+                            java.sql.Statement rulesstatement = con.createStatement();
+                            int rowins = rulesstatement.executeUpdate(szRulesQuery);
+                            log.info("Rules Table Created -  SUCESSFULLY");
+                            rulesstatement.close();
+                            System.out.println("rulestable created");
+                        } catch (SQLException sqle)
+                        {
+                            sqle.printStackTrace();
+                            log.error("Rules Table Creation -  Failed	");
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.error("Rules Table Creation -  Failed	");
+                        }
+
+                        try
+                        {
+
+                            System.out.println("Inside Addr table create");
+                            String szAddrQuery = "";
+                            if ("Postgresql".equalsIgnoreCase(szDataBaseName))
+                            {
+                                szAddrQuery = "CREATE TABLE " + szAddrTable + " (owner VARCHAR(255) NOT NULL,displayname VARCHAR(255),email VARCHAR(255),phone VARCHAR(255),fax VARCHAR(255),mobile VARCHAR(255),postal VARCHAR(255),city VARCHAR(255),zip VARCHAR(255),state VARCHAR(255),country VARCHAR(255),categorylist VARCHAR(1024),notes TEXT,photograph OID,photosize INTEGER)";
+                            } else if ("MS Access".equalsIgnoreCase(szDataBaseName))
+                            {
+                                szAddrQuery = "CREATE TABLE " + szAddrTable + " (owner VARCHAR(255) NOT NULL,displayname VARCHAR(255),email VARCHAR(255),phone VARCHAR(100),fax VARCHAR(100),mobile VARCHAR(100),postal VARCHAR(255),city VARCHAR(100),zip VARCHAR(100),state VARCHAR(100),country VARCHAR(100),categorylist MEMO,notes MEMO,photograph IMAGE,photosize INTEGER)";
+                            } else       //   if("SQL Server".equalsIgnoreCase(szDataBaseName))
+                            {
+                                szAddrQuery = "CREATE TABLE " + szAddrTable + " (owner VARCHAR(255) NOT NULL,displayname VARCHAR(255),email VARCHAR(255),phone VARCHAR(255),fax VARCHAR(255),mobile VARCHAR(255),postal VARCHAR(255),city VARCHAR(255),zip VARCHAR(255),state VARCHAR(255),country VARCHAR(255),categorylist TEXT,notes TEXT,photograph IMAGE,photosize INTEGER)";
+                            }
+                            java.sql.Statement Addrstatement = con.createStatement();
+                            int rowins = Addrstatement.executeUpdate(szAddrQuery);
+                            log.info("AddressBook Table Created - SUCESSFULLY");
+                            Addrstatement.close();
+                            System.out.println("Addr table created");
+                        } catch (SQLException sqle)
+                        {
+                            sqle.printStackTrace();
+                            log.error("AddressBook Table Creation - FAILED	", sqle);
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.error("AddressBook Table Creation - FAILED	", e);
+                        }
+                        try
+                        {
+
+                            System.out.println("Inside member table create");
+                            String szGrmembersQuery = "";
+                            if ("Postgresql".equalsIgnoreCase(szDataBaseName))
+                            {
+                                szGrmembersQuery = "CREATE TABLE " + szGrMembersTable + " (owner VARCHAR(255) NOT NULL,groupname VARCHAR(255),displayname TEXT)";
+                            } else if ("MS Access".equalsIgnoreCase(szDataBaseName))
+                            {
+                                szGrmembersQuery = "CREATE TABLE " + szGrMembersTable + " (owner VARCHAR(255) NOT NULL,groupname VARCHAR(255),displayname MEMO)";
+                            } else    // if("SQL Server".equalsIgnoreCase(szDataBaseName))
+                            {
+                                szGrmembersQuery = "CREATE TABLE " + szGrMembersTable + " (owner VARCHAR(255) NOT NULL,groupname VARCHAR(255),displayname TEXT)";
+                            }
+                            java.sql.Statement Grmemstatement = con.createStatement();
+                            int rowins = Grmemstatement.executeUpdate(szGrmembersQuery);
+                            log.info("Group Table Created - SUCESSFULLY");
+                            Grmemstatement.close();
+                            System.out.println("member table created");
+                        } catch (SQLException sqle)
+                        {
+                            sqle.printStackTrace();
+                            log.error("Group Table Creation - FAILED", sqle);
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.error("Group Table Creation - FAILED", e);
+                        }
+                        try
+                        {
+                        //groupmembers table
+                        //store the values from the table  to the  bean
+                        System.out.println("Inside default search table create");
+                        String szGTDefQuery="";
+                        if ("Postgresql".equalsIgnoreCase(szDataBaseName))
+                        {
+                        szGTDefQuery="CREATE TABLE "+HG_DBConstants.GT_DEFAULT_SEARCH_TABLE+" (user_name VARCHAR(255) NOT NULL,noofdays INTEGER,subject VARCHAR(800),sender VARCHAR(255),recipients TEXT,PRIMARY KEY(user_name))";
+                        }
+                        else if("MS Access".equalsIgnoreCase(szDataBaseName))
+                        {
+                        szGTDefQuery="CREATE TABLE "+HG_DBConstants.GT_DEFAULT_SEARCH_TABLE+" (user_name VARCHAR(255) PRIMARY KEY,noofdays INTEGER,subject VARCHAR(800),sender VARCHAR(255),recipients MEMO)";
+                        }
+                        else      // if("SQL Server".equalsIgnoreCase(szDataBaseName))
+                        {
+                        szGTDefQuery="CREATE TABLE "+HG_DBConstants.GT_DEFAULT_SEARCH_TABLE+" (user_name VARCHAR(255) NOT NULL,noofdays INTEGER,subject TEXT,sender VARCHAR(255),recipients TEXT,PRIMARY KEY(user_name))";
+                        }
+                        java.sql.Statement GTdefstmt = con.createStatement();
+                        int rowins = GTdefstmt.executeUpdate(szGTDefQuery);
+                        //GALogwriter.writeDebug("GTDefaultsearch  Table Created - SUCESSFULLY",2,session);
+                        GTdefstmt.close();
+                        System.out.println("default search table created");
+                        }
+                        catch(SQLException sqle)
+                        {
+                        sqle.printStackTrace();
+                        //GALogwriter.writeDebug("GTDefaultsearch  Table Creation - FAILED	"+SWriter,1,session);
+                        }
+                        catch (Exception e)
+                        {
+                        e.printStackTrace();
+                        //GALogwriter.writeDebug("GTDefaultsearch  Table Creation - FAILED	"+SWriter,1,session);
+                        }
+                        try
+                        {
+                            System.out.println("Inside insert into default");
+                            java.sql.Statement stmt3 = con.createStatement();
+                            stmt3.executeUpdate("INSERT INTO " + HG_DBConstants.GT_DEFAULT_SEARCH_TABLE + " VALUES('" + szUserId + "',7,'','','')");
+                            log.info("Default Value is inserted in  GTDefaultSearch : ");
+                            stmt3.close();
+                            System.out.println("default insertion success");
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.error("Default Value insertion failed in  GTDefaultSearch : ", e);
+                        }
+//					INSERT HIS DEFAULT VIEWS
+                        try
+                        {
+                            System.out.println("Inside default view");
+                            PreparedStatement statement55 = con.prepareStatement("INSERT INTO " + DBConstants.TASK_VIEW_TABLE + " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                            statement55.setString(1, szUserId);
+                            statement55.setString(2, "All");
+                            statement55.setString(3, "All");
+                            statement55.setString(4, "All");
+                            statement55.setString(5, "7");
+                            statement55.setString(6, "All");
+                            statement55.setString(7, "tasktype,status,createdby,lastupdateduser,lastupdatedtime,primarytaskflag,lastseenflag");
+                            statement55.setString(8, "All");
+                            statement55.setString(9, "homepage");
+                            statement55.setString(10, "No");
+                            statement55.setString(11, "No");
+                            statement55.setString(12, "No");
+                            statement55.setString(13, "No");
+                            statement55.setString(14, "ASC");
+                            statement55.setString(15, "search");
+
+                            statement55.setString(16, "no");
+                            statement55.executeUpdate();
+                            System.out.println("default view set successfully");
+                            statement55.close();
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.error("EXCEPTION : Inserting values in GATaskView ", e);
+                        }
+                        try
+                        {
+                            System.out.println("Inside transient view");
+                            PreparedStatement statement66 = con.prepareStatement("INSERT INTO " + DBConstants.TRANSIENT_VIEW_TABLE + " values(?,?,?,?,?,?,?)");
+                            statement66.setString(1, szUserId);
+                            statement66.setString(2, "None");
+                            statement66.setString(3, "All");
+                            statement66.setString(4, "All");
+                            statement66.setString(5, "None");
+                            statement66.setString(6, "None");
+                            statement66.setString(7, "None");
+                            statement66.executeUpdate();
+                            statement66.close();
+                            System.out.println("Transient view inserted");
+                        } catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            log.error("EXCEPTION : Inserting values in GATransientView ", e);
+                        }
+                        try
+                        {
+                            System.out.println("Inside Insert into user task filter");
+                            String szFilterId = szUserId + "HomeFilter";
+                            statement = con.prepareStatement("INSERT INTO " + DBConstants.USER_TASK_FILTER_TABLE + " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                            statement.setString(1, szUserId);
+                            statement.setString(2, szFilterId);
+                            statement.setString(3, "HomeFilter");
+                            statement.setString(4, "Customized Home Filter");
+                            statement.setString(5, "On");
+                            statement.setString(6, "7");
+                            statement.setString(7, "All");
+                            statement.setString(8, null);
+                            statement.setString(9, "All");
+                            statement.setString(10, "All");
+                            statement.setString(11, "Yes");
+                            statement.setString(12, "tasktype,status,createdby,lastupdateduser,lastupdatedtime,primarytaskflag,lastseenflag");
+                            statement.setString(13, "No");
+                            statement.setString(14, "None");
+                            statement.setString(15, "None");
+                            statement.setInt(16, 0);
+                            statement.executeUpdate();
+                            statement.close();
+                            System.out.println("Inserted user task filter success");
+                        } catch (Exception e)
+                        {
+                            opStatus = "101";
+                            opDescription = "DB Error";
+                            e.printStackTrace();
+                            log.error("EXCEPTION : Inserting values in GAUserTaskFilter ", e);
+                        }
+                    } else
+                    {
+                        bFLAG = false;
+                        opStatus = "100";
+                        opDescription = "The user record with this user id already exists";
+
+
+
+                    }
+
+                } else
+                {
+                    //database connection fail
+                    opStatus = "101";
+                    opDescription = "Unable to connect database";
+                    log.info("unable to connect to database");
+                }
+            } catch (SQLException sqle)
+            {
+                System.out.println("Exception while performing db operation");
+                sqle.printStackTrace();
+                log.error("EXCEPTION : Adding InternalUser ", sqle);
+                opStatus = "106";
+                opDescription = "Unable to perform request";
+
+                bFLAG = false;
+
+
+            } finally
+            {
+                try
+                {
+                    if (con != null)
+                    {
+                        con.close();
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    log.error("error closing connection", e);
+                }
+            }
+            if (bFLAG)
+            {
+
+                opStatus = "0";
+                opDescription = "Operation Success";
+                log.info("operation success");
+
+            }
+
+
+
+
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid Session login again";
+            log.info("invalid session");
+
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</adduser>");
+            response.getWriter().write(results.toString());
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing out put");
+        } finally
+        {
+            results = null;
+        }
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

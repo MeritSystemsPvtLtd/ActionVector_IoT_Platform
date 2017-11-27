@@ -1,0 +1,144 @@
+[
+   {
+      "text":"Select Graph",
+      "value":"Options",
+      "items":[
+         {
+            "text":"Health",
+            "id":"Health_id",
+            "value":"Health",
+            "items":[
+               {
+                  "text":"Availability",
+                  "value":"Availability",
+                  "filename":"/JVM/JVMAvail.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Availability"
+                  ],
+                  "index":"0"
+               },
+               {
+                  "text":"JVM Heap",
+                  "value":"JVM Heap",
+                  "filename":"/JVM/JVMHeapMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "HMUsed",
+                     "HMMax"
+                  ],
+                  "index":"1"
+               },
+               {
+                  "text":"JVM System Load",
+                  "value":"JVM System Load",
+                  "filename":"/JVM/JVMSystemMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "SysLoadAvg"
+                  ],
+                  "index":"2"
+               },
+               {
+                  "text":"JVM Thread",
+                  "value":"JVM Thread",
+                  "filename":"/JVM/JVMThreadMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "PeakThrCnt",
+                     "ThrCnt"
+                  ],
+                  "index":"3"
+               },
+                {
+                        "value": "Time Line Availability",
+                        "text": "Time Line Availability",
+                        "filename": "/JVM/JVMLineChartAvailability.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                   		 "Availability"],
+                        "index": "4"
+                    },
+                {
+                        "value": "Time Line Heap",
+                        "text": "Time Line Heap",
+                        "filename": "/JVM/JVMLineChartBatteryByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                        "HMUsed",
+                       "HMMax"],
+                        "index": "5"
+                    },
+                     {
+                        "value": "Time Line System Load",
+                        "text": "Time Line System Load",
+                        "filename": "/JVM/JVMLineChartBatteryByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [ "SysLoadAvg"],
+                        "index": "6"
+                    },
+                     {
+                        "value": "Time Line Thread",
+                        "text": "Time Line Thread",
+                        "filename": "/JVM/JVMLineChartBatteryByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                     "PeakThrCnt",
+                     "ThrCnt"],
+                        "index": "7"
+                    },
+            ]
+         },
+         {
+            "text":"Alert",
+            "value":"Alert",
+            "items":[
+               {
+                  "text":"Alerts By Assignee",
+                  "value":"Alerts By Assignee",
+                  "filename":"/JVM/JVMAssignee.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"0"
+               },
+               {
+                  "text":"Alerts By Status",
+                  "value":"Alerts By Status",
+                  "filename":"/JVM/JVMStatus.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"1"
+               },
+               {
+                  "text":"Critical Alerts",
+                  "value":"Critical Alerts",
+                  "filename":"/JVM/JVMAlertCount.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+                     "UNLODCLASSEXC",
+                     "HMExceded",
+                     "JVMThCntExceded",
+                     "JVM_HSTDWN"
+                  ],
+                  "index":"2"
+               }
+            ]
+         }
+      ]
+   }
+]

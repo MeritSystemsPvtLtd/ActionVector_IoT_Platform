@@ -1,0 +1,22 @@
+## Request properties
+request.commandsequence.startbytes.byte0 = 0x80
+request.commandsequence.startbytes.byte1 = 0x80
+request.commandsequence.startbytes.byte2 = 0x80
+request.commandsequence.datalength.byte = 0x00
+request.commandsequence.deviceoption.inverter.byte = 0x01	//ignored
+request.commandsequence.deviceoption.sensor.byte = 0x01   //ignored
+request.commandsequence.deviceno.byte = 0x01 //ignored
+request.commandsequence.command.byte = 0x12		//ignored
+request.commandsequence.checksum.byte = 0x00	//ignored
+
+## Response properties - not being processed now
+response.commandsequence.startbytes.byte0 = 0x80
+response.commandsequence.startbytes.byte1 = 0x80
+response.commandsequence.startbytes.byte2 = 0x80
+
+response.commandsequence.datalength.byte = 0x00
+response.commandsequence.deviceoption.inverter.byte = 0x01
+response.commandsequence.deviceoption.sensor.byte = 0x02
+response.commandsequence.deviceno.byte = 0x01
+response.commandsequence.command.byte = 0x12
+response.commandsequence.datavalue.byte = 0x12

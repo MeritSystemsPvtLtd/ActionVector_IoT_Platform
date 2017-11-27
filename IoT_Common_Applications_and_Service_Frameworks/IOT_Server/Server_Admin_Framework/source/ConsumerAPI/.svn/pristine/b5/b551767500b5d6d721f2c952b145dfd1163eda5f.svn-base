@@ -1,0 +1,139 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.log4j.Logger;
+/**
+ *
+ * @author gopal
+ */
+public class CustomerDatabase extends HttpServlet
+{
+static Logger log = Logger.getLogger(CustomerDatabase.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+
+        StringBuffer results = new StringBuffer("<database-creation>");
+        String opStatus = null;
+        String opDescription = null;
+        boolean fcheckschema = false;
+        boolean fcheckdb = false;
+        String dbname = request.getParameter("customerid");
+        if (dbname != null && !dbname.equalsIgnoreCase(""))
+        {
+            try
+            {
+                fcheckdb = CreateCustomerDatabase.createDatabase(dbname, request);
+                if (fcheckdb)
+                {
+                    //response.getWriter().write("databse " + dbname + " created successfully");
+                    System.out.println("databse " + dbname + " created successfully");
+                    log.debug("databse " + dbname + " created successfully");
+                } else
+                {
+                    //response.getWriter().write("Fail to create database");
+                    System.out.println("Fail to create database");
+                    log.debug("Fail to create database");
+                }
+                fcheckschema = CreateCustomerDatabase.createCustomerSchema(request, dbname);
+                if (fcheckschema)
+                {
+                    //response.getWriter().write("databseschema for " + dbname + " created successfully");
+                    System.out.println("databseschema for " + dbname + " created successfully");
+                    log.debug("databseschema for " + dbname + " created successfully");
+                } else
+                {
+                    //response.getWriter().write("Fail to create database");
+                    log.debug("Fail to create database");
+                    System.out.println("Fail to create database");
+                }
+                if (fcheckdb && fcheckschema)
+                {
+                    opStatus = "0";
+                    opDescription = "Database Created Successfully";
+                } else
+                {
+                    opStatus = "106";
+                    opDescription = "Unable to process the request action";
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        } else
+        {
+            opStatus = "101";
+            opDescription = "Invalid Inputs";
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</database-creation>");
+            response.getWriter().write(results.toString());
+        //System.out.println(results);
+        } catch (Exception e)
+        {
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            results = null;
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

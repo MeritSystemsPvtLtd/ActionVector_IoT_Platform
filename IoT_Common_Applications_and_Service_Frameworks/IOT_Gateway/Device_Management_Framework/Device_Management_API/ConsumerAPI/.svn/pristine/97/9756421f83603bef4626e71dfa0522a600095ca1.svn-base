@@ -1,0 +1,119 @@
+package businessmodel;
+import java.io.*;
+import java.util.*;
+import javax.naming.*;
+import javax.naming.ldap.*;
+import javax.naming.directory.*;
+import javax.servlet.http.HttpServlet;
+class  TestADS extends HttpServlet
+{
+
+
+
+	public String loginLDAP(String user,String passd,String szDirectoryServer,String szDirectoryPort,String szDirectoryBaseContext,String szDirectoryAuthenticationMethod,String szUserPrefix,String szADSDomain) 
+	{
+		System.out.println("Hello World!");
+		String  username = user;
+		String  pwd = passd;
+		String szLDAPaddr=szDirectoryServer;
+		int iLDAPport = Integer.parseInt(szDirectoryPort);
+		String szLDAPAuth = szDirectoryAuthenticationMethod;
+		//String szLDAPUserIDPrefix = "cn=";
+		String szLDAPUserIDPrefix = szUserPrefix;
+		String szLDAPSrchbase = szDirectoryBaseContext;//configdet.getLDAPSrchBase();
+		System.out.println("### User Name :"+username);
+		
+		System.out.println("### ADSearchBase :"+szLDAPSrchbase);
+
+
+		//String searchFilter = szLDAPUserIDPrefix+username;
+		String searchFilter = "(&(objectClass=user)(sAMAccountName=" + username + "))";
+		String szUserMail4mLDAP="";
+		String[] returnAttribute = {"mail"}; // ### Searching attribute ...
+		SearchControls srchControls = new SearchControls();
+		srchControls.setReturningAttributes(returnAttribute);
+		srchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+					 
+		Hashtable authEnv = new Hashtable();
+		String szProviderURL = "ldap://"+szLDAPaddr+":"+iLDAPport;
+
+		//String szLDAPSrchbase = szLdapSearchBase;//configdet.getLDAPSrchBase(); // Getting it from Configuration file ..
+			
+			//String szLDAPSrchbase = "ou=TestOU,dc=meritsystems,dc=com"; // ### Will get it from Configuration file ...
+			
+			System.out.println("### AD URL  :"+szProviderURL);
+			System.out.println("### AD Search Base  :"+szLDAPSrchbase);
+			System.out.println("### AD Search Filter  :"+searchFilter);
+
+			authEnv.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory");
+			authEnv.put(Context.PROVIDER_URL,szProviderURL);// Getting it from Configuration file ...
+			authEnv.put(Context.SECURITY_AUTHENTICATION, szLDAPAuth);
+			//authEnv.put(Context.SECURITY_PRINCIPAL, username);
+			//authEnv.put(Context.SECURITY_PRINCIPAL, szLDAPUserIDPrefix+username+","+szLDAPSrchbase);
+			authEnv.put(Context.SECURITY_PRINCIPAL, username + "@" + szADSDomain);
+			authEnv.put(Context.SECURITY_CREDENTIALS, pwd);
+			try 
+			{
+				System.out.println("### Before Validating User using Directory Service ###");
+			
+			//	################################## Searching from the LDAP. #################################
+				LdapContext authContext = new InitialLdapContext(authEnv, null);
+				//LdapContext authContext = new InitialLdapContext(authEnv, null);
+				
+				if(authContext != null) // ### i.e. FOUND IN LDAP :),then Search in the DB, if not found enter this user into DB ...
+				{
+					System.out.println("### User exist in the AD :)");
+				
+					SearchResult result = null;
+
+					try 
+					{
+						System.out.println("### Now,lets search and get the user's email address from the AD ...");
+						//System.out.println("### searchFilter:"+searchFilter);
+				        NamingEnumeration answer = authContext.search(szLDAPSrchbase, searchFilter, srchControls);  
+       					while (answer.hasMoreElements())  
+       					{  
+          					SearchResult sr = (SearchResult) answer.next();  
+         					Attributes attrs = sr.getAttributes();  
+          					if (attrs != null)  
+           					{  
+								String[] arrMailAttr = ((BasicAttribute) attrs.get("mail")).toString().split(":");
+								if(arrMailAttr != null && arrMailAttr.length==2)
+								{
+									System.out.println("### Extracted Email :"+arrMailAttr[1]);
+									szUserMail4mLDAP = arrMailAttr[1];
+								}else{
+									szUserMail4mLDAP=null;
+								}
+          					
+          					}  
+						}
+
+						return szUserMail4mLDAP;												
+					} 
+					catch (Exception namEx) 
+					{
+						//namEx.printStackTrace();
+						System.out.println("### Exception  :"+namEx.toString());
+						szUserMail4mLDAP=null;
+						return szUserMail4mLDAP;
+					}
+					
+				}
+				return szUserMail4mLDAP;
+		}
+		catch(AuthenticationException exp) {
+							System.out.println("User not exist in ADS....");
+						    szUserMail4mLDAP = null;
+							return szUserMail4mLDAP;
+						}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			szUserMail4mLDAP = null;
+			return szUserMail4mLDAP;
+			
+		}
+		//return szUserMail4mLDAP;
+}
+}

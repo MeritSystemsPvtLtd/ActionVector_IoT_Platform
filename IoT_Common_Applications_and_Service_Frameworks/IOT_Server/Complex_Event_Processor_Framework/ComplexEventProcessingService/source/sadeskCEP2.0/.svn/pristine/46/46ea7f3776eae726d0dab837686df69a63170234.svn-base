@@ -1,0 +1,60 @@
+module com.prokosha.cep.dispatcher.v1;
+
+
+//compute the CpuUtil = CpuUser+CpuSystem
+//MemUsed (%) = (MemFree/MemTotal)*100 where,
+// MemTotal - total amount of memory available
+// MemFree - total free memory available
+//DiskUsed (%) = (DiskFree/DiskTotal)*100 where,
+// DiskTotal - total amount of disk space available
+// DiskFree - total free disk space unused
+insert into CPUMemDiskStream
+    select (CpuUser+CpuSystem) as CpuUtil,
+    ((MemFree/MemTotal)*100) as MemoryUtilisation,
+    ((DiskFree/DiskTotal)*100) as DiskSpaceUtilisation,
+    HostName as HostName1, HostAddress,
+    MemFree as FreeMemory, MemTotal as TotalMemory,
+    DiskFree as FreeDiskSpace, DiskTotal as TotalDiskSpace
+    from ServerStateStream;
+
+//compute the CpuLoad
+insert into LoadMon
+        select (Load1/CpuNum) as CpuLoad, HostName as HostName1, HostAddress
+        from ServerStateStream;
+
+//compute the 5 minute average of the load
+insert into AvgLoadMon
+    select avg(CpuLoad) as CurrentAvgLoad, HostName1, HostAddress
+    from LoadMon.win:time(1 minutes)
+        group by HostName1;
+
+//extract the begin avgLoad and end avgLoad for every 5 minute window
+insert into LoadIncreaseMon
+        select CurrentAvgLoad, first(CurrentAvgLoad) as PriorAvgLoad, HostName1, HostAddress
+        from AvgLoadMon.win:time(1 minutes)
+        group by HostName1;
+
+
+
+
+/**
+** Rule set1: Detect when the CPU util exceeds 80%, Memory usage is above 80% and Disk util is above 80%.
+** Alert once every 2 minutes for every distinct server
+**/
+@Name("com.prokosha.cep.cpudiskmem.dispatch.1")
+select  "Correlated Event" as EventType,
+    "ALERT - Disk,Mem and CPU Utilisation Rising" as EventDesc,
+    "Disk Space, Memory and CPU Utilisation has exceeded 80% and
+    Average load has increased by over 100% in the past 1 minutes" as EventSymptoms,
+    CMD.HostName1 as HostName, CMD.HostAddress as HostAddress, CMD.CpuUtil as CpuUtil,
+    CMD.MemoryUtilisation as MemoryUtilisation, CMD.TotalMemory as TotalMemory,
+    CMD.FreeMemory as FreeMemory, CMD.DiskSpaceUtilisation as DiskSpaceUtilisation,
+    CMD.FreeDiskSpace as FreeDiskSpace, CMD.TotalDiskSpace as TotalDiskSpace,
+    LIM.CurrentAvgLoad as CurrentAvgLoad, LIM.PriorAvgLoad as AvgLoadAtBegining
+    from CPUMemDiskStream.win:length(1) as CMD,
+    LoadIncreaseMon.win:length(1) as LIM
+    where (CMD.CpuUtil > 80.0f and CMD.MemoryUtilisation > 80.0f and CMD.DiskSpaceUtilisation > 80.0f
+    and ((LIM.HostName1 = CMD.HostName1) and (LIM.CurrentAvgLoad/LIM.PriorAvgLoad > 2.0)))
+    group by CMD.HostName1
+    output first every 2 minute;
+

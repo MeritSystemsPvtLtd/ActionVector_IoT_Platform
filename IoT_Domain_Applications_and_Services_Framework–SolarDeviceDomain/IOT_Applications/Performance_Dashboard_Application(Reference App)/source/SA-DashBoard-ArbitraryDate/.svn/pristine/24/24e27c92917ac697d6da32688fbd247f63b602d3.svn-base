@@ -1,0 +1,91 @@
+[
+   {
+      "text":"Select Graph",
+      "value":"Options",
+      "items":[
+        {
+            "text":"Health",
+            "id":"Health_id",
+            "value":"Health",
+            "items":[
+               {
+                  "value":"Actual vs Target Energy",
+                  "text":"Actual vs Target Energy",
+                  "filename":"/server/serverAlertCount.json",
+                  "charttype":"grouped",
+                  "category":"health",
+                  "metricType":[ "DayEnergy",
+                     "YearEnergy",
+		     "TotalEnergy" ],
+                  "index":"0"
+               },
+		{
+                  "value":"PerformanceRatio",
+                  "text":"PerformanceRatio",
+                  "filename":"/server/serverAlertCount.json",
+                  "charttype":"grouped",
+                  "category":"health",
+                  "metricType":[ "DayEnergy",
+                     "YearEnergy",
+                     "TotalEnergy" ],
+                  "index":"1"
+               },
+                {
+                  "value":"EnergyPerRatedPower",
+                  "text":"EnergyPerRatedPower",
+                  "filename":"/server/serverAlertCount.json",
+                  "charttype":"grouped",
+                  "category":"health",
+                  "metricType":[ "DayEnergy",
+                     "YearEnergy",
+                     "TotalEnergy" ],
+                  "index":"2"
+               }
+
+            ]
+         },
+         {
+            "text":"Alert",
+            "value":"Alert",
+            "items":[
+               {
+                  "value":"Alerts By Assignee",
+                  "text":"Alerts By Assignee",
+                  "filename":"/server/serverAssignee.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+					 "DayEnergy",
+                     "YearEnergy",
+		     "TotalEnergy"
+                  ],
+                  "index":"0"
+               },
+               {
+                  "value":"Alerts By Status",
+                  "text":"Alerts By Status",
+                  "filename":"/server/serverStatus.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+					 "DayEnergy",
+                     "YearEnergy",
+		     "TotalEnergy"
+                  ],
+                  "index":"1"
+               },
+               {
+                  "value":"Critical Alerts",
+                  "text":"Critical Alerts",
+                  "filename":"/server/serverAlertCount.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+                  ],
+                  "index":"2"
+               }
+            ]
+         }
+      ]
+   }
+]

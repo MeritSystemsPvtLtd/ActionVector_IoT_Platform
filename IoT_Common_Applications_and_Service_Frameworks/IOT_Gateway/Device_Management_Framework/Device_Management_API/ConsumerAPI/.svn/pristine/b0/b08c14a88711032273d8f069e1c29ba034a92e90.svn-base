@@ -1,0 +1,190 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Mail;
+
+import java.util.Properties;
+import java.io.*;
+import java.util.logging.Level;
+import org.apache.log4j.Logger;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+/**
+ *
+ * @author mkrekha
+ * Created on Dec 26, 2011, 3:48:24 PM
+ */
+public class ConfigValues implements Serializable
+{
+
+    private static String[] enbTasktypes = null;
+    private static int interval = 0;
+    private static Properties properties = null;
+    private static String driver = null;
+    private static String username = null;
+    private static String password = null;
+    private static String url = null;
+    private static Connection con = null;
+    private static String SMTPServer = null;
+    private static String SMTPPort = null;
+    private static String SMTPUser = null;
+    private static String SMTPPassword = null;
+    private static String link = null;
+
+    public static String getLink()
+    {
+        return link;
+    }
+
+    public static String getSMTPPort()
+    {
+        return SMTPPort;
+    }
+
+    public static String getSMTPServer()
+    {
+        return SMTPServer;
+    }
+
+    public static String getSMTPUser()
+    {
+        return SMTPUser;
+    }
+
+    public static String getSMTPPassword()
+    {
+        return SMTPPassword;
+    }
+
+    public static Connection getCon()
+    {
+
+        return con;
+    }
+
+    public static void setCon()
+    {
+        try
+        {
+            Class.forName(driver);
+            con = DriverManager.getConnection(url, username, password);
+
+        } catch (Exception e)
+        {
+            System.err.println("EXCEPTION : while Connecting to database:: " + e.getMessage());
+        }
+    }
+
+    public static void closeConnection()
+    {
+        if (con != null)
+        {
+            try
+            {
+
+                con.close();
+
+            } catch (SQLException ex)
+            {
+                java.util.logging.Logger.getLogger(ConfigValues.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    private static final Logger log = Logger.getLogger(ConfigValues.class.getName());
+
+    public static boolean initialized(javax.servlet.http.HttpServletRequest request) throws FileNotFoundException, IOException
+    {
+
+              properties = new Properties();
+            try
+            {
+                String FileName = null;
+                try
+                {
+                    String UserHome_dir = System.getProperty("user.home");
+                    String Fileseperator = System.getProperty("file.separator");
+                    String Servername = request.getServerName();
+                    FileName = UserHome_dir + Fileseperator + "parameters.properties";
+
+
+                } catch (Exception ex)
+                {
+                    ex.printStackTrace();
+                    System.out.println("PROPERTIES FILE NOT FOUND *****************");
+                }
+                Properties propsdAddressPath = new Properties();
+                propsdAddressPath.load(new FileInputStream(FileName));
+                properties.load(new FileInputStream(FileName));
+
+                String Tasktypes = properties.getProperty("enabled");
+                if (Tasktypes == null || Tasktypes.trim().length() == 0)
+                {
+                    log.error(" ERROR *** Command Not Specified - cannot continue!!");
+                    return false;
+                } else
+                {
+                    enbTasktypes = Tasktypes.split(",");
+                }
+
+                interval = Integer.parseInt(properties.getProperty("interval"));
+                driver = properties.getProperty("driver");
+                username = properties.getProperty("username");
+                password = properties.getProperty("password");
+                url = properties.getProperty("url");
+                SMTPServer = properties.getProperty("SMTPServer");
+                SMTPPort = properties.getProperty("SMTPPort");
+                SMTPUser = properties.getProperty("SMTPUser");
+                SMTPPassword = properties.getProperty("SMTPPassword");
+                link = properties.getProperty("link");
+
+                try
+                {
+                    Class.forName(driver);
+                    con = DriverManager.getConnection(url, username, password);
+
+                } catch (Exception e)
+                {
+                    System.err.println("EXCEPTION : while Connecting to database:: " + e.getMessage());
+                }
+            } catch (Exception e)
+            {
+                log.error(" ERROR *** ******************- cannot continue!!");
+                e.printStackTrace();
+                return false;
+            }
+            return true;
+        }
+
+    public static String getDriver()
+    {
+        return driver;
+    }
+
+    public static String getPassword()
+    {
+        return password;
+    }
+
+    public static String getUrl()
+    {
+        return url;
+    }
+
+    public static String getUsername()
+    {
+        return username;
+    }
+
+    public static String[] getEnbTasktypes()
+    {
+        return enbTasktypes;
+    }
+
+    public static int getInterval()
+    {
+        return interval;
+    }
+}

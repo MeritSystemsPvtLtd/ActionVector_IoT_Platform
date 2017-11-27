@@ -1,0 +1,39 @@
+module com.prokosha.cep.memcachemonitor.v1;
+
+//
+//compute average memcache latency for 5 minute window
+//if current memcache latency is 50% greater than average 
+//	send current memcache latency to 5 minutes monitor window
+//  in 5 minute window if last latency measure is equal to or greater than begin latency meaure send alert (in other words, alert if the latency increase is sustained)
+//
+
+//@Name("com.prokosha.cep.memcachemonitor.istream.1")
+insert into MemcacheLatencyMonitor
+	select MemcacheClient, MemcacheServer, MemcachePort, MemcacheLatency, avg(MemcacheLatency) as AvgMemcacheLatency
+	from MemcacheLatencyStream.win:time(5 minutes)
+	group by MemcacheServer, MemcachePort;
+
+//@Name("com.prokosha.cep.memcachemonitor.istream.2")
+insert into MemcacheLatencyRiseMonitor
+    select MemcacheClient, MemcacheServer, MemcachePort, MemcacheLatency, AvgMemcacheLatency
+	from MemcacheLatencyMonitor
+	where (MemcacheLatency/AvgMemcacheLatency > 1.5)
+	group by MemcacheServer, MemcachePort;
+
+//@Name("com.prokosha.cep.memcachemonitor.istream.3")
+insert into ReportMemcacheLatencyAlert
+	select MemcacheClient, MemcacheServer, MemcachePort, MemcacheLatency, AvgMemcacheLatency, 
+	last(AvgMemcacheLatency) as FinalMemcacheLatency, first(AvgMemcacheLatency) as InitialMemcacheLatency
+	from MemcacheLatencyRiseMonitor.win:time_batch(5 minutes)
+	group by MemcacheServer, MemcachePort;
+	
+@Name("com.prokosha.cep.memcachemonitor.dispatch.1")
+select "Correlated Event" as EventType,
+	"ALERT - Memcache Performance Degradation Likely" as EventDesc,
+	"Memcache read latency has increased by 50% and was sustained for the past 5 minutes" as EventSymptoms,
+    MemcacheServer as HostName,
+	MemcacheServer, MemcacheClient as MemcacheReadFrom, MemcachePort, MemcacheLatency as ReadElapsedTime, AvgMemcacheLatency as AverageMemcacheReadTime
+	from ReportMemcacheLatencyAlert
+	where (FinalMemcacheLatency >= InitialMemcacheLatency)
+	group by MemcacheServer, MemcachePort
+	output first every 2 minutes;

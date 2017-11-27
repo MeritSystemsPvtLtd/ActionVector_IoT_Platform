@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+"-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+"http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>
+   <constant name="struts.devMode" value="true" />
+   <constant name="struts.multipart.maxSize" value="10000000000" />
+
+   <package name="fileupload" namespace="/" extends="struts-default">
+        <action name="UploadFile" class="fileupload.uploadFile" method="execute">
+            <result name="success" >/success.jsp</result>
+            <result name="error">/error.jsp</result>
+        </action>
+    </package>
+</struts>

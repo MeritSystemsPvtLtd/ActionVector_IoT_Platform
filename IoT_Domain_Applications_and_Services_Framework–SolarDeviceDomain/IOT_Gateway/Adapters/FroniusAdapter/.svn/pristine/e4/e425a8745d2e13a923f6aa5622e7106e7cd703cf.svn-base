@@ -1,0 +1,413 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.prokosha.froniusadapter;
+
+import com.prokosha.froniusadapter.configuration.AdapterProperties;
+import com.prokosha.froniusadapter.configuration.FroniusEventMapper;
+import com.prokosha.froniusadapter.configuration.FroniusRequests;
+import com.prokosha.froniusadapter.configuration.SensorMapping;
+import com.prokosha.ssl.tcp.SSLClient;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
+/**
+ *
+ * @author rekhas
+ */
+public class FroniusAdapter {
+
+    private static Logger logger = Logger.getLogger(FroniusAdapter.class.getName());
+    private static Logger evtLogger = Logger.getLogger("eventsLogger");
+    private String propertyFile;
+    public static SSLClient FrontControllerSSLClient = null;
+    public static SSLClient WatchDogEventConnector = null;
+    private static long eventID;
+
+    public FroniusAdapter(String propertyFileName) {
+        logger.debug("Constructing  ...");
+        this.propertyFile = propertyFileName;
+    }
+
+    public boolean initialize() {
+
+        logger.debug("Loading FroniusAdapter properties from property file: " + propertyFile);
+        try {
+            if (!AdapterProperties.loadProperties(propertyFile)) {
+                logger.error("*** ERROR *** Coould not load the adapter properties correctly...");
+                return false;
+            }
+            if (!SensorMapping.loadProperties("config/sensorchannelmapping.properties")) {
+                logger.error("*** ERROR *** Coould not load the SensorMapping properties correctly...");
+                return false;
+            }
+
+            if (!FroniusRequests.initializeRequests(AdapterProperties.getXMLConfigFile())) {
+                logger.error("*** ERROR *** Coould not initialize the adapter requests configuration correctly...");
+                return false;
+            }
+            if (!FroniusEventMapper.initializeFroniusEvents(AdapterProperties.getEventMapper())) {
+                logger.error("*** ERROR *** Coould not initialize FroniusEventMapper correctly...");
+                return false;
+            }
+            if (!FroniusEventMapper.initializeEventStaticData(AdapterProperties.getEventStaticData())) {
+                logger.error("*** ERROR *** Coould not initialize EventStaticData correctly...");
+                return false;
+            }
+            if (!FroniusEventMapper.initializeParserMapping(AdapterProperties.getParserMapper())) {
+                logger.error("*** ERROR *** Coould not initialize EventStaticData correctly...");
+                return false;
+            }
+            if (!FroniusMailModule.initialize()) {
+                logger.error("*** ERROR *** Coould not initialize FroniusMailModule correctly...");
+                return false;
+            }
+            logger.debug("FroniusAdapter properties, FroniusEventMapper and requests configuration loaded successfully!!");
+            logger.info("No of events configured==>>" + FroniusEventMapper.getFroniusEvents().size());
+            return true;
+
+        } catch (Exception ex) {
+            logger.error("*** ERROR **** error while loading adapter properties and requests configuration: \n" + ex.toString());
+            logger.error("Send msg and e-mail" + ex.toString());
+            FroniusMailModule.sendSMS("Fronius Error while loading adapter properties and "
+                    + " requests configuration" + ex.toString());
+
+            String szSubject = "FroniusAdapterError";
+            String szBody = "Fronius Error while loading adapter properties and requests configuration"
+                    + ex.toString();
+            FroniusMailModule.sendMail(szSubject, szBody);
+
+            ex.printStackTrace();
+            return false;
+        }
+
+    }
+
+    public void mainLoop() {
+
+        logger.debug("Entering Fronius adapter mainloop...");
+        FrontControllerSSLClient = new SSLClient();
+        //set up the FrontController connector to package and send CEP events
+        FrontControllerSSLClient.initialize(AdapterProperties.getSSLHost(), AdapterProperties.getSSLPort(), AdapterProperties.getNewline());
+        if (AdapterProperties.sendToWatchDog()) {
+            WatchDogEventConnector = new SSLClient();
+            WatchDogEventConnector.initialize(AdapterProperties.getWatchDogHost(), AdapterProperties.getWatchDogPort(), AdapterProperties.getNewline());
+        }
+        logger.debug("Connecting to FrontController....");
+        if (!FrontControllerSSLClient.isServerReady()) {
+            logger.error("Some error occurred while connecting to FrontController. Will retry later...");
+        }
+
+        //setup the Fronius JSON downloader
+        logger.debug("Setting up the FroniusCollector...");
+        int moreRetries = AdapterProperties.getRetryCount() + 1;
+        //increment for at least one try
+
+        HashMap froniusRequestsMap = FroniusRequests.getRequestsMap();
+        HashMap eventSchemaMap = (HashMap) FroniusEventMapper.getFroniusEvents();
+        HashMap eventStaticData = FroniusEventMapper.getEventStaticData();
+        Iterator eventsItr;
+        String customerID = AdapterProperties.getCustomerID();
+        //String szSystemTemp;
+        String szDeviceTemp;
+        String jsonParserClsName;
+        String jsonParserMethodName;
+        String[] jsonParserMapping;
+        Class jsonParserClass;
+        Object jsonParserObj;
+        Method jsonParserMethod;
+        String timePeriod;
+        boolean evntSent = false;
+        String cCustomer = null;
+        String SystemID = AdapterProperties.getInstallationID();
+        int sendRetries = AdapterProperties.getSendRetryCount() + 1;
+
+        boolean forever = true;
+        while (forever && (moreRetries > 0)) {
+             StringBuffer jsonBuff;
+            boolean FrontControllerReady = false;
+
+            //download the Fronius json
+            logger.debug("Download Fronius JSON doc...");
+            String evtName;
+            Object evtStaticData;
+            String evtString = "";
+            eventsItr = froniusRequestsMap.keySet().iterator();
+            while (eventsItr.hasNext()) {
+                evtName = (String) eventsItr.next();
+                evtStaticData = eventStaticData.get(evtName);
+                logger.info("Download json for event " + evtName);
+                HashMap deviceMap = (HashMap) froniusRequestsMap.get(evtName);
+                HashMap dataCollMap = (HashMap) eventSchemaMap.get(evtName);
+                //logger.info("dataCollMap key entries==>>" + dataCollMap.keySet().toString());
+                Iterator deviceItr = deviceMap.keySet().iterator();
+                String deviceID = null;
+                boolean gotEvent;
+                boolean isSystem = false;
+
+                cCustomer = AdapterProperties.getcCustomerID();
+
+                while (deviceItr.hasNext()) {
+                    evtString = "";
+                    gotEvent = true;
+                    try {
+                        evntSent = false;
+                        deviceID = (String) deviceItr.next();
+                        String insDeviceID = SystemID + "-" + deviceID;
+                        Long timeL = System.currentTimeMillis() / 1000;
+                        //szSystemTemp = "stream=" + evtName + ",CustomerID=" + customerID + ",timestamp1=" + timeL + ",cCustomer="
+                        //+ cCustomer;
+                        szDeviceTemp = "stream=" + evtName + ",CustomerID=" + customerID + ",timestamp1=" + timeL + ",cCustomer="
+                                + cCustomer + ",HostName=" + insDeviceID + ",HostAddress=" + insDeviceID + ",resourceId=" + insDeviceID
+                                + ",IPAddress=" + insDeviceID;
+                        logger.info("deviceMap for device " + deviceID + " is==>>" + deviceMap.get(deviceID).toString());
+                        ArrayList dataCollections = (ArrayList) deviceMap.get(deviceID);
+                        for (int i = 0; i < dataCollections.size(); i++) {
+                            String dataCollection = (String) dataCollections.get(i);
+                            timePeriod = dataCollection.split(":")[2];
+                            jsonBuff = new StringBuffer();
+                            if (!FroniusModBusJSONCollector.download(jsonBuff, deviceID, dataCollection, timePeriod)) { //error while downloading
+                                //if (!FroniusHTTPJSONCollector.download(jsonBuff, deviceID, dataCollection, timePeriod)) { //error while downloading
+                                moreRetries--; //decrement counter
+                                gotEvent = false;
+                                logger.error("*** ERROR **** Error while downloading fronius json document.");
+                                if (moreRetries > 0) {
+                                    logger.error("Will retry download again later...");
+                                } else {
+                                    logger.fatal("*** FATAL ERROR *** Re-tried " + AdapterProperties.getRetryCount()
+                                            + " times to reconnect to fronius");
+                                    logger.fatal("*** FATAL ERROR *** Giving up... Fronius Adapter terminating.....");
+                                    return;
+                                }
+                            } else if (jsonBuff.length() < 1) {
+                                logger.info("json response null, hence breaking for device " + deviceID);
+                                gotEvent = false;
+                                FroniusError.sendErrorEvent("Cannot connect to fronius device id:" + deviceID,
+                                        "Cannot connect to fronius device id:" + deviceID);
+                                break;
+                            } else {
+                                //download successfull
+                                moreRetries = AdapterProperties.getRetryCount() + 1; //reset retry counter
+                                logger.info("JSON download successful");
+                                //parse json and send events to CEP
+                                if (dataCollection.contains(":")) {
+                                    dataCollection = dataCollection.split(":")[0];
+                                }
+                                logger.info("dataCollection==>>" + dataCollection);
+                                ArrayList paramList = (ArrayList) dataCollMap.get(dataCollection);
+                                //logger.info("paramList for dataCollection " + dataCollection + " is==>>" + paramList);
+                                String temp = FroniusEventMapper.getParser(evtName, dataCollection);
+                                jsonParserMapping = temp.split("-");
+                                logger.info("ParserMapping for " + evtName + "." + dataCollection + "==>>" + temp);
+                                jsonParserClsName = jsonParserMapping[0];
+                                jsonParserMethodName = jsonParserMapping[1];
+                                jsonParserClass = Class.forName(jsonParserClsName);
+                                jsonParserObj = jsonParserClass.newInstance();
+                                Class[] argsCls = new Class[3];
+                                argsCls[0] = String.class;
+                                argsCls[1] = ArrayList.class;
+                                argsCls[2] = String.class;
+                                jsonParserMethod = jsonParserClass.getDeclaredMethod(jsonParserMethodName, argsCls);
+
+                                if (dataCollection.equalsIgnoreCase("System")) {
+                                    evtString += (String) jsonParserMethod.invoke(jsonParserObj, jsonBuff.toString(), paramList, timePeriod);
+                                    isSystem = true;
+                                } else {
+                                    evtString += (String) jsonParserMethod.invoke(jsonParserObj, jsonBuff.toString(), paramList, timePeriod);
+                                    isSystem = false;
+                                }
+                            }
+                            jsonBuff = null; //offer the memory for garbage collection
+                        }
+                        if (evtStaticData != null) {
+                            evtString += "," + evtStaticData;
+                        }
+                        while ((!FrontControllerReady) && (sendRetries > 0)) {
+                            if (!FrontControllerSSLClient.isServerReady()) {
+                                logger.error("Some error occurred while connecting to front controller. Will retry...");
+                                sendRetries--;
+                            } else {
+                                FrontControllerReady = true;
+                            }
+                        }
+                        if (gotEvent) {
+                            String szEvtString;
+                            if (!isSystem) {
+                                szEvtString = szDeviceTemp + evtString;
+                                //sendEvent
+                                logger.info("Send CEP event==>>" + szEvtString);
+                                szEvtString = szEvtString + "," + "eventID=" + (++eventID);
+                                //if (FrontControllerReady) {
+                                szEvtString = addAvailability(szEvtString);
+                                evntSent = FrontControllerSSLClient.sendMessage(szEvtString);
+
+                                if (evntSent) {
+                                    logger.info("frontcontroller event sent successfully");
+                                }
+                                //}
+                                if (!evntSent) {
+                                    logger.info("frontcontroller event not sent, logging the event to send later");
+                                    evtLogger.info(szEvtString);
+                                }
+                            } else {
+                                /*Set deviceIDs = evtStringMap.keySet();
+                                 Iterator deivceItr = deviceIDs.iterator();
+                                 while (deivceItr.hasNext()) {
+                                 evntSent = false;
+                                 String szTempDevID = deivceItr.next().toString();
+                                 szEvtString = evtStringMap.get(szTempDevID).toString();
+                                 //accumulate metric values of all devices
+                                 if (evtName.equals(cumulationEvent)) {
+                                 foundCumulation = true;
+                                 String szTemp = szEvtString.split("DayEnergy=")[1];
+                                 SystemDayEnergy += Long.parseLong(szTemp.substring(0, szTemp.indexOf(",")));
+                                 szTemp = szEvtString.split("YearEnergy=")[1];
+                                 SystemYearEnergy += Long.parseLong(szTemp.substring(0, szTemp.indexOf(",")));
+                                 szTemp = szEvtString.split("TotalEnergy=")[1];
+                                 SystemTotalEnergy += Long.parseLong(szTemp.substring(0, szTemp.indexOf(",")));
+                                 szTemp = szEvtString.split("ACPower=")[1];
+                                 SystemACPower += Long.parseLong(szTemp.substring(0, szTemp.indexOf(",")));
+                                 }
+                                 }
+                                
+                                
+
+                                 if (foundCumulation) {
+                                 timeL = System.currentTimeMillis() / 1000;
+                                 String InverterCumulationEvent = "stream=" + "InverterCumulationEvent" + ",CustomerID=" + customerID + ",timestamp1=" + timeL
+                                 + ",cCustomer=" + cCustomer + ",HostName=" + SystemID + ",HostAddress=" + SystemID + ",resourceId=" + SystemID
+                                 + ",IPAddress=" + SystemID + ",DayEnergy=" + SystemDayEnergy + ",YearEnergy=" + SystemYearEnergy
+                                 + ",TotalEnergy=" + SystemTotalEnergy + ",ACPower=" + SystemACPower + ",resourceType=" + SystemID;
+                                 InverterCumulationEvent += "," + eventStaticData.get("InverterCumulationEvent");
+
+                                 InverterCumulationEvent = InverterCumulationEvent + "," + "eventID=" + (++eventID);
+
+                                 InverterCumulationEvent = addAvailability(InverterCumulationEvent);
+                                 evntSent = FrontControllerSSLClient.sendMessage(InverterCumulationEvent);
+                                 if (evntSent) {
+                                 logger.info("frontcontroller event sent successfully");
+                                 }
+                                 //}
+                                 if (!evntSent) {
+                                 logger.info("frontcontroller event not sent, logging the event to send later");
+                                 evtLogger.info(InverterCumulationEvent);
+                                 }
+                                 }*/
+                                szEvtString = "stream=" + "InverterCumulationEvent" + ",CustomerID=" + customerID + ",timestamp1=" + timeL
+                                        + ",cCustomer=" + cCustomer + ",HostName=" + SystemID + ",HostAddress=" + SystemID + ",resourceId=" + SystemID
+                                        + ",IPAddress=" + SystemID + ",resourceType=" + SystemID + evtString;
+                                //sendEvent
+                                logger.info("Send CEP event==>>" + szEvtString);
+                                szEvtString = szEvtString + "," + "eventID=" + (++eventID);
+                                //if (FrontControllerReady) {
+                                szEvtString = addAvailability(szEvtString);
+                                evntSent = FrontControllerSSLClient.sendMessage(szEvtString);
+
+                                if (evntSent) {
+                                    logger.info("frontcontroller event sent successfully");
+                                }
+                                //}
+                                if (!evntSent) {
+                                    logger.info("frontcontroller event not sent, logging the event to send later");
+                                    evtLogger.info(szEvtString);
+                                }
+                            }
+                        } else {
+                            logger.info("JSON download failed for some data collection. Ignoring this event.");
+                        }
+                        evtString = null;
+                    } catch (Exception e) {
+                        logger.error("Error for device " + deviceID + "==>>" + e.getMessage());
+                        logger.error("Send msg and e-mail" + e.toString());
+                        FroniusMailModule.sendSMS("Error for device " + deviceID + "==>>" + e.getMessage());
+
+                        String szSubject = "FroniusAdapterError";
+                        String szBody = "Error for device " + deviceID + "==>>" + e.getMessage();
+                        FroniusMailModule.sendMail(szSubject, szBody);
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            //sending watchdog event 09-04-2013
+            if (AdapterProperties.sendToWatchDog()) {
+                logger.debug("Connecting to WatchDog....");
+                if (!WatchDogEventConnector.isServerReady()) {
+                    WatchDogEventConnector.initialize(AdapterProperties.getWatchDogHost(), AdapterProperties.getWatchDogPort(), "\n");
+                }
+                if (!WatchDogEventConnector.isServerReady()) {
+                    logger.error("Some error occurred while connecting to WatchDog. Will retry later...");
+                } else {
+                    WatchDogEventConnector.sendMessage("type=froniusAdapter,status=Alive");
+                    logger.info("dogwatch event sent successfully");
+                }
+            }
+            try {
+                Thread.sleep(AdapterProperties.getSleepInterval());
+            } catch (InterruptedException ex) {
+                logger.error("Fronius adapter sleep between JSON downloads interrupted. Exiting......" + ex.toString());
+                logger.error("Send msg, e-mail" + ex.toString());
+                FroniusMailModule.sendSMS("Fronius adapter sleep between JSON downloads interrupted. Exiting......" + ex.toString());
+
+                String szSubject = "FroniusAdapterError";
+                String szBody = "Fronius adapter sleep between JSON downloads interrupted. Exiting......" + ex.toString();
+                FroniusMailModule.sendMail(szSubject, szBody);
+                ex.printStackTrace();
+                forever = false;
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+
+        //setup the logger properties
+        PropertyConfigurator.configure("config/logger.properties");
+
+        //TODO: pass the property file name as a program argument
+        FroniusAdapter fronius = new FroniusAdapter("config/froniusadapter.properties");
+
+        if (fronius.initialize()) {
+            fronius.mainLoop();
+        } else {
+            logger.error("Could not start Fronius adapter properly. Exiting.....");
+            System.exit(1);
+        }
+
+    }
+
+    private String addAvailability(String szEvent) {
+        int availability = 1;
+        try {
+            String[] szStrArray = szEvent.split("DeviceStatus=");
+
+            if (szStrArray != null) {
+                if (szStrArray.length > 1) {
+                    int deviceStatus = Integer.parseInt(szStrArray[1].split(",")[0]);
+                    if (deviceStatus == 7) {
+                        availability = 1;
+                    } else {
+                        availability = 0;
+                    }
+                    //szEvent += ",availability=" + availability;
+                }
+            }
+            szEvent += ",availability=" + availability;
+            szStrArray = null;
+            return szEvent;
+        } catch (Exception ex) {
+            logger.error("Error in adding availabiliy" + ex.toString());
+            FroniusMailModule.sendSMS("Fronius Error while adding availabiliy==>>" + ex.getMessage());
+            String szSubject = "FroniusAdapterError";
+            String szBody = "Fronius Error while adding availabiliy"
+                    + ex.toString();
+            FroniusMailModule.sendMail(szSubject, szBody);
+            ex.printStackTrace();
+        }
+        return null;
+    }
+}

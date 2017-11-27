@@ -1,0 +1,7 @@
+#ResourceName=ResId,ProcessName,InstanceId,InstancePort
+gmetad=192.168.1.177,java com.prokosha.ganglia.GangliaAdapter,192.168.1.55,8649
+DBMonitor=192.168.1.177,java com.prokosha.dbmonitor.DBMonitor,null,null
+JVMLocal=192.168.1.177,java cm.meritsystems.monitor.JVMMonitor,null,null
+JVMRemote=192.168.1.177,java com.meritsystems.monitor.Monitor,null,null
+NetAgent=192.168.1.177,java lm.sensors.LMSensors,null,null
+OpsView=192.168.1.177,java com.prokosha.adapter.perfdata.SadeskPerfdataAdapter,null,null

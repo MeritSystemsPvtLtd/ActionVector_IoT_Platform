@@ -1,0 +1,720 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/* -------------------------------------------------------------------------
+ *
+ *                           Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *              #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8rd Block
+ *                          Bangalore - 560 070, India
+ *                Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *         THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ * --------------------------------------------------------------------------
+ */
+package controller;
+import dbmanager.DatabaseConnectionManager;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.sql.*;
+import org.apache.log4j.Logger;
+/**
+ *
+ * @author gopal
+ * Created on Aug 3, 2012, 10:53:35 AM
+ */
+public class AV_SARegistrationDetails
+{
+public static Logger log=Logger.getLogger(AV_SARegistrationDetails.class);
+    private java.sql.PreparedStatement statement = null;
+    private java.sql.ResultSet rs = null;
+    private String szDatabaseName = "";
+    private String szDataSourceName = "";
+    private String szDatabaseDriver = "";
+    private String szDatabaseUser = "";
+    private String szDatabasePassword = "";
+    String szDomainName = "None";
+    String szHomeDir = "None";
+    String szSmtpAddress = "None";
+    int iSmtpPort = 0;
+    int szpasswordexpperiod = 0;
+    int sznopasslockattempt = 0;
+    String szSmtpUser = "None";
+    String szSmtpPassword = "None";
+    String szBannerFile = "None";
+    String szHomeFileGIF = "None";
+    String szLogoFile = "None";
+    String szBackGroundGif = "None";
+    String szBackGroundColor = "None";
+    String szFaxDomain = "None";
+    String szFaxPort = "None";
+    String szSmsPort = "None";
+    String szSmsDomain = "None";
+    int iLogLevel = 0;
+    String szUserRegistration = "None";
+    String szRegMailBoxid = "None";
+    String szRegMailBoxPassword = "None";
+    String szPostCreateFile = "None";
+    String szPostUpdateFile = "None";
+    String imapaddress = "";
+    int iIMAPPort = 0;
+    String szLanguage = "None";
+    String szDemoFlag = "false";
+    String szKeyNumber1 = "";
+    String szKeyNumber2 = "";
+    String szDomainEmail = "";
+    boolean szEmailModule = false;
+    boolean szFaxModule = false;
+    boolean szSMSModule = false;
+    String szName = "";
+    String szDesignation = "";
+    String szOrganization = "";
+    String szAddress = "";
+    String szCity = "";
+    String szZip = "";
+    String szCountry = "";
+    String szState = "";
+    String szPhone = "";
+    String szFax = "";
+    String szEmail = "";
+    String szOrgName = "";
+    String szBandColor = "";
+    String szHomePage = "";
+    String szLoginURL_Ref = "";
+    String szMeritCopyRight = "";
+    String szStrongPwdChk = "Yes";
+    String szExternaluser = "No";
+    String szDirLink = "No";
+    public String getDatabaseName()
+    {
+        return szDatabaseName;
+    }
+
+    public String getDataSourceName()
+    {
+        return szDataSourceName;
+    }
+
+    public String getDatabaseDriver()
+    {
+        return szDatabaseDriver;
+    }
+
+    public String getDatabaseUser()
+    {
+        return szDatabaseUser;
+    }
+
+    public String getDatabasePassword()
+    {
+        return szDatabasePassword;
+    }
+
+    public String getDomainName()
+    {
+        return szDomainName;
+    }
+
+    public String getHomeDir()
+    {
+        return szHomeDir;
+    }
+
+    public String getSmtpAddress()
+    {
+        return szSmtpAddress;
+    }
+
+    public int getSmtpPort()
+    {
+        return iSmtpPort;
+    }
+
+    public String getSmtpUser()
+    {
+        return szSmtpUser;
+    }
+
+    public String getSmtpPassword()
+    {
+        return szSmtpPassword;
+    }
+
+    public String getBannerFile()
+    {
+        return szBannerFile;
+    }
+
+    public String getHomeGIFFile()
+    {
+        return szHomeFileGIF;
+    }
+
+    public String getLogoFile()
+    {
+        return szLogoFile;
+    }
+
+    public String getBackGroundGif()
+    {
+        return szBackGroundGif;
+    }
+
+    public String getBackGroundColor()
+    {
+        return szBackGroundColor;
+    }
+
+    public String getFaxDomain()
+    {
+        return szFaxDomain;
+    }
+
+    public String getFaxPort()
+    {
+        return szFaxPort;
+    }
+
+    public String getSmsPort()
+    {
+        return szSmsPort;
+    }
+
+    public String getSmsDomain()
+    {
+        return szSmsDomain;
+    }
+
+    public int getLogLevel()
+    {
+        return iLogLevel;
+    }
+
+    public String getUserRegistration()
+    {
+        return szUserRegistration;
+    }
+
+    public String getRegMailBoxid()
+    {
+        return szRegMailBoxid;
+    }
+
+    public String getRegMailBoxPassword()
+    {
+        return szRegMailBoxPassword;
+    }
+
+    public String getPostCreateFile()
+    {
+        return szPostCreateFile;
+    }
+
+    public String getPostUpdateFile()
+    {
+        return szPostUpdateFile;
+    }
+
+    public String getImapAddress()
+    {
+        return imapaddress;
+    }
+
+    public int getIMAPPort()
+    {
+        return iIMAPPort;
+    }
+
+    public String getLanguage()
+    {
+        return szLanguage;
+    }
+
+    public String getDemoFlag()
+    {
+        return szDemoFlag;
+    }
+
+    public String getKeyNumber1()
+    {
+        return szKeyNumber1;
+    }
+
+    public String getKeyNumber2()
+    {
+        return szKeyNumber2;
+    }
+
+    public String getDomainEmail()
+    {
+        return szDomainEmail;
+    }
+
+    public String getName()
+    {
+        return szName;
+    }
+
+    public String getDesignation()
+    {
+        return szDesignation;
+    }
+
+    public String getOrganization()
+    {
+        return szOrganization;
+    }
+
+    public String getAddress()
+    {
+        return szAddress;
+    }
+
+    public String getCity()
+    {
+        return szCity;
+    }
+
+    public String getZip()
+    {
+        return szZip;
+    }
+
+    public String getCountry()
+    {
+        return szCountry;
+    }
+
+    public String getState()
+    {
+        return szState;
+    }
+
+    public String getPhone()
+    {
+        return szPhone;
+    }
+
+    public String getFax()
+    {
+        return szFax;
+    }
+
+    public String getEmail()
+    {
+        return szEmail;
+    }
+
+    public String getOrgName()
+    {
+        return szOrgName;
+    }
+
+    public String getBandcolor()
+    {
+        return szBandColor;
+    }
+
+    public String getHomePage()
+    {
+        return szHomePage;
+    }
+
+    public String getLoginURL_Ref()
+    {
+        return szLoginURL_Ref;
+    }
+
+    public String getMeritCopyRight()
+    {
+        return szMeritCopyRight;
+    }
+
+    public String getStrongPwdChk()
+    {
+        return szStrongPwdChk;
+    }
+
+    public int getSzpasswordexpperiod()
+    {
+        return szpasswordexpperiod;
+    }
+
+    public int getSznopasslockattempt()
+    {
+        return sznopasslockattempt;
+    }
+
+    public String getExtUserChk()
+    {
+        return szExternaluser;
+    }
+
+    public String getDirLink()
+    {
+        return szDirLink;
+    }
+
+    public boolean configureRegistrationDetails(Connection con,javax.servlet.http.HttpServletRequest request,String szDatabaseName, String szDataSourceName,String szDatabaseDriver,String szDatabaseUser,String szDatabasePassword,String szKey1,String szKey2)
+    {
+        boolean bRequestProcessFlag = true;
+        javax.servlet.http.HttpSession HSsession = request.getSession(true);
+        DBConstants DBConstants = new DBConstants();
+
+        try
+        {
+            /*szDatabaseName = request.getParameter("database_name");
+            szDataSourceName = request.getParameter("datasource_name");
+            szDatabaseUser = request.getParameter("database_user");
+            szDatabasePassword = request.getParameter("database_password");
+            szDatabaseDriver = request.getParameter("database_driver");
+            szDemoFlag = request.getParameter("demo_flag");*/
+          /*szName = request.getParameter("name");
+            szDesignation = request.getParameter("designation");
+            szOrganization = request.getParameter("organization");
+            szAddress = request.getParameter("address");
+            szCity = request.getParameter("city");
+            szZip = request.getParameter("zip");
+            szCountry = request.getParameter("country");
+            szState = request.getParameter("state");
+            szPhone = request.getParameter("phone");
+            szFax = request.getParameter("fax");
+            szEmail = request.getParameter("email");*/
+        } catch (Exception e)
+        {
+        }
+        if (szDatabasePassword == null)
+        {
+            szDatabasePassword = "";
+        }
+        try
+        {
+            //Class.forName(szDatabaseDriver);
+           //String szDBServerName = request.getServerName();
+          //ServletContext oSC = request.getSession().getServletContext();
+            //con = DatabaseConnectionManager.getConnection("GIFT_GARegistrationDetail", szDBServerName, oSC);
+            statement = con.prepareStatement("SELECT * FROM " + DBConstants.DOMAIN_INFO_TABLE + "");
+            rs = statement.executeQuery();
+            
+            while (rs.next())
+            {
+                try
+                {
+                    szDomainName = rs.getString("domainname");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving domainname :");
+                }
+                try
+                {
+                    szHomeDir = rs.getString("homedir");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving homedir :");
+                }
+                try
+                {
+                    szSmtpAddress = rs.getString("smtpaddress");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving smtpaddress :");
+                }
+                try
+                {
+                    iSmtpPort = rs.getInt("smtpport");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving smtpport :");
+                }
+                try
+                {
+                    szSmtpUser = rs.getString("smtpuser");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving smtpuser :");
+                }
+                try
+                {
+                    szSmtpPassword = rs.getString("smtppassword");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving smtppassword :");
+                }
+
+                try
+                {
+                    imapaddress = rs.getString("imapaddress");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving imapaddress :");
+                }
+                try
+                {
+                    iIMAPPort = rs.getInt("imapport");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving imapport :");
+                }
+                try
+                {
+                    szBannerFile = rs.getString("bannerfile");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving bannerfile :");
+                }
+
+
+                try
+                {
+                    szHomeFileGIF = rs.getString("homegif");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving Home gif file :");
+                }
+
+                try
+                {
+                    szBackGroundGif = rs.getString("backgroundgif");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving backgroundgif :");
+                }
+                try
+                {
+                    szBackGroundColor = rs.getString("backgroundcolor");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving backgroundcolor :");
+                }
+                try
+                {
+                    szLanguage = rs.getString("language");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving language :");
+                }
+                try
+                {
+                    szFaxDomain = rs.getString("faxdomain");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving language :");
+                }
+                try
+                {
+                    szFaxPort = rs.getString("faxport");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving language :");
+                }
+                try
+                {
+                    szSmsDomain = rs.getString("smsdomain");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving language :");
+                }
+                try
+                {
+                    szSmsPort = rs.getString("smsport");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving language :");
+                }
+                try
+                {
+                    iLogLevel = rs.getInt("loglevel");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving language :");
+                }
+                try
+                {
+                    szUserRegistration = rs.getString("userregistration");
+                } catch (Exception edomainname)
+                {
+                    System.out.println("Exception caught while retriving language :");
+                }
+                try
+                {
+                    szRegMailBoxid = rs.getString("regmailboxid");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving regmailboxid :");
+                }
+                try
+                {
+                    szRegMailBoxPassword = rs.getString("regmailboxpassword");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving regmailboxpassword :");
+                }
+                try
+                {
+                    szPostCreateFile = rs.getString("postcreatefile");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving postcreatefile :");
+                }
+                try
+                {
+                    szPostUpdateFile = rs.getString("postupdatefile");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving postupdatefile :");
+                }
+                try
+                {
+                    szKeyNumber1 = rs.getString("key1");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving key1 :");
+                }
+                try
+                {
+                    szKeyNumber2 = rs.getString("key2");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving key2 :");
+                }
+                try
+                {
+                    szDomainEmail = rs.getString("domainemail");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving domainemail :");
+                }
+                try
+                {
+                    szLogoFile = rs.getString("logofile");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving logofile :");
+                }
+                try
+                {
+                    szOrgName = rs.getString("organizationname");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving organizationname :");
+                }
+                try
+                {
+                    szBandColor = rs.getString("bandcolor");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving bandcolor :");
+                }
+                try
+                {
+                    szHomePage = rs.getString("homepage");
+                } catch (Exception e1)
+                {
+                    System.out.println("Exception caught while retriving homepage :");
+                }
+                try
+                {
+                    szLoginURL_Ref = rs.getString("LoginURL_Ref");
+                } catch (Exception e1)
+                {
+                    szLoginURL_Ref = "NONE";
+                    System.out.println("Exception caught while retriving LoginURL_Ref :");
+                }
+
+                try
+                {
+                    szMeritCopyRight = rs.getString("MeritCopyRight_reqd");
+                } catch (Exception e1)
+                {
+                    szMeritCopyRight = "Yes";
+                    System.out.println("Exception caught while retriving MeritCopyRight_reqd :");
+                }
+
+                try
+                {
+                    szStrongPwdChk = rs.getString("StrongPasswordChk");
+                } catch (Exception e1)
+                {
+                    szStrongPwdChk = "No";
+                    System.out.println("Exception caught while retriving StrongPasswordChk :");
+                }
+                try
+                {
+                    szpasswordexpperiod = rs.getInt("passwordexpperiod");
+                } catch (Exception e1)
+                {
+                    szpasswordexpperiod = 0;
+                    System.out.println("Exception caught while retriving passwordexpperiod :");
+                }
+                try
+                {
+                    sznopasslockattempt = rs.getInt("nopasslockattempt");
+                } catch (Exception e1)
+                {
+                    sznopasslockattempt = 0;
+                    System.out.println("Exception caught while retriving nopasslockattempt :");
+                }
+                try
+                {
+                    szExternaluser = request.getParameter("externaluser");
+                } catch (Exception e1)
+                {
+                    szExternaluser = "No";
+                    System.out.println("Exception caught while retriving External user :");
+                }
+
+            }
+            rs.close();
+            statement.close();
+            statement = con.prepareStatement("SELECT * FROM " + DBConstants.DIRECTORY_LINK_TABLE + " WHERE directoryflag='Yes'");
+            rs = statement.executeQuery();
+            if (rs.next())
+            {
+                this.szDirLink = "Yes";
+            }
+            rs.close();
+            statement.close();
+        
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        } /*finally
+        {
+        try
+        {
+        if (con != null)
+        {
+        con.close();
+        }
+
+        } catch (SQLException ex)
+        {
+        Logger.getLogger(AV_SARegistrationDetails.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        }*/
+        /*AV_SAMessageConfiguration OMessages=new AV_SAMessageConfiguration();
+        OMessages.configureMessages(con,request,szDatabaseName, szDataSourceName,szDatabaseDriver,szDatabaseUser,szDatabasePassword,szKey1,szKey2,szDomainName,szHomeDir);*/
+        try
+        {
+            request.setAttribute("NextScreen", "/jsp/GIFT_GAConfiguration.jsp");
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return true;
+    }
+}

@@ -1,0 +1,260 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
+import java.util.HashMap;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class Getgrouproles extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(Getgrouproles.class);
+    Connection con = null;
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml");
+
+        PreparedStatement statement2 = null;
+        StringBuffer results = new StringBuffer("<group-rolelist>");
+        StringBuffer result = null;
+        String opStatus = null;
+        String opDescription = null;
+        String customerid=null;
+        String check = null;
+        HttpSession HSSessions;
+        boolean checksession = true;
+        String szFromAdminLogin = null;
+        String[] szRoleArr = null;
+        boolean config = false;
+        String username = null;
+        String sessionid = null;
+        HashMap<String, Integer> hashMap = new HashMap<String, Integer>();
+        int iGroupLen = 0;
+        ResultSet rs1 = null;
+        ResultSet rs2 = null;
+        Object OUser1;
+        String szUsers;
+        Integer ISecurityUsers = 1;
+        PreparedStatement statement1 = null;
+        java.util.ArrayList vGroupList = new java.util.ArrayList();
+        java.util.ArrayList vSecurityList = new java.util.ArrayList();
+        try
+        {
+            HSSessions = request.getSession(true);
+           
+            /*OUser1 = HSSessions.getValue("user");
+            ISecurityUsers = (Integer) HSSessions.getValue("ints");
+            szFromAdminLogin = (String) HSSessions.getAttribute("FromAdminLogin");
+            customerid=request.getParameter("customerid");
+            sessionid=request.getParameter("sessionid");
+            username=request.getParameter("username");*/
+        } catch (Exception k)
+        {
+            
+            k.printStackTrace();
+            opStatus = "102";
+            opDescription = "Session invalid";
+            System.out.println("Session fail");
+            log.info("invalid session");
+
+        }
+        if (checksession)
+        {
+            try
+            {
+                con = DatabaseConnection.getGuiDatabaseConnection(request);
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error while connecting to database");
+            }
+            if (con != null)
+            {
+                System.out.println("aaa:::::" + con);
+                try
+                {
+
+                    statement1 = con.prepareStatement("select groupname from gagroupname");
+                    rs1 = statement1.executeQuery();
+
+                    while (rs1.next())
+                    {
+                        vGroupList.add((String) rs1.getString("groupname"));
+                    }
+
+                    rs1.close();
+                    statement1.close();
+                    statement2 = con.prepareStatement("select name,level from gasecuritylevels where level !=1 and name != 'User'");
+                    rs2 = statement2.executeQuery();
+                    while (rs2.next())
+                    {
+                        String szKey = rs2.getString("name");
+                        Integer szValues = (Integer) rs2.getInt("level");
+                        hashMap.put(szKey, szValues);
+
+                    }
+                    System.out.println("roles:::::" + vSecurityList);
+                    rs2.close();
+                    statement2.close();
+                    ListIterator lit = vGroupList.listIterator();
+
+                    int i = 0, j = 0;
+                    result = new StringBuffer("<groups>");
+                    while (lit.hasNext())
+                    {
+                        result.append("<group>");
+                        result.append("<group-name>");
+                        String name = (String) lit.next();
+                        result.append(name);
+                        result.append("</group-name>");
+
+                        Set set = hashMap.entrySet();
+                        Iterator it = set.iterator();
+                     
+                        while (it.hasNext())
+                        {
+                            Map.Entry me = (Map.Entry) it.next();
+                            System.out.print(me.getKey() + ": ");
+                            System.out.println(me.getValue());
+                            result.append("<role>");
+                            String role = (String) me.getKey();
+                            result.append("<name>");
+                            result.append(role);
+                            result.append("</name>");
+                            int level = (Integer)me.getValue();
+                            result.append("<level>");
+                            result.append(level);
+                            result.append("</level>");
+
+                            result.append("</role>");
+
+                        }
+                      
+                        result.append("</group>");
+                   
+                    }
+                    result.append("</groups>");
+                    opStatus = "0";
+                    opDescription = "Success";
+                    log.info("operation success");
+                    hashMap = null;
+                } catch (Exception e)
+                {
+                    opStatus = "106";
+                    opDescription = "Unable to process the request";
+                    log.error("unable to process the request action");
+                    e.printStackTrace();
+                } finally
+                {
+                    try
+                    {
+                        if (con != null)
+                        {
+                            con.close();
+
+                        }
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        log.error("error closing connection", e);
+                    }
+                }
+            } else
+            {
+                opStatus = "101";
+                opDescription = "Database operation failed";
+                log.info("database connection failed");
+            }
+            iGroupLen = vGroupList.size();
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid Session Login again";
+            log.info("invalid session");
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            if (!(result == null))
+            {
+                results.append(result);
+            }
+            results.append("</group-rolelist>");
+            response.getWriter().write(results.toString());
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            System.out.println("xml response fail");
+        } finally
+        {
+            result = null;
+            results = null;
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

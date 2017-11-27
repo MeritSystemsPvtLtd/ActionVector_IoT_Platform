@@ -1,0 +1,89 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package AV_Action;
+import businessmodel.*;
+import org.apache.log4j.Logger;
+/**
+ *
+ * @author gopal
+ */
+public class AV_GetHosts extends AV_Model{
+ static Logger log = Logger.getLogger(AV_GetHosts.class);
+ public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+        response.setContentType("text/xml;charset=UTF-8");
+        StringBuffer result = new StringBuffer();
+        String szopration = "hostservices";
+        String szrespStr=null;
+        String szSessionid = "";
+        boolean fchecksession = false;
+        boolean fchkParam = false;
+        String szHostServices = null;
+        try
+        {
+            szSessionid = request.getParameter("szsessionid");
+            if (szSessionid != null && !szSessionid.equalsIgnoreCase(""))
+            {
+                
+                fchkParam = true;
+            }
+            if (fchkParam)
+            {
+               
+                    result.append("<hosttoservices>");
+                    
+                    szHostServices = GetHostServices.getAllHostServices(request);
+                    if (szHostServices == null)
+                    {
+                        
+                        AV_Constants.opStatus=AV_Constants.NODATA_FOUND;
+                        log.debug("No data found");
+                    } else
+                    {
+                        if(szHostServices.equalsIgnoreCase(""))
+                            result.append("Undefined");
+                        else
+                            result.append(szHostServices);
+
+                        AV_Constants.opStatus=AV_Constants.SUCCESS;
+                    }
+                    result.append("</hosttoservices>");
+                
+            } else
+            {
+                
+                AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            log.error("Error while performing action", e);
+            AV_Constants.opStatus=AV_Constants.FAILURE;
+        }
+        try
+        {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,result,szopration,sc);
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e)
+        {
+            log.debug("exception while writing output", e);
+        } finally
+        {
+            try
+            {
+                szopration = null;
+                szrespStr=null;
+                result = null;
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+ }
+}

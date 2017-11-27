@@ -1,0 +1,586 @@
+
+<html>
+<head>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<style>
+#customerschart.k-grid table,#customerschart2.k-grid table,#customerschart3.k-grid table,#customerschart4.k-grid table
+	{
+	border-style: solid;
+	border-width: 1px;
+	-webkit-appearance: none;
+	background-color: black;
+	width: 80%;
+	margin: auto;
+	text-align: center;
+}
+
+#customerschart.k-grid .k-widget,#customerschart2.k-grid .k-widget,#customerschart3.k-grid .k-widget,#customerschart4.k-grid .k-widget
+	{
+
+	background-color: black;
+	padding: 2px;
+}
+
+#customerschart>table tr td,#customerschart2>table tr td,#customerschart3>table tr td,#customerschart4>table tr td
+	{
+	border-width:0px;
+	background-color: black;
+	font-size: 6.5pt;
+}
+
+#customerschart>.k-grid.k-widget tr td,#customerschart2>.k-grid.k-widget tr td,#customerschart3>.k-grid.k-widget tr td,#customerschart4>.k-grid.k-widget tr td
+	{
+	border-width:0px;
+	background-color: black;
+	font-size: 6.5pt;
+}
+</style>
+</head>
+<body style="background-color:#1b141a">
+	<div id="loader"
+i		style="position: absolute; left: 65%; top: 50%; z-index: 100"></div>
+	<div id="customersexample" class="k-content">
+		<table id="customersdiagram">
+
+			<tr>
+				<td>
+					<div id="customerscharthead">
+						<table width="100%">
+							<tr>
+								<td>
+									<ul id="customersinput" />
+								</td>
+								<td><input id="customerschartname" type="text"
+									class="k-textbox" readonly="readonly" /></td>
+								<td><div class="wrapper">
+										<button class="k-button" id="customersRTButton" style=""
+											onclick="generateLiveLineChart(this.id)">
+											<font size=2>Live</font>
+										</button>
+									</div></td>
+							</tr>
+						</table>
+					</div>
+					<div class="chart" id="customerschart" style="border: 0;"></div>
+				</td>
+				<td>
+					<div id="customerscharthead2">
+						<table width="100%">
+							<tr>
+								<td>
+									<ul id="customersinput2" />
+								</td>
+								<td><input id="customerschartname2" type="text"
+									class="k-textbox" readonly="readonly" /></td>
+								<td><div class="wrapper">
+										<button class="k-button" id="customersRTButton2"
+											onclick="generateLiveLineChart(this.id)">
+											<font size=2>Live</font>
+										</button>
+									</div></td>
+							</tr>
+						</table>
+					</div>
+					<div id="customerschart2" style="border: 0;"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div id="customerscharthead3">
+						<table width="100%">
+							<tr>
+								<td>
+									<ul id="customersinput3" />
+								</td>
+								<td><input id="customerschartname3" type="text"
+									class="k-textbox" readonly="readonly" /></td>
+								<td><div class="wrapper">
+										<button class="k-button" id="customersRTButton3"
+											onclick="generateLiveLineChart(this.id)">
+											<font size=2>Live</font>
+										</button>
+									</div></td>
+							</tr>
+						</table>
+					</div>
+					<div id="customerschart3" style="border: 0;"></div>
+				</td>
+				<td>
+					<div id="customerscharthead4">
+						<table width="100%">
+							<tr>
+								<td>
+									<ul id="customersinput4" />
+								</td>
+								<td><input id="customerschartname4" type="text"
+									class="k-textbox" readonly="readonly" /></td>
+								<td><div class="wrapper">
+										<button class="k-button" id="customersRTButton4"
+											onclick="generateLiveLineChart(this.id)">
+											<font size=2>Live</font>
+										</button>
+									</div></td>
+							</tr>
+						</table>
+					</div>
+					<div id="customerschart4" style="border: 0;"></div>
+				</td>
+			</tr>
+		</table>
+		<div id="customersgrid"></div>
+	</div>
+
+	<script>
+		var chartheaddiv = [ "customerschartname", "customerschartname2",
+				"customerschartname3", "customerschartname4" ]
+		var combodiv = [ "#customersinput", "#customersinput2",
+				"#customersinput3", "#customersinput4", "#customerscharthead",
+				"#customerscharthead2", "#customerscharthead3",
+				"#customerscharthead4", "#customersexample",
+				"#customersdiagram", "#customerschart", "#customerschart2",
+				"#customerschart3", "#customerschart4", "#customersgrid",
+				"customerstypeColumn", "customerstypeColumn2",
+				"customerstypeColumn3", "customerstypeColumn4",
+				"customersseriesType", "customersseriesType2",
+				"customersseriesType3", "customersseriesType4",
+				"customerstypeBar", "customerstypeBar2", "customerstypeBar3",
+				"customerstypeBar4", "customerstypeLine", "customerstypeLine2",
+				"customerstypeLine3", "customerstypeLine4" ]
+		var headdiv = [
+				[ "customerstypeColumn", "customerstypeBar",
+						"customerstypeLine" ],
+				[ "customerstypeColumn2", "customerstypeBar2",
+						"customerstypeLine2" ],
+				[ "customerstypeColumn3", "customerstypeBar3",
+						"customerstypeLine3" ],
+				[ "customerstypeColumn4", "customerstypeBar4",
+						"customerstypeLine4" ] ]
+		var dataSource5;
+		var firstGrid;
+		var secondGrid;
+		var servicefirst = null;
+		var servicesecond = null;
+		var servicethird = null;
+		var sub = "";
+		var finalgriddata;
+		var service = "";
+		var host;
+		var Customer;
+		var combourl;
+		var startup = true;
+		var firstIteration = false;
+		var secondIteration = false;
+		var thirdIteration = false;
+		var fourthIteration = false;
+		var customerUrl;
+		var gridurl;
+		var userDetails = []
+		function customerMainGrid(division) {
+			/* to load the values for the left hand gridside */
+			gridurl = customerID + "/" + $('#maincombo').val() + "/"
+					+ "CustomersLeftGrid.json";
+			/* to load the Health and Alert menues */
+			combourl = "jsonconfigurations/CustomerComboSource.json";
+			$("#customersgrid").empty();
+			/* get the user name from the SA-Desk UI application and Authenticate the user based on it*/
+			userDetails = getUserAuthenticity("Admin");
+			if (userDetails[0] == "Admin") {
+				/*if the user Role is Admin ,the user should see the Customer view tab without any filtering*/
+				firstGrid = new kendo.data.DataSource({
+					transport : {
+						read : {
+							url : gridurl,
+							dataType : "json"
+						}
+					},
+
+				});
+				firstDetail();
+			} else if (userDetails[0] == "Customer") {
+				/*if the user Role is Customer ,the user should see the Customer view tab with the filtered Customer name*/
+				firstGrid = new kendo.data.DataSource({
+					transport : {
+						read : {
+							url : gridurl,
+							dataType : "json"
+						}
+					},
+					/* filter based on Customer name */
+					filter : {
+						field : "Customer",
+						operator : "eq",
+						value : userDetails[1]
+					}
+				});
+				firstDetail();
+
+			} else if (userDetails[0] == "installationUser") {
+				/*if the user Role is InstalltionUser ,the user should see the Customer view tab with the filtered installation with repect to the Customer name*/
+				servicesecond = userDetails[1];
+				servicefirst = userDetails[2];
+				detailInit();
+
+			}
+			/* if the User Role is Customer or Admin this function is called to populate the left conatining Customer names*/
+			function firstDetail() {
+
+				firstIteration = true;
+				secondIteration = false;
+				fourthIteration = false;
+				thirdIteration = false;
+				/* to load CustomerComboSource Customer is assigned */
+				customerUrl = "Customer";
+
+				var element = $(division)
+						.kendoGrid(
+								{
+									/* to load left grid data use the fistGrid as dataSource */
+									dataSource : firstGrid,
+									selectable : "single",
+									/* to load menus from CustomerComboSource on all four div's, onDataBound is called*/
+									dataBound : onDataBound,
+									/* to load Charts along with the chart name in all four div's */
+									change : onChange,
+									/* to make drill down to next level deatilInit is called*/
+									detailInit : detailInit,
+									scrollable : false,
+									resizable : false,
+									reorderable : false,
+									sortable : false,
+									detailCollapse : function() {
+
+										firstIteration = true;
+										secondIteration = false;
+										fourthIteration = false;
+										thirdIteration = false;
+										this.refresh();
+									},
+									/*	define columns by passing the values to the respective method*/
+									columns : [
+											{
+												template : "#=generateLeftGridBasedOnHealth(Health,Customer)#"
+
+											},
+											{
+												template : "#=generateHealthstatus(Customer,Health)#",
+												/* the size for this column is fixed to end of the row*/
+												width : "40px"
+											} ]
+								});
+				/* to hide the Column header*/
+				hideHeader();
+			}
+			/* called for Displaying next set of drill down containing  installations*/
+			function detailInit(e) {
+				/* pass the value Cotains the Customer Name(eg.shreecity)*/
+				if (getEstatus(e)) {
+					servicefirst = e.data.Customer;
+					Customer = servicefirst;
+					/*load the data on click of the plus symbol of first level */
+					secondGrid = new kendo.data.DataSource({
+						transport : {
+							read : {
+								url : customerID + "/" + $('#maincombo').val()
+										+ "/" + servicefirst + "/"
+										+ "ServicesLeftGrid.json",
+								dataType : "json"
+							}
+						}
+
+					});
+				} else {
+					/* if e value is null then this is called based Role based where filtering based on Customer name is done */
+					Customer = servicefirst;
+					secondGrid = new kendo.data.DataSource({
+						transport : {
+							read : {
+								url : customerID + "/" + $('#maincombo').val()
+										+ "/" + servicefirst + "/"
+										+ "ServicesLeftGrid.json",
+								dataType : "json"
+							}
+						},
+						filter : {
+							field : "ServiceName",
+							operator : "eq",
+							value : servicesecond
+
+						}
+
+					});
+				}
+
+				firstIteration = false;
+				secondIteration = true;
+				fourthIteration = false;
+				thirdIteration = false;
+				customerUrl = "Installation";
+				/* if called from first level of Drill down*/
+				if (getEstatus(e)) {
+					$("<div/>")
+							.appendTo(e.detailCell)
+							.kendoGrid(
+									{
+										dataSource : secondGrid,
+										selectable : "single",
+										dataBound : onDataBound,
+										change : onChange,
+										detailInit : detailInit3,
+										scrollable : false,
+										resizable : false,
+										reorderable : false,
+										sortable : false,
+										detailExpand : function() {
+
+										},
+										detailCollapse : function() {
+
+											if (firstIteration == false) {
+
+												firstIteration = false;
+												secondIteration = true;
+												fourthIteration = false;
+												thirdIteration = false;
+												this.refresh();
+											}
+
+										},
+										columns : [
+												{
+													template : "#=generateLeftGridBasedOnHealth(Health,ServiceName)#"
+												},
+												{
+													template : "#=generateHealthstatus(ServiceName,Health)#",
+													width : "35px"
+												} ]
+
+									});
+					/* if called based on Roles based filtering*/
+				} else {
+
+					var element = $(division)
+							.kendoGrid(
+									{
+										dataSource : secondGrid,
+										selectable : "single",
+										dataBound : onDataBound,
+										change : onChange,
+										detailInit : detailInit3,
+										scrollable : false,
+										resizable : false,
+										reorderable : false,
+										sortable : false,
+										detailCollapse : function() {
+
+											firstIteration = false;
+											secondIteration = true;
+											fourthIteration = false;
+											thirdIteration = false;
+											this.refresh();
+										},
+
+										columns : [
+												{
+													template : "#=generateLeftGridBasedOnHealth(Health,ServiceName)#"
+												},
+												{
+													template : "#=generateHealthstatus(ServiceName,Health)#",
+													width : "35px"
+												} ]
+									});
+				}
+
+				hideHeader();
+			}
+			/* called for grouping the devices*/
+			function detailInit3(e) {
+				servicesecond = e.data.ServiceName;
+				Customer = servicefirst + "/" + servicesecond;
+				firstIteration = false;
+				secondIteration = false;
+				fourthIteration = false;
+				thirdIteration = true;
+				var secondGrid = new kendo.data.DataSource({
+					transport : {
+						read : {
+							url : customerID + "/" + $('#maincombo').val()
+									+ "/" + servicefirst + "/" + servicesecond
+									//+ "/" + "LeftGrid.json",
+									+ "/" + "DefaultResourcetype.json",
+							dataType : "json"
+						}
+
+					}
+
+				});
+
+				$("<div/>")
+						.appendTo(e.detailCell)
+						.kendoGrid(
+								{
+									dataSource : secondGrid,
+									scrollable : false,
+									resizable : false,
+									reorderable : false,
+									sortable : false,
+									dataBound : function() {
+										CustomerClearAll();
+										this.select(this.tbody
+												.find(">tr:first"));
+										//this.expandRow(this.tbody
+										//		.find(">tr:first"));
+									},
+									selectable : "single",
+
+									change : function() {
+										var grid = this;
+										grid.collapseRow(grid.tbody
+												.find("tr.k-master-row"));
+									},
+									detailInit : detailInit4,
+									detailCollapse : function() {
+										if (secondIteration == false
+												&& firstIteration == false) {
+
+											firstIteration = false;
+											secondIteration = false;
+											fourthIteration = false;
+											thirdIteration = true;
+											this.refresh();
+										}
+
+									},
+									columns : [
+											{
+												//template : "#=generateLeftGridBasedOnHealth(Health,ServiceName)#"
+												template : "#=generateLeftGridBasedOnHealth(Health,ResourceType)#"
+
+											},
+											{
+
+												template : "#=generateHealthstatus(ResourceType,Health)#",
+												width : "30px"
+
+											} ]
+								});
+
+				hideHeader();
+			}
+			/* to display the charts for each Devices(eg.inverter)*/
+			function detailInit4(e) {
+				//servicethird = e.data.ServiceName;
+				servicethird = e.data.ResourceType;
+				customerUrl = servicethird;
+				Customer = servicefirst + "/" + servicesecond + "/"
+						+ servicethird;
+				combourl = "jsonconfigurations/" + servicethird
+						+ "ComboSource.json";
+				firstIteration = false;
+				secondIteration = false;
+				thirdIteration = false;
+				fourthIteration = true;
+				var thirdGrid = new kendo.data.DataSource({
+					transport : {
+						read : {
+							url : customerID + "/" + $('#maincombo').val()
+									+ "/" + servicefirst + "/" + servicesecond
+									+ "/" + servicethird + "/" + servicethird
+									+ "LeftGrid.json",
+							dataType : "json"
+						}
+
+					}
+
+				});
+
+				$("<div/>")
+						.appendTo(e.detailCell)
+						.kendoGrid(
+								{
+									dataSource : thirdGrid,
+									scrollable : false,
+									resizable : false,
+									reorderable : false,
+									sortable : false,
+									dataBound : onDataBound,
+									selectable : "single",
+									change : onChange,
+
+									columns : [
+											{
+												template : "#=generateLeftGridBasedOnHealth(Health,ServerName)#"
+											},
+											{
+												template : "#=generateHealthstatus(ServerName,Health)#",
+												width : "25px"
+											} ]
+
+								});
+				hideHeader();
+			}
+
+		}
+
+		$(document).ready(
+				function() {
+
+					$("#customersexample").width($(window).width() - 25);
+					$("#customersexample").height($(window).height() - 75);
+					$("#customersdiagram").width(
+							3 * ($("#customersexample").width()) / 3.9);
+					$("#customersdiagram").height(
+							$("#customersexample").height() - 20);
+					$("#customersgrid").width(
+							1 * ($("#customersexample").width()) / 4.5);
+					$("#customersgrid").height(
+							$("#customersdiagram").height() + 20);
+					$("#customerschart").width(
+							($("#customersdiagram").width()) / 2 - 10);
+					$("#customerschart2").width(
+							($("#customersdiagram").width()) / 2 - 10);
+					$("#customerschart3").width(
+							($("#customersdiagram").width()) / 2 - 10);
+					$("#customerschart4").width(
+							($("#customersdiagram").width()) / 2 - 10);
+					$("#customerscharthead").width(
+							($("#customersdiagram").width()) / 2 - 8);
+					$("#customerscharthead2").width(
+							($("#customersdiagram").width()) / 2 - 8);
+					$("#customerscharthead3").width(
+							($("#customersdiagram").width()) / 2 - 8);
+					$("#customerscharthead4").width(
+							($("#customersdiagram").width()) / 2 - 8);
+					$("#customerschart").height(
+							($("#customersdiagram").height()) / 2 - 35);
+					$("#customerschart2").height(
+							($("#customersdiagram").height()) / 2 - 35);
+					$("#customerschart3").height(
+							($("#customersdiagram").height()) / 2 - 35);
+					$("#customerschart4").height(
+							($("#customersdiagram").height()) / 2 - 35);
+					$("#customerscharthead").height(
+							($("#customersdiagram").height()) / 14);
+					$("#customerscharthead2").height(
+							($("#customersdiagram").height()) / 14);
+					$("#customerscharthead3").height(
+							($("#customersdiagram").height()) / 14);
+					$("#customerscharthead4").height(
+							($("#customersdiagram").height()) / 14);
+
+					customerMainGrid(combodiv[14])
+					$(window).resize(function() {
+						$("#customersgrid").data("kendoGrid").refresh();
+						$("#customerschart").data("kendoChart").refresh();
+						$("#customerschart2").data("kendoChart").refresh();
+						$("#customerschart3").data("kendoChart").refresh();
+						$("#customerschart4").data("kendoChart").refresh();
+					});
+				});
+
+		function hideHeader() {
+			$(".k-grid .k-grid-header").hide();
+		}
+	</script>
+
+</body>
+</html>

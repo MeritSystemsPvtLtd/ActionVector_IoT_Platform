@@ -1,0 +1,49 @@
+module com.prokosha.cep.cpuramp.v1;
+
+create variable int CPU_RAMP_AVERAGING_TIME=5;//minutes
+create variable int CPU_RAMP_DETECTION_TIME=15;//minutes
+create variable int CPU_RAMP_TOLERANCE_PERC=5;//percentage
+create variable string CPU_ACRO_RAMP="[CPU_RAMP]";
+
+//@Name("com.prokosha.cep.cpuramp.istream.1")
+insert into CPUUsage
+        select (CpuUser+CpuSystem) as CPUUsage,HostName,HostAddress,CustomerID,resourceType,
+	resourceId from ServerStateStream where ((CpuUser>=0) and (CpuSystem>=0) );
+
+//@Name("com.prokosha.cep.cpuramp.istream.2")
+insert into CPUAverage
+        select HostName, HostAddress,avg(CPUUsage) as AvgCPUUsage,CustomerID,resourceType,resourceId
+        from CPUUsage.win:time(CPU_RAMP_AVERAGING_TIME minutes)
+        group by HostName;
+
+//@Name("com.prokosha.cep.cpuramp.istream.3")
+insert into CPUDiffStream
+	select last(AvgCPUUsage) as currCPUAvg,last(HostName) as HostName,last(HostAddress) as HostAddress,
+	last(CustomerID) as CustomerID,last(resourceType) as resourceType,
+	last(resourceId) as resourceId,cast(last(AvgCPUUsage,1),float) as prevCPUAvg
+	from CPUAverage.win:time(CPU_RAMP_AVERAGING_TIME minutes)
+        group by HostName;
+
+//@Name("com.prokosha.cep.cpuramp.istream.4")
+insert into CPUPSTFlagStream
+	select case when ((currCPUAvg-prevCPUAvg) >= (CPU_RAMP_TOLERANCE_PERC*prevCPUAvg/100)) then 1 else 0 end as pstflag,
+	currCPUAvg,prevCPUAvg,HostName,HostAddress,CustomerID,resourceType,resourceId from CPUDiffStream;
+
+//@Name("com.prokosha.cep.cpuramp.istream.5")
+insert into CPUPSTRampStream
+	select min(pstflag) as minPstFlag,currCPUAvg,prevCPUAvg,HostName,HostAddress,CustomerID,resourceType,
+	resourceId from CPUPSTFlagStream.win:time(CPU_RAMP_DETECTION_TIME minutes)
+        group by HostName;
+
+@Name("com.prokosha.cep.cpuramp.dispatch.6")
+select "Server" as EventType,
+        (("ALERT - CPU Usage has been increasing continously in the past ").concat(cast(CPU_RAMP_DETECTION_TIME,String)).concat(" minutes").concat(CPU_ACRO_RAMP)) as EventDesc,
+        ("CPU Usage has been increasing continously in the past ").concat(cast(CPU_RAMP_DETECTION_TIME,String)).concat(" minutes") as EventSymptoms,
+        HostName, HostAddress,CustomerID,
+        resourceType,resourceId,currCPUAvg as CurrentCPUAvg,prevCPUAvg as PreviousCPUAvg
+        from CPUPSTRampStream
+        where (minPstFlag >0)
+        group by HostName
+        output first every 30 minutes;
+
+

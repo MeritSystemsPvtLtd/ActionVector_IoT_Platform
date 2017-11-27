@@ -1,0 +1,138 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package AV_Action;
+
+import Model.*;
+import controller.LogWriter;
+import getcomment.*;
+import java.util.logging.Level;
+import org.apache.axis2.AxisFault;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_ViewCommentsAction extends AV_Model {
+
+    static Logger log = Logger.getLogger(AV_ViewCommentsAction.class);
+
+    public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+        response.setContentType("text/xml");
+        String szopration = "viewcomments";
+        String szrespStr=null;
+        StringBuffer result = null;
+        String szSessionid = null;
+        String Taskid = null;
+        boolean checkparam = false;
+        boolean checkresponse = false;
+        GetCommentsResponse commentresp = null;
+        boolean checksession = false;
+        GetCommentStub commentstub =null;
+        try {
+
+            szSessionid = (String) request.getParameter("szsessionid");
+            Taskid = (String) request.getParameter("taskid");
+            checkparam = true;
+            System.out.println("------------I m in START of calling getdetails service from Client----------------");
+            System.err.println(szSessionid + Taskid);
+            String sztarget = TargetEndpoint.getTargetEndpoint(request);
+            String targetEndpoint = sztarget + "/proChara/services/GetComment";
+            log.info("Target End Point***************** " + targetEndpoint);
+            commentstub = new GetCommentStub(targetEndpoint);
+            GetCommentsRequest commentreq = new GetCommentsRequest();
+            commentreq.setSzSessionId(szSessionid);
+            commentreq.setSzTaskId(Taskid);
+            commentresp = commentstub.getComments(commentreq);
+            checkresponse = true;
+        } catch (Exception e) {
+            log.error("exception processing result::" + e);
+           
+        }finally{
+            if(commentstub!=null){
+                try {
+                    commentstub.cleanup();
+                } catch (AxisFault ex) {
+                    java.util.logging.Logger.getLogger(AV_ViewCommentsAction.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        if (checkparam && checkresponse) {
+            
+            try {
+
+                if (commentresp != null) {
+
+                    String[] getSzcomment = commentresp.getSzComment();
+                    String[] getSzActions = commentresp.getSzActions();
+                    String[] getSzUpdatedDate = commentresp.getSzUpdatedDate();
+                    String[] getszUpdatedBy = commentresp.getSzUpdatedBy();
+
+                    if (getSzcomment != null) {
+                        result = new StringBuffer("<comments>");
+                        for (int i = 0; i < getSzcomment.length; i++) {
+                            String comment = getSzcomment[i];
+                            String Action = getSzActions[i];
+                            String Updateddate = getSzUpdatedDate[i];
+                            String UpdatedBy = getszUpdatedBy[i];
+                            if (comment != null) {
+                                result.append("<comment>");
+                                result.append("<updateddate>");
+                                result.append(Updateddate);
+                                result.append("</updateddate>");
+                                result.append("<updatedby>");
+                                result.append(UpdatedBy);
+                                result.append("</updatedby>");
+                                result.append("<commenttext>");
+                                result.append(comment);
+                                result.append("</commenttext>");
+                                result.append("</comment>");
+                            }
+                        }
+                        result.append("</comments>");
+                        System.out.println("Successfully getting");
+                        AV_Constants.opStatus=AV_Constants.SUCCESS;
+                    } else {
+                        
+                        AV_Constants.opStatus=AV_Constants.NODATA_FOUND;
+                    }
+                } else {
+                    
+                    AV_Constants.opStatus=AV_Constants.NODATA_FOUND;
+
+                }
+
+            } catch (Exception e) {
+                
+                AV_Constants.opStatus=AV_Constants.FAILURE;
+                log.error("Unable to process the request action" + e);
+                
+            }
+           
+        } else {
+           
+            AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+        }
+        try {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,result,szopration,sc);
+            
+            response.getWriter().write(szrespStr);
+
+        } catch (Exception e) {
+            LogWriter.writeDebug("exception while writing output");
+        } finally {
+            try {
+                szrespStr = null;
+                result = null;
+                szopration=null;
+            } catch (Exception e) {
+                log.error("error clearing strings::" + e);
+                }
+        }
+
+
+    }
+}

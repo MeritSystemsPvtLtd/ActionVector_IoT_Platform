@@ -1,0 +1,96 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/***************************************************************************
+ *
+ *                            Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *     #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8th Block
+ *                          Bangalore - 560 070, India
+ *               Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *          THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ ***************************************************************************/
+package controller;
+
+import java.util.*;
+import Model.*;
+import java.sql.*;
+
+/**
+ *
+ * @author gopal
+ * Created on Sep 15, 2012, 3:48:34 PM
+ */
+public class CheckSLA
+{
+
+    public static void checkSLA(ArrayList<TaskShow> owntaskids, Connection con, String szSessionid, javax.servlet.http.HttpServletRequest request)
+    {
+        TaskShow OTshow=null;
+        String szTempTaskId=null;
+        String szTempTaskType=null;
+        String szTempCreatedBy=null;
+        String szSLAString=null;
+        String szCreatedDate=null;
+        String szTempStatus=null;
+        StringBuffer szSLAImage=null;
+        javax.servlet.http.HttpSession HSsession = null;
+        SLAConditionCheck SLACheck = new SLAConditionCheck();
+        boolean fSLAcheck=false;
+        try
+        {
+            Iterator it = owntaskids.iterator();
+            while (it.hasNext())
+            {
+               OTshow=new TaskShow();
+               OTshow=(TaskShow)it.next();
+               szTempTaskId=OTshow.getTaskid();
+               szTempTaskType=OTshow.getTaskkind();
+               szTempCreatedBy=OTshow.getCreatedby();
+               szSLAString=OTshow.getSLA();
+               szCreatedDate=OTshow.getDatetime();
+               szTempStatus=OTshow.getTaskstatus();
+               szSLAImage=new StringBuffer("");
+               // System.out.println("SLA String before check::"+OTshow.getSLAImage());
+               fSLAcheck=SLACheck._getSLACondition(szTempTaskId, szTempTaskType, szTempCreatedBy, szSLAString, szCreatedDate, szTempStatus, szSLAImage, con);
+              //  System.out.println("SLA Status Updated successfully for taskid::"+szTempTaskId+"::"+fSLAcheck);
+              //  System.out.println("SLA String after check::"+szSLAImage);
+                if((szSLAImage.toString().equalsIgnoreCase(""))||(szSLAImage.toString()==null))
+                {
+                    OTshow.setSLAImage("none");
+
+                }
+                OTshow.setSLAImage(szSLAImage.toString());
+                fSLAcheck=false;
+                OTshow=null;
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }finally{
+            OTshow=null;
+            szTempTaskId=null;
+            szTempTaskType=null;
+            szTempCreatedBy=null;
+            szSLAString=null;
+            szCreatedDate=null;
+            szTempStatus=null;
+            szSLAImage=null;
+        }
+    }
+}

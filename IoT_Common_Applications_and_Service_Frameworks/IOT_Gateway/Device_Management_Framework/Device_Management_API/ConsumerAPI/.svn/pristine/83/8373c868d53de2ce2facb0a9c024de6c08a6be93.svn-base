@@ -1,0 +1,253 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package controller;
+
+import Model.*;
+import java.sql.*;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+import java.util.logging.Level;
+
+/**
+ *
+ * @author gopal
+ */
+public class AddSecurityPolicy extends HttpServlet
+{
+
+    static Logger log = Logger.getLogger(AddSecurityPolicy.class);
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        response.setContentType("text/xml;charset=UTF-8");
+
+
+        StringBuffer results = new StringBuffer("<addpolicy>");
+
+        HttpSession sessions = null;
+        Object OUser;
+        String szUsers = "";
+        Integer ISecurityUsers = 1;
+        boolean checksession = true;
+        String opStatus = null;
+
+        String opDescription = null;
+        String username = null;
+        String sessionid = null;
+
+        try
+        {
+            sessions = request.getSession(true);
+            //username=request.getParameter("username");
+            //sessionid=request.getParameter("sessionid");
+        } catch (Exception npe)
+        {
+            checksession = false;
+            opStatus = "102";
+            opDescription = "Invalid Session";
+            log.error("error while reading session values", npe);
+
+        }
+        
+        Connection con = null;
+        PreparedStatement statement = null;
+        boolean bFlag = true;
+        String szCCActions = "";
+        String szTaskType = "";
+        String szSecuritylevel = null;
+        String sAGroupNameArray[] = new String[1024];
+        String SecurityLevel_Array[] = new String[1024];
+        String szAllowPeers = "No";
+        boolean bCheckFlag = true;
+        String customerid="";
+        GA_CommandTask commandinsert = new GA_CommandTask();
+        String szSecAction[] = new String[1024];
+
+        if (checksession)
+        {
+            try
+            {
+                customerid=request.getParameter("customerid");
+                szSecAction = request.getParameterValues("action");
+                szTaskType = request.getParameter("task_type");
+                sAGroupNameArray = request.getParameterValues("group");
+                szSecuritylevel = request.getParameter("securitylevel");
+                //SecurityLevel_Array = request.getParameterValues("securitylevel");
+                SecurityLevel_Array = szSecuritylevel.split(",");
+                szAllowPeers = request.getParameter("allowpeers");
+                if (szAllowPeers == null)
+                {
+                    szAllowPeers = "No";
+                }
+
+            } catch (Exception e)
+            {
+                opStatus = "108";
+                opDescription = "Invalid Inputs";
+                LogWriter.writeDebug("EXCEPTION : Getting the parameter values ", 1);
+            }
+            if (ISecurityUsers.intValue() == 1)
+            {
+                try
+                {
+                    con = DatabaseConnection.getDatabaseConnection(request);
+                    if (con != null)
+                    {
+                        for (int k = 0; k < sAGroupNameArray.length; k++)
+                        {
+                            PreparedStatement statement2 = con.prepareStatement("Select * from " + DBConstants.POLICIES_TABLE + " where tasktype = ? and action = ? and groupname = ? and securitylevel = ?");
+                            for (int i = 0; i < SecurityLevel_Array.length; i++)
+                            {
+                                for (int j = 0; j < szSecAction.length; j++)
+                                {
+                                    bCheckFlag = true;
+                                    statement2.setString(1, szTaskType);
+                                    statement2.setString(2, szSecAction[j]);
+                                    statement2.setString(3, sAGroupNameArray[k]);
+                                    statement2.setString(4, SecurityLevel_Array[i]);
+                                    ResultSet rs2 = statement2.executeQuery();
+                                    while (rs2.next())
+                                    {
+                                        bCheckFlag = false;
+                                    }
+                                    LogWriter.writeDebug("Check flag is ..." + bCheckFlag, 4);
+                                    if (bCheckFlag)
+                                    {
+                                        statement = con.prepareStatement("INSERT INTO " + DBConstants.POLICIES_TABLE + " values(?,?,?,?,?)");
+                                        statement.setString(1, szTaskType);
+                                        statement.setString(2, szSecAction[j]);
+                                        statement.setString(3, sAGroupNameArray[k]);
+                                        statement.setString(4, SecurityLevel_Array[i]);
+                                        statement.setString(5, szAllowPeers);
+                                        statement.executeUpdate();
+                                        LogWriter.writeDebug("Insertion Security Policy Done successfully...", 3);
+                                    }
+                                    rs2.close();
+                                    statement.close();
+                                    
+                                }
+
+                            }
+                            statement2.close();
+
+                        }
+                    }
+                    szCCActions = "New Security Policy Added for " + szTaskType;
+                    commandinsert.GA_CommandTask(con, sessions.getId(), szUsers, szCCActions);
+
+                    opStatus = "0";
+                    opDescription = "Operation success";
+                } catch (Exception sqle)
+                {
+
+                    opStatus = "106";
+                    opDescription = "Unable to process the request";
+                    LogWriter.writeDebug("EXCEPTION : While Performing the Addition of New security Policy " + sqle.getMessage(), 1);
+                    bFlag = false;
+                    log.error("error while processing request", sqle);
+                    sqle.printStackTrace();
+                } finally
+                {
+                    try
+                    {
+                        if (con != null)
+                        {
+                            con.close();
+                        }
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        log.error("error while closing connection", e);
+                    }
+                }
+
+            } else
+            {
+                opStatus = "103";
+                opDescription = "Security level failed";
+
+            }
+        } else
+        {
+            opStatus = "102";
+            opDescription = "Invalid Session";
+        }
+        try
+        {
+            results.append("<status>\n");
+            results.append("<code>\n");
+            results.append(opStatus);
+            results.append("</code>\n");
+            results.append("<Description>\n");
+            results.append(opDescription);
+            results.append("</Description>\n");
+            results.append("</status>\n");
+            results.append("</addpolicy>");
+            response.getWriter().write(results.toString());
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            LogWriter.writeDebug("exception while writing out put");
+        } finally
+        {
+            try
+            {
+                results = null;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error while removing strings");
+            }
+        }
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /** 
+     * Handles the HTTP <code>GET</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Handles the HTTP <code>POST</code> method.
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    /** 
+     * Returns a short description of the servlet.
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo()
+    {
+        return "Short description";
+    }// </editor-fold>
+}

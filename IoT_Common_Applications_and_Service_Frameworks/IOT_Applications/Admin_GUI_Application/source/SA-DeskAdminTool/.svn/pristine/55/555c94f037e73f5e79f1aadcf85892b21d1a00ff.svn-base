@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+        <style>html { font-size: 12px; font-family: Arial, Helvetica, sans-serif; }</style>
+        <title>Resource Configuration</title>
+        <link href="styles/kendo.common.min.css" rel="stylesheet" />
+        <link href="styles/kendo.highcontrast.min.css" rel="stylesheet" />
+        <link href="styles/kendo.dataviz.min.css" rel="stylesheet" />
+        <!--<link href="styles/kendo.dataviz.highcontrast.min.css" rel="stylesheet" />-->
+        <script src="js/jquery.min.js"></script>
+        <script src="js/kendo.all.min.js"></script>
+
+    </head>
+    <body style="background-color: #1b141a">
+
+    <div id="grid"></div>
+
+    <p>  
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <label for="dropDownList1" style="color:#FFF">Customers: </label><input id="dropDownList1"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="service" style="color:#FFF">Installation: </label><input id="service"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="resource3" style="color:#FFF">Devices: </label><input id="resource"/>
+
+    </p>
+
+
+    <script>
+        var customerid;
+        var service;
+        var resource;
+        var serviceid;
+        var resourceid;
+        var customer;
+        var dataSource;
+
+        $(document).ready(function() {
+            //var list;
+            //list = customerList();
+            //alert(list);
+            //  alert("list=" + list);
+            $("#dropDownList1").kendoDropDownList({
+                optionLabel: "Select Customers",
+                dataTextField: "Customer",
+                dataValueField: "Customer",
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: {url: "Get_Customers.action",
+                            type: "GET",
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8"
+                        }
+                    }
+                },
+                /*schema: {
+                 data: function(data) {
+                 alert(JSON.stringify(data));
+                 return eval(data);
+                 }
+                 },*/
+                change: function() {
+
+                    customerid = this.value();
+                    if (customerid !== "select customers") {
+                        var reqdata = {customer: customerid};
+                        loadServices(reqdata);
+                        //alert("Returned from loadServices");
+                        loadCustomerConfigInfo(reqdata);
+                        //alert("Returned from loadCustomerConfigInfo");
+                    }
+			$("#grid2").data('kendoGrid').dataSource.data([]);
+			$("#grid3").data('kendoGrid').dataSource.data([]);
+
+
+                }
+
+            });
+
+            $("#service").val(service).kendoDropDownList({
+                //cascadeFrom: "dropDownList1",
+                optionLabel: "Select Installation"
+
+            });
+            function loadServices(reqdata) {
+
+                $("#service").val(service).kendoDropDownList({
+                    //cascadeFrom: "dropDownList1",
+                    optionLabel: "Select Installation",
+                    dataTextField: "Service",
+                    dataValueField: "Service",
+                    dataSource: {
+                        type: "json",
+                        transport: {
+                            read: {
+                                url: "User_Services.action",
+                                type: "GET",
+                                dataType: "json",
+                                contentType: "application/json; charset=utf-8"
+                            },
+                            parameterMap: function(options, operation)
+                            {
+                                //alert("req data=" + JSON.stringify(reqdata));
+                                return reqdata;
+                            }
+
+                        }
+
+                    },
+                    /*schema: {
+                     data: function(data) {
+                     // alert(JSON.stringify(data));
+                     return eval(data);
+                     }
+                     },*/
+                    change: function() {
+                        serviceid = this.value();
+                        if (serviceid !== "Select Installation") {
+                            var reqdata = {customer: customerid, service: serviceid};
+                           // alert("required data =" + JSON.stringify(reqdata));
+                            loadResources(reqdata);
+                            loadServiceConfigInfo(reqdata);
+                        }
+
+                    }
+                });
+            }
+
+            $("#resource").val(resource).kendoDropDownList({
+                //cascadeFrom: "dropDownList1",
+                optionLabel: "Select Resource"});
+
+            function loadResources(reqdata) {
+
+                $("#resource").val(resource).kendoDropDownList({
+                    //cascadeFrom: "dropDownList1",
+                    optionLabel: "Select Resource",
+                    dataTextField: "ResourceId",
+                    dataValueField: "ResourceId",
+                    dataSource: {
+                        type: "json",
+                        transport: {
+                            read: {
+                                url: "User_Resources.action",
+                                type: "GET",
+                                dataType: "json",
+                                contentType: "application/json; charset=utf-8"
+                            },
+                            parameterMap: function(options, operation)
+                            {
+                                //alert("req data for res=" + JSON.stringify(reqdata));
+                                return reqdata;
+                            }
+
+                        }
+
+                    },
+                    /*schema: {
+                     data: function(data) {
+                     alert(JSON.stringify(data));
+                     return eval(data);
+                     }
+                     },*/
+                    change: function() {
+                        resourceid = this.value();
+                        if (resourceid !== "Select Installation") {
+                            var reqdata = {customer: customerid, service: serviceid, resource: resourceid};
+                            //alert("required data =" + reqdata);
+                            //loadResources(reqdata);
+                            loadResourceConfigInfo(reqdata);
+                        }
+                    }
+                });
+            }
+        }
+        );
+
+
+
+
+
+
+    </script>
+    <!-- <label>Customers: </label><select id="dropDownList1"></select>-->
+    <!--<label>Installation centers: </label><select id="dropDownList2"></select>-->
+    <br>
+    <div>
+        <div id = "grid1" style = "position : absolute; left : 1%; top : 15%; z-index : 10; width: 400px">
+            <label style="color: white;font: caption;">Customer Configuration</label>
+        </div>
+
+        <script>
+            function loadCustomerConfigInfo(reqdata) {
+
+                $("#grid1").kendoGrid({
+                    dataSource: {
+                        transport: {
+                            read: {
+                                url: "Customer_Update.action",
+                                //type: "GET",
+                                dataType: "json"
+                                        //contentType: "application/json; charset=utf-8"
+                            },
+                            update: {
+                                url: "Update_ResourceConfig.action",
+                                //type: "POST",
+                                type: "GET",
+                                dataType: "json",
+                                contentType: "application/json; charset=utf-8"
+                            },
+                            /*update: function(options, operation){
+                             alert("data updating ==>>");
+                             },*/
+                            parameterMap: function(options, operation) {
+                                if (operation !== "read" && options.models) {
+                                    var models = kendo.stringify(options.models);
+                                    //alert("models==>>" + models);
+                                    var paramsdata = {
+                                        Customer: customerid,
+                                        //Service: null,
+                                        //Resource: null,
+                                        paramsJson: models
+                                    };
+                                    //return {models:kendo.stringify(options.models)};
+                                    //alert(JSON.stringify(paramsdata));
+                                    return(paramsdata);
+                                }
+                                //alert("loadCustomerConfigInfo reqdata==>>" + JSON.stringify(reqdata));
+                                return reqdata;
+                            }
+                        },
+                        batch: true,
+                        pageSize: 10, 
+                        schema: {
+                            model: {
+                                id: "ParamName",
+                                fields: {
+                                    ParamName: {type: "string", editable: false},
+                                    ParamValue: {type: "string", editable: true}
+                                }
+                            }
+                        }
+                    },
+                    pageable: true,
+                    resizable: true,
+                    sortable: true,
+                    reorderable: true,
+                    columnMenu: true,
+                    navigatable: true,
+                    toolbar: ["save", "cancel"],
+                    update: true,
+                    editable: true,
+                    columns: [
+                        {field: "ParamName", title: "Param Name", width: "120px"},
+                        {field: "ParamValue", title: "Param Value", width: "120px"}
+                        //{command: ["edit", "destroy"], title: " ", width: "172px"}
+                    ]
+
+                });
+                $("#grid1").find(".k-grid-toolbar").insertAfter($("#grid .k-grid-content"));
+            }
+            $(document).ready(function() {
+
+                $("#grid1").kendoGrid({
+                    //dataSource: dataSource,
+                    height: 400,
+                    pageable: true,
+                    resizable: true,
+                    sortable: true,
+                    reorderable: true,
+                    columnMenu: true,
+                    navigatable: true,
+                    toolbar: ["save", "cancel"],
+                    update: true,
+                    editable: true,
+                    columns: [
+                        {field: "ParamName", title: "Param Name", width: "120px"},
+                        {field: "ParamValue", title: "Param Value", width: "120px"}
+                        //{command: ["edit", "destroy"], title: " ", width: "172px"}
+                    ]
+
+                });
+                
+            });
+            $("#grid1").find(".k-grid-toolbar").insertAfter($("#grid .k-grid-content"));
+        </script><br><br><br>
+
+
+
+        <div id = "grid2" style = "position : absolute; left : 35%; top : 15%; z-index : 10; width: 400px">
+            <label style="color: white;font: caption;">Installation Configuration</label>
+        </div>
+
+        <script>
+            function loadServiceConfigInfo(reqdata) {
+	
+                $("#grid2").kendoGrid({
+                    dataSource: {
+                        transport: {
+                            read: {
+                                url: "Service_Update.action",
+                                //type: "GET",
+                                dataType: "json"
+                                        //contentType: "application/json; charset=utf-8"
+                            },
+                            update: {
+                                url: "Update_ResourceConfig.action",
+                                //type: "POST",
+                                type: "GET",
+                                dataType: "json",
+                                contentType: "application/json; charset=utf-8"
+                            },
+                            
+                            parameterMap: function(options, operation) {
+                                if (operation !== "read" && options.models) {
+                                    //alert(options.models);
+                                    var models = kendo.stringify(options.models);
+                                   // alert("models==>>" + models);
+
+                                    var paramsdata = {
+                                        Customer: customerid,
+                                        Service: serviceid,
+                                        //Resource: null,
+                                        paramsJson: models
+                                    };
+                                    //return {models:kendo.stringify(options.models)};
+                                    //alert(JSON.stringify(paramsdata));
+                                    return(paramsdata);
+                                }
+                                //alert("loadServiceConfigInfo reqdata==>>" + reqdata);
+                                return reqdata;
+                            }
+                        },
+                        batch: true,
+                        pageSize: 10,
+                        schema: {
+                            model: {
+                                id: "ParamName",
+                                fields: {
+                                    ParamName: {type: "string", editable: false},
+                                    ParamValue: {type: "string", editable: true}
+                                }
+                            }
+                        }
+                    },
+                    pageable: true,
+                    resizable: true,
+                    sortable: true,
+                    reorderable: true,
+                    columnMenu: true,
+                    navigatable: true,
+                    toolbar: ["save", "cancel"],
+                    update: true,
+                    editable: true,
+                    columns: [
+                        {field: "ParamName", title: "Param Name", width: "120px"},
+                        {field: "ParamValue", title: "Param Value", width: "120px"}
+                        // {command: ["edit", "destroy"], title: " ", width: "172px"}
+                    ]
+
+                });
+                $("#grid2").find(".k-grid-toolbar").insertAfter($("#grid .k-grid-content"));
+            }
+            $(document).ready(function() {
+
+                $("#grid2").kendoGrid({
+                    // dataSource: dataSource,
+                    height: 400,
+                    pageable: true,
+                    resizable: true,
+                    sortable: true,
+                    reorderable: true,
+                    columnMenu: true,
+                    navigatable: true,
+                    toolbar: ["save", "cancel"],
+                    update: true,
+                    editable: true,
+                    columns: [
+                        {field: "ParamName", title: "Param Name", width: "120px"},
+                        {field: "ParamValue", title: "Param Value", width: "120px"}
+                        //{command: ["edit", "destroy"], title: " ", width: "172px"}
+                    ]
+                   
+                });
+		var ds  = kendo.data.DataSource;
+                //ds = $("#grid3").data.dataSource;
+                //ds.Refresh();                 
+            });
+            $("#grid2").find(".k-grid-toolbar").insertAfter($("#grid .k-grid-content"));
+        </script>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;
+
+
+
+        <div id = "grid3" style = "position : absolute; left : 69%; top : 15%; z-index : 10; width: 400px">
+            <label style="color: white;font: caption;">Device Configuration</label>
+        </div>
+
+        <script>
+            function loadResourceConfigInfo(reqdata) {
+
+                $("#grid3").kendoGrid({
+                    dataSource: {
+                        transport: {
+                            read: {
+                                url: "Resource_Update.action",
+                                //type: "GET",
+                                dataType: "json"
+                                        //contentType: "application/json; charset=utf-8"
+                            },
+                            update: {
+                                url: "Update_ResourceConfig.action",
+                                //type: "POST",
+                                type: "GET",
+                                dataType: "json",
+                                contentType: "application/json; charset=utf-8"
+                            },
+                            
+                            parameterMap: function(options, operation) {
+                                //alert("operation" + operation);
+                                if (operation !== "read" && options.models) {
+                                    //alert(options.models);
+                                    var models = kendo.stringify(options.models);
+                                    //alert("models==>>" + models);
+
+                                    var paramsdata = {
+                                        Customer: customerid,
+                                        Service: serviceid,
+                                        Resource: resourceid,
+                                        paramsJson: models
+                                    };
+                                    //return {models:kendo.stringify(options.models)};
+                                    //alert(JSON.stringify(paramsdata));
+                                    return(paramsdata);
+                                }
+                                //alert("loadResourceConfigInfo reqdata==>>" + JSON.stringify(reqdata));
+                                return reqdata;
+                            }
+                        },
+                        batch: true,
+                        pageSize: 10,
+                        schema: {
+                            model: {
+                                id: "ParamName",
+                                fields: {
+                                    ParamName: {type: "string", editable: false},
+                                    ParamValue: {type: "string", editable: true}
+                                }
+                            }
+                        }
+                    },
+                    pageable: true,
+                    resizable: true, 
+                    sortable: true,
+                    reorderable: true,
+                    columnMenu: true,
+                    navigatable: true,
+                    toolbar: ["save", "cancel"],
+                    update: true,
+                    editable: true,
+                    columns: [
+                        {field: "ParamName", title: "Param Name", width: "120px"},
+                        {field: "ParamValue", title: "Param Value", width: "120px"}
+                        //{command: ["edit", "destroy"], title: " ", width: "172px"}
+                    ]
+                });
+                $("#grid3").find(".k-grid-toolbar").insertAfter($("#grid .k-grid-content"));
+            }
+            $(document).ready(function() {
+
+                $("#grid3").kendoGrid({
+                    //dataSource: dataSource,
+                    height: 400,
+                    pageable: true,
+                    resizable: true,
+                    sortable: true,
+                    reorderable: true,
+                    columnMenu: true,
+                    navigatable: true,
+                    toolbar: ["save", "cancel"],
+                    update: true,
+                    editable: true,
+                    columns: [
+                        {field: "paramName", title: "Param Name", width: "120px"},
+                        {field: "paramValue", title: "Param Value", width: "120px"}
+                        //{command: ["edit", "destroy"], title: " ", width: "172px"}
+                    ]
+
+                });
+		
+            });
+            $("#grid3").find(".k-grid-toolbar").insertAfter($("#grid .k-grid-content"));
+        </script>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;
+    </div>
+
+</body>
+</html>
+

@@ -1,0 +1,34 @@
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+//select count(*) as mycount from LoadAvgMonitor having count(*) > 4;
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.1")
+insert into MC1
+    select MemcacheClient, MemcacheServer, MemcachePort, Latency, Load1, Load5, Load15
+    from MemcacheMonitor.win:length(1), LoadAvgMonitor.win:length(1);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.2")
+insert into MC11
+    select MemcacheClient, MemcacheServer, MemcachePort, Latency, avg(Latency) as AvgLatency
+    from MC1.win:length(5)
+    having (avg(Latency)>0.4);
+
+//@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.istream.2")
+insert into MC12
+    select avg(Load1) as AvgLoad1, Load1, Load5, Load15
+    from MC1.win:length(5)
+    having (avg(Load1)>1.5);
+
+
+/* The event sent to SADesk must have the following parameters
+    EventType="Correlated Event", EventDesc, EventSymptoms, IncidentIDList, CiidList,
+    MemcServer, MemcPort, MemcClient, MemcLatency, MemcMemUsed, MemcMemMax,
+    ServerSwapMax, ServerSwapUsed, ServerCpuUtil, ServerLoad1, ServerLoad5,
+    ServerLoad15, MonitorWindow, ServerLoad1Average, ServerLatencyAverage
+*/
+@Name("com.prokosha.sadeskCeP.MemcachePerfMonitor.dispatch.1")
+select distinct "Correlated Event" as EventType, "Memcache Performance Degradation" as EventDesc,
+        "Latency too high or load too high on memcached server" as EventSymptoms,
+        MemcacheClient, MemcacheServer, MemcachePort, Latency, AvgLatency,
+        AvgLoad1, Load1, Load5, Load15
+    from MC11.win:length(1), MC12.win:length(1)
+    having (AvgLatency>0.4 and AvgLoad1>1.5);

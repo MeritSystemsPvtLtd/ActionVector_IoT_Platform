@@ -1,0 +1,482 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Model;
+
+import AV_Action.AV_GetAllTrackTasksAction;
+import AV_Action.AV_SAGetTaskAttributes;
+import java.sql.*;
+import java.util.ArrayList;
+import org.apache.log4j.Logger;
+/**
+ *
+ * @author raghu
+ */
+public class UserTask {
+static Logger log = Logger.getLogger(UserTask.class);
+    private String customerid;
+    private String service;
+public ArrayList<TaskShow> getTaskJobs(String username, Connection con, String Tasktype, ArrayList UserTasktypes, TaskFilter jobfilter, String attributes, int ipageNo, int ipageLimit) {
+
+        ArrayList<TaskShow> owntaskids = new ArrayList<TaskShow>();
+        final String All = "All";
+        boolean defualtclose = false;
+        PreparedStatement preparedstat = null;
+        Statement stat = null;
+        String UserTaskView = null;
+        String CheckTasktype = Tasktype;
+        ResultSet rs = null;
+        int usertasktypesize = UserTasktypes.size();
+        if (Tasktype.equals(All)) {
+            try {
+                Tasktype = "";
+                for (int i = 0; i < usertasktypesize; i++) {
+                    if (i == (usertasktypesize - 1)) {
+
+                        Tasktype = Tasktype + "'" + (String) UserTasktypes.get(i) + "'";
+                    } else {
+                        Tasktype = Tasktype + "'" + (String) UserTasktypes.get(i) + "',";
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            Tasktype = "'" + Tasktype + "'";
+        }
+                    
+        if (jobfilter.getStatus() == null || jobfilter.getStatus().equalsIgnoreCase("null")||jobfilter.getStatus().equalsIgnoreCase("")) {
+            jobfilter.setStatus(All);
+        }
+        if (jobfilter.getPriority() == null || jobfilter.getPriority().equalsIgnoreCase("null")||jobfilter.getPriority().equalsIgnoreCase("")) {
+            jobfilter.setPriority(All);
+        }
+        if (jobfilter.getHostname() == null || jobfilter.getHostname().equalsIgnoreCase("null")||jobfilter.getHostname().equalsIgnoreCase("")) {
+            jobfilter.setHostname(All);
+        }
+        if (jobfilter.getStartdate() == null || jobfilter.getStartdate().equalsIgnoreCase("null")) {
+            jobfilter.setStartdate(" ");
+        }
+        if (jobfilter.getEnddate() == null || jobfilter.getEnddate().equalsIgnoreCase("null")) {
+            jobfilter.setEnddate(" ");
+        }
+       
+        try {
+            System.out.println("Checking User set tasks shown");
+
+            String sqlstatement = "select task_view from gausertaskfilter where lower(user_id)=lower(?)";
+            preparedstat = con.prepareStatement(sqlstatement);
+            preparedstat.setString(1, username);
+            log.info(preparedstat);
+            rs = preparedstat.executeQuery();
+            String taskview = null;
+            while (rs.next()) {
+                taskview = rs.getString("task_view");
+                log.info("taskview=====>" + taskview);
+            }
+            String[] UserCheckedlevel = taskview.split(",");
+            for (int i = 0; i < UserCheckedlevel.length; i++) {
+
+                if (UserCheckedlevel[i].equals("actionassigned")) {
+                    UserTaskView = "actionassigned";
+                    // ShowActiontasks = "YES";
+                }
+            }
+            for (int i = 0; i < UserCheckedlevel.length; i++) {
+
+                if (UserCheckedlevel[i].equals("assigned")) {
+                    UserTaskView = "AssignedAndActionassigned";
+                    // ShowAssignedTask = "YES";
+
+                }
+            }
+            for (int j = 0; j < UserCheckedlevel.length; j++) {
+                if (UserCheckedlevel[j].equals("managed")) {
+                    UserTaskView = "managed";
+                    // ShowAllGroupTasks = "YES";
+                    //ShowAssignedTask = "NO";
+                }
+            }
+            for (int j = 0; j < UserCheckedlevel.length; j++) {
+                if (UserCheckedlevel[j].equals(All)) {
+                    UserTaskView = All;
+                    // ShowAllTasks = "YES";
+                    //ShowAssignedTask = "NO";
+                }
+            }
+            System.out.println("UserTaskView=====>" + UserTaskView);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            UserTaskView = "AssignedAndActionassigned";
+        }
+
+        int ipageOffset = 0;
+        String taskid = null;
+        String description = null;
+        String category = null;
+        String datetime = null;
+        String taskstatus = null;
+        String createdby = null;
+        String Taskpriority = null;
+        String Taskhost = null;
+        String SLAImage = null;
+        String tempattr = null;
+        String taskkind = null;
+        String assignee = null;
+        String SLA = null;
+        String service = null;
+        String subservice = null;
+        String host = null;
+        String Taskforstatus = null;
+        String Finalquery = null;
+        String Mainquery = " select MTS.*,ATS.assignee  from gatask MTS,gatasktypeassignee ATS where  task_type in (" + Tasktype + ") AND( ";
+        String SetstatusAttributesingle = "(task_type in (" + Tasktype + ") And (status in (select status from gastatus where task_type in (" + Tasktype + ") and default_on_close!=1) or status in('') ) )";
+        String StartDate = ") AND TO_DATE(TO_CHAR(created_date,'MM-DD-YYYY'),'MM-DD-YYYY') >= TO_DATE('" + jobfilter.getStartdate() + "','MM-DD-YYYY')";
+        String EndDate = " AND TO_DATE(TO_CHAR(created_date,'MM-DD-YYYY'),'MM-DD-YYYY') <= TO_DATE('" + jobfilter.getEnddate() + "','MM-DD-YYYY')";
+        String AllGroupTasks = " AND ( task_id in (SELECT taskid from gatasktypeassignee where assignee in(select userid from gaagentgroup where  groupname in (select groupname  from gatasktypegroup where groupname in (select groupname from gaagentgroup where  lower(userid)=lower('" + username + "')) and tasktype in (" + Tasktype + ")) ) AND (lower(startdate)='none' OR startdate <= '" + jobfilter.getEnddate() + "')) OR task_id in(select taskid from gatasktypeassignee where lower(assignee) =lower('" + username + "') AND (lower(startdate) = 'none' OR startdate <= '" + jobfilter.getEnddate() + "')) OR task_id in(select taskid from gatasktypeassignee where lower(assignee) = lower('" + username + "') AND (lower(startdate)='none' OR startdate <= '" + jobfilter.getEnddate() + "')  AND action_assignee = 1) OR task_id in(Select taskid from gatasktypeassignee where role_assignee in(select role from gaagentgroup where groupname in (select groupname from gatasktypegroup where tasktype in(" + Tasktype + ")) and lower(userid)=lower('" + username + "')) and groupname in(select groupname  from gatasktypegroup where groupname in (select groupname from gaagentgroup where  lower(userid)=lower('" + username + "')) and tasktype in (" + Tasktype + ")) and action_assignee = 1))";
+        String Assignedandactionassigned = " AND ( task_id in (Select taskid from gatasktypeassignee where lower(assignee) = lower('" + username + "') AND  (lower(startdate)='none' or  startdate <= '" + jobfilter.getEnddate() + "'))  OR task_id in(select taskid from gatasktypeassignee where lower(assignee) = lower('" + username + "') AND (lower(startdate)='none' OR startdate <= '" + jobfilter.getEnddate() + "')  AND action_assignee = 1) OR task_id in(Select taskid from gatasktypeassignee where role_assignee in( select role from gaagentgroup where groupname in (select groupname from gatasktypegroup where tasktype in (" + Tasktype + ")) and lower(userid)=lower('" + username + "')) and groupname in(select groupname  from gatasktypegroup where groupname in (select groupname from gaagentgroup where  lower(userid)=lower('" + username + "')) and tasktype in (" + Tasktype + ")) and action_assignee = 1))";
+        String Actionassignedonly = " AND ( task_id in(select taskid from gatasktypeassignee where lower(assignee) = lower('" + username + "') AND (lower(startdate)='none' OR startdate <= '" + jobfilter.getEnddate() + "')  AND action_assignee = 1) OR task_id in(Select taskid from gatasktypeassignee where role_assignee in( select role from gaagentgroup where groupname in (select groupname from gatasktypegroup where tasktype in(" + Tasktype + ")) and lower(userid)=lower('" + username + "')) and groupname in(select groupname  from gatasktypegroup where groupname in (select groupname from gaagentgroup where  lower(userid)=lower('" + username + "')) and tasktype in(" + Tasktype + ")) and action_assignee = 1))";
+
+        String szAssigneeFilter=" and ATS.assignee=\'"+jobfilter.getAssignee()+"\'";
+        String szTaskIdFilter=" and (MTS.task_id=\'"+jobfilter.getTaskid()+"\' or MTS.task_id like \'%"+jobfilter.getTaskid()+"%\')";
+        String szDescriptionFilter=" and MTS.task_summary like \'%"+jobfilter.getDescription()+"%\'";
+
+        
+
+
+        String statusfilter = " and status='" + jobfilter.getStatus() + "'";
+        String priorityfilter = "and priority='" + jobfilter.getPriority() + "'";
+        String hostnamefilter = " and attributes5='" + jobfilter.getHostname() + "'";
+        
+        String customerIDfilter = " and customerid='" + jobfilter.getCustomerid() + "'";
+        String attributes4filter = " and attributes4='" + jobfilter.getService() + "'";
+        String checkdefaultstring = " and default_on_close!=1) or status in('')))";
+        String orderby = " and  (MTS.task_id=ATS.taskid and ATS.action_assignee=1)  order by MTS.lastupdated_date desc";
+
+
+        Finalquery = Mainquery;
+
+        try {
+            try {
+                if (!jobfilter.getStatus().equals(All)) {
+                    stat = con.createStatement();
+                    if (CheckTasktype.equals(All)) {
+                        log.info("select default_on_close from gastatus where status ='" + jobfilter.getStatus() + "'");
+                        rs = stat.executeQuery("select default_on_close from gastatus where status ='" + jobfilter.getStatus() + "'");
+                    } else {
+                        log.info("select default_on_close from gastatus where status ='" + jobfilter.getStatus() + "' and task_type='" + CheckTasktype + "'");
+                        rs = stat.executeQuery("select default_on_close from gastatus where status ='" + jobfilter.getStatus() + "' and task_type='" + CheckTasktype + "'");
+                    }
+                    int check_defualt_on_close = 0;
+                    while (rs.next()) {
+                        check_defualt_on_close = rs.getInt("default_on_close");
+                        if (check_defualt_on_close == 1) {
+                            defualtclose = true;
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (CheckTasktype.equals(All) && UserTasktypes != null) {
+                    log.info(UserTasktypes);
+                    log.info("many status query");
+                    // Taskforstatus = (String) UserTasktypes.get(0);
+                    Taskforstatus = (String) UserTasktypes.get(0);
+                    if (defualtclose == false) {
+                        Finalquery = Finalquery + "(task_type='" + Taskforstatus + "' And (status in (select status from gastatus where task_type='" + Taskforstatus + "' " + checkdefaultstring;
+
+                    } else {
+                        Finalquery = Finalquery + "(task_type='" + Taskforstatus + "' And (status in (select status from gastatus where task_type='" + Taskforstatus + "' ) or status in(''))) ";
+                    }
+
+                    for (int i = 1; i < usertasktypesize; i++) {
+                        Taskforstatus = (String) UserTasktypes.get(i);
+                        if (defualtclose == false) {
+                            Finalquery = Finalquery + " or " + "(task_type='" + Taskforstatus + "' And (status in (select status from gastatus where task_type='" + Taskforstatus + "' " + checkdefaultstring;
+                        } else {
+                            Finalquery = Finalquery + " or " + "(task_type='" + Taskforstatus + "' And (status in (select status from gastatus where task_type='" + Taskforstatus + "' ) or status in(''))) ";
+                        }
+                    }
+                } else {
+                    log.info("single status query");
+                    if (defualtclose == false) {
+                        Finalquery = Finalquery + SetstatusAttributesingle;
+                    } else {
+                        Finalquery = Finalquery + "(task_type in (" + Tasktype + ") And (status in (select status from gastatus where task_type in (" + Tasktype + ") ) or status in('')))";
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+               log.error("CATCHING EXCEPTION IN GETALLTRACKS.DO WHILE SETTING STATUS QUERY");
+            }
+            try {
+                if (!(jobfilter.getStartdate().equals(" "))) {
+                    Finalquery = Finalquery + StartDate;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (!(jobfilter.getEnddate().equals(" "))) {
+                    Finalquery = Finalquery + EndDate;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (UserTaskView.equals("AssignedAndActionassigned")) {
+
+                    Finalquery = Finalquery + Assignedandactionassigned;
+
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (UserTaskView.equals("managed")) {
+                    Finalquery = Finalquery + AllGroupTasks;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (UserTaskView.equals("actionassigned")) {
+
+                    Finalquery = Finalquery + Actionassignedonly;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (!(jobfilter.getStatus().equals(All))) {
+
+                    Finalquery = Finalquery + statusfilter;
+
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (!(jobfilter.getPriority().equals(All))) {
+
+                    Finalquery = Finalquery + priorityfilter;
+
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if ((jobfilter.getCustomerid() != null)) {
+
+                    Finalquery = Finalquery + customerIDfilter;
+
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if ((jobfilter.getService() != null)) {
+
+                    Finalquery = Finalquery + attributes4filter;
+
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            //adding for assignee filter on 2-08-2013
+            try {
+                System.out.println("Desc::"+jobfilter.getDescription());
+                if (!(jobfilter.getDescription().equalsIgnoreCase(All))&&!(jobfilter.getDescription().equalsIgnoreCase(""))&&(jobfilter.getDescription()!=null)&&!(jobfilter.getDescription().equalsIgnoreCase("null"))) {
+                System.out.println("Desc::"+jobfilter.getDescription());
+                    Finalquery = Finalquery + szDescriptionFilter;
+
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            try {
+                System.out.println("Taskid::"+jobfilter.getTaskid());
+                if (!(jobfilter.getTaskid().equalsIgnoreCase(All))&&!(jobfilter.getTaskid().equalsIgnoreCase(""))&&(jobfilter.getTaskid()!=null)&&!(jobfilter.getTaskid().equalsIgnoreCase("null"))) {
+                System.out.println("Taskid::"+jobfilter.getTaskid());
+                    Finalquery = Finalquery + szTaskIdFilter;
+
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+
+            try {
+                System.out.println("Assignee::"+jobfilter.getAssignee());
+                if (!(jobfilter.getAssignee().equalsIgnoreCase(All))&&!(jobfilter.getAssignee().equalsIgnoreCase(""))&&(jobfilter.getAssignee()!=null)&&!(jobfilter.getAssignee().equalsIgnoreCase("null"))) {
+                    System.out.println("Assignee::"+jobfilter.getAssignee());
+                    Finalquery = Finalquery + szAssigneeFilter;
+
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+
+            
+//end filter
+
+
+            try {
+                if (!(jobfilter.getHostname().equals(All))) {
+
+                    Finalquery = Finalquery + hostnamefilter;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            //adding for serverside pagination
+            ipageOffset = getPageOffset(ipageLimit, ipageNo, con, Finalquery);
+            
+            String limitOffset = " limit " + ipageLimit + " offset " + ipageOffset;
+
+            try {
+                if (UserTaskView.equals(All)) {
+                    Finalquery = Finalquery + orderby + limitOffset;
+                } else {
+                    Finalquery = Finalquery + orderby + limitOffset;
+                }
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+        } catch (Exception ex) {
+
+            ex.printStackTrace();
+        }
+        log.info("Finalquery======>" + Finalquery);
+        System.out.println("Finalquery======>" + Finalquery);
+        try {
+            TaskShow TaskRecord = null;
+            stat = con.createStatement();
+            rs = stat.executeQuery(Finalquery);
+            while (rs.next()) {
+                taskid = rs.getString("task_id");
+                description = rs.getString("task_summary");
+                category = rs.getString("category");
+                datetime = rs.getString("created_date");
+                taskstatus = rs.getString("status");
+                createdby = rs.getString("created_by");
+                Taskpriority = rs.getString("priority");
+                Taskhost = rs.getString("attributes5");
+                SLAImage = rs.getString("slahistory");
+                tempattr = rs.getString(attributes);
+                taskkind = rs.getString("task_type");
+                assignee = rs.getString("assignee");
+                SLA = rs.getString("sla");
+                service = rs.getString("attributes4");
+                subservice = rs.getString("attributes7");
+                host = rs.getString("attributes6");
+                TaskRecord = new TaskShow();
+                TaskRecord.setTaskid(taskid);
+
+                AV_SAGetTaskAttributes.setTaskAttributes(TaskRecord,taskid,con);
+                
+                TaskRecord.setDescription(description);
+                TaskRecord.setCategory(category);
+                TaskRecord.setDatetime(datetime);
+                TaskRecord.setTaskstatus(taskstatus);
+                TaskRecord.setCreatedby(createdby);
+                TaskRecord.setTaskpriority(Taskpriority);
+                TaskRecord.setTaskhost(Taskhost);
+                TaskRecord.setSLAImage(SLAImage);
+                TaskRecord.setTempattr(tempattr);
+                TaskRecord.setTaskkind(taskkind);
+                TaskRecord.setAssignee(assignee);
+                TaskRecord.setSLA(SLA);
+                TaskRecord.setService(service);
+                TaskRecord.setSubservice(subservice);
+                TaskRecord.setHost(host);
+                owntaskids.add(TaskRecord);
+                TaskRecord = null;
+            }
+            stat.close();
+            rs.close();
+        } catch (SQLException ex) {
+            ex.getMessage();
+            log.debug("Error while getting tasks \n");
+
+            //Logger.getLogger(UserTask.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+        } finally {
+            jobfilter = null;
+            stat = null;
+            preparedstat = null;
+            Finalquery = null;
+            if (rs != null) {
+                rs = null;
+            }
+            if (con != null) {
+
+                con = null;
+            }
+            UserTasktypes = null;
+        }
+        return owntaskids;
+
+    }
+
+    public int getPageOffset(int ipageLimit, int ipageNo, Connection con, String Finalquery) {
+        int itotalcount = 0;
+        int pageOffset = 0;
+        int noOfPages = 0;
+        try {
+
+            Finalquery = Finalquery.replace("MTS.*,ATS.assignee", "count(MTS.*)");
+            Finalquery = Finalquery+" and  (MTS.task_id=ATS.taskid and ATS.action_assignee=1) ";
+            log.info("Query to get Total Count::" + Finalquery);
+
+            Statement st = con.createStatement();
+            ResultSet rsp = st.executeQuery(Finalquery);
+            while (rsp.next()) {
+                itotalcount = rsp.getInt(1);
+            }
+            rsp.close();
+            st.close();
+            System.out.println("Total Ticket count::" + itotalcount);
+            AV_GetAllTrackTasksAction.iTicketCount=itotalcount;
+            System.out.println("PageLimit:::" + ipageLimit);
+            log.info("PageNo" + ipageNo);
+            if (ipageNo == 1) {
+                pageOffset = 0;
+            } else {
+                int reminCount = itotalcount % ipageLimit;
+                if (reminCount > 0) {
+                    noOfPages = itotalcount / ipageLimit + 1;
+
+                } else {
+                    noOfPages = itotalcount / ipageLimit;
+                }
+                if(noOfPages>=ipageNo){
+                    pageOffset = ipageLimit*(ipageNo - 1);
+                }else{
+                    pageOffset = ipageLimit*(ipageNo - 1);
+                }             
+
+            }
+            itotalcount=0;
+            System.out.println("PageOffset::" + pageOffset);
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return pageOffset;
+        }
+
+
+
+        return pageOffset;
+    }
+
+}

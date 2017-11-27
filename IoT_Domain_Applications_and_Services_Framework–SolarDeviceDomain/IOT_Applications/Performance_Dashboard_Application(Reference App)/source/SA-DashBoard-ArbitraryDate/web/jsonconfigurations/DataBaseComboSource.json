@@ -1,0 +1,105 @@
+[
+   {
+      "text":"Select Graph",
+      "value":"Options",
+      "items":[
+         {
+            "text":"Health",
+            "id":"Health_id",
+            "value":"Health",
+            "items":[
+               {
+                  "text":"Availability",
+                  "value":"Availability",
+                  "filename":"/DataBase/DataBaseAvail.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Availability"
+                  ],
+                  "index":"0"
+               },
+               {
+                  "text":"Health Metrics",
+                  "value":"Health Metrics",
+                  "filename":"/DataBase/DataBaseMetrics.json",
+                  "charttype":"column",
+                  "category":"health",
+                  "metricType":[
+                     "Rollbacks",
+                     "Commits",
+                     "Connections"
+                  ],
+                  "index":"1"
+               },
+                {
+                        "value": "Time Line Availability",
+                        "text": "Time Line Availability",
+                        "filename": "/DataBase/DataBaseLineChartAvailability.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                   		 "Availability"],
+                        "index": "2"
+                    },
+               {
+                        "value": "Time Line Health Metrics",
+                        "text": "Time Line Health Metrics",
+                        "filename": "/DataBase/DataBaseLineChartBatteryByTime.json",
+                        "charttype": "line",
+                        "category": "health",
+                        "metricType": [
+                     "Rollbacks",
+                     "Commits",
+                     "Connections"],
+                        "index": "3"
+                    }
+
+            ]
+         },
+         {
+            "text":"Alert",
+            "value":"Alert",
+            "items":[
+               {
+                  "text":"Alerts By Assignee",
+                  "value":"Alerts By Assignee",
+                  "filename":"/DataBase/DataBaseAssignee.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"0"
+               },
+               {
+                  "text":"Alerts By Status",
+                  "value":"Alerts By Status",
+                  "filename":"/DataBase/DataBaseStatus.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+
+                  ],
+                  "index":"1"
+               },
+               {
+                  "text":"Critical Alerts",
+                  "value":"Critical Alerts",
+                  "filename":"/DataBase/DataBaseAlertCount.json",
+                  "charttype":"column",
+                  "category":"alert",
+                  "metricType":[
+                     "PG_CONNEXC",
+                     "NOBakend",
+                     "THREXC",
+                     "MYSQL_HSTDWN",
+                     "PGSQL_HSTDWN"
+                  ],
+                  "index":"2"
+               }
+            ]
+         }
+      ]
+   }
+]

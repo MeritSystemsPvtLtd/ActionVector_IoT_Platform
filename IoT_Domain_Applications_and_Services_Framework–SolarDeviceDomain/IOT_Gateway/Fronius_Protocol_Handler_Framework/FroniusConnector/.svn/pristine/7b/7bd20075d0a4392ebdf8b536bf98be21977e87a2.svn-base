@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<port>
+	<name>COM5</name>
+	<baudRate>9600</baudRate>
+	<flowControlIn>0</flowControlIn>
+	<flowControlOut>0</flowControlOut>
+	<parity>0</parity>
+	<databits>8</databits>
+	<stopbits>1</stopbits>
+	<timeout>30</timeout>
+</port>

@@ -1,0 +1,102 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Mail;
+
+import java.util.*;
+import javax.mail.*;
+import javax.mail.internet.*;
+import java.io.*;
+
+/**
+ *
+ * @author gopal
+ * Created on Jun 11, 2012, 3:24:20 PM
+ */
+public class MailModule
+{
+
+    public static boolean mailSend(String szReceipent, String szMessageBody, javax.servlet.http.HttpServletRequest request)
+    {
+
+        boolean isinitialized = false;
+        try
+        {
+            isinitialized = ConfigValues.initialized(request);
+        } catch (Exception fe)
+        {
+            fe.printStackTrace();
+        }
+        if (isinitialized)
+        {
+            String szSubject = "Subscription Summary";
+            String szSMTPServer = ConfigValues.getSMTPServer();
+            String szSMTPUser = ConfigValues.getSMTPUser();
+            int iSMTPPort = Integer.parseInt(ConfigValues.getSMTPPort());
+            String szSMTPPassword = ConfigValues.getSMTPPassword();
+                System.out.println("SMTP port::"+iSMTPPort);
+            try
+            {
+                //log.info(" Inside Mail Module :: Subject :: " + szSubject + "   szSMTPUser :: " + szSMTPUser);
+                // log.info(szSMTPServer + "   " + iSMTPPort + "   " + szSMTPPassword);
+                Properties props = new Properties();
+                props.put("mail.smtp.host", szSMTPServer);
+                props.put("mail.smtp.socketFactory.port", iSMTPPort);
+                props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+                props.put("mail.smtp.auth", "true");
+                props.put("mail.smtp.port", "465");
+                props.put("mail.smtp.tls/ssl","yes");
+                Session session = Session.getDefaultInstance(props,
+                        new javax.mail.Authenticator()
+                        {
+
+                            String szSMTPUser = ConfigValues.getSMTPUser();
+                            String szSMTPPassword = ConfigValues.getSMTPPassword();
+
+                            protected PasswordAuthentication getPasswordAuthentication()
+                            {
+                                return new PasswordAuthentication(szSMTPUser, szSMTPPassword);
+                            }
+                        });
+
+                try
+                {
+                    //System.out.println("SMTPUser:::" + szSMTPUser);
+                    //System.out.println("SMTPUser:::" + szSMTPPassword);
+                    Message message = new MimeMessage(session);
+                    message.setFrom(new InternetAddress(szSMTPUser));
+                    message.setRecipients(Message.RecipientType.TO,
+                            InternetAddress.parse(szReceipent));
+                    message.setSubject(szSubject);
+                    //  message.setText("Dear Mail Crawler," +
+                    //          "\n\n No spam to my email, please!");
+                    Multipart mp = new MimeMultipart();
+                    MimeBodyPart mbp1 = new MimeBodyPart();
+                    System.out.println("smtp mimebody::"+szMessageBody.toString());
+                    mbp1.setContent(szMessageBody.toString(), "text/html");
+                    mp.addBodyPart(mbp1);
+                    message.setContent(mp);
+
+                    Transport.send(message);
+
+                    System.out.println("Mail has sent successfully");
+                    return true;
+                //log.info("Done");
+
+                } catch (MessagingException e)
+                {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                return false;
+            }
+            //return true;
+        }
+        return true;
+
+    }
+}

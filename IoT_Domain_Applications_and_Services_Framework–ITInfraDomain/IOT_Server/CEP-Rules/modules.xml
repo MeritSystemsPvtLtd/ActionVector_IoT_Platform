@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : modules.xml
+    Created on : January 17, 2011, 7:52 PM
+    Author     : Abraham
+    Description:
+        Purpose of the document follows.
+    <module>
+        MemcachePerfMonitor.epl
+    </module>
+    <module>
+        Tester.epl
+    </module>
+-->
+
+<config>
+    <module>
+        rules/Filter.epl
+    </module>
+    <module>
+	rules/CpuLoadMonitor.epl
+    </module>
+    <module>
+        rules/CPUDiskMemMonitor.epl
+    </module>
+    <module>
+        rules/GangliaHostUpDown.epl
+    </module>
+    <module>
+        rules/JVM.epl
+    </module> 
+    <module>
+            rules/CPURampDetector.epl
+    </module>
+    <module>
+            rules/MemRampDetector.epl
+    </module>
+    <module>
+            rules/DiskRampDetector.epl
+    </module>
+    <module>
+            rules/CPUDiskMemStepFlapDetector.epl
+    </module>
+    <module>
+            rules/HeapRampDetector.epl
+    </module>
+    <module>
+            rules/HeapStepFlapDetector.epl
+    </module>
+</config>

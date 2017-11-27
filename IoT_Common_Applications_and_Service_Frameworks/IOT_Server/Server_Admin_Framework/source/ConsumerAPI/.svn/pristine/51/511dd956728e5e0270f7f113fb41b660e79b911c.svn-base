@@ -1,0 +1,180 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package businessmodel;
+
+import Model.*;
+import controller.DBConstants;
+import java.util.ArrayList;
+import java.util.*;
+import java.sql.*;
+
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on Jun 19, 2012, 2:45:14 PM
+ */
+public class AddRole
+{
+
+    private static String szCCActions;
+    private static boolean bLeveloneexists;
+    private String SWriter;
+    static Logger log = Logger.getLogger(AddRole.class);
+
+    public static boolean addNewRoles(String customerid, ArrayList<String> roleNames, javax.servlet.http.HttpServletRequest request)
+    {
+        String szUsers = null;
+        Integer ISecurityUsers = 1;
+        PreparedStatement statement = null;
+        PreparedStatement statement1 = null;
+        PreparedStatement statement2 = null;
+        PreparedStatement statement3 = null;
+        boolean bNameExists = false;
+        Connection con = null;
+        int iSecurityLevel = 2;
+        String szSecurityName = "";
+        String szDescription = "";
+        int rolelength = 0;
+        int rolecount = 0;
+
+        try
+        {
+            if (customerid != null && !customerid.equalsIgnoreCase(""))
+            {
+                con = DatabaseConnection.getDbConnection(request, customerid);
+            } else
+            {
+                con = DatabaseConnection.getDatabaseConnection(request);
+            }
+            System.out.println("connected");
+            if (con != null)
+            {
+
+                rolelength = roleNames.size();
+                Iterator it = roleNames.iterator();
+                while (it.hasNext())
+                {
+
+                    szSecurityName=(String)it.next();
+
+                    //check for the sec level 1 which is for admin only
+                    if (iSecurityLevel == 1)
+                    {
+                        statement3 = con.prepareStatement("Select \"level\" from " + DBConstants.SECURITYLEVELS_TABLE + " where \"level\" = 1");
+                        ResultSet rs3 = statement3.executeQuery();
+                        while (rs3.next())
+                        {
+                            bLeveloneexists = true;
+                        }
+                        rs3.close();
+                        statement3.close();
+
+
+                        if (bLeveloneexists)
+                        {
+                            bNameExists = true;
+
+
+                        }
+                        System.out.println("security level check:::" + bLeveloneexists);
+                    } else
+                    {
+                        /*check for max security level,you can only add upto a maximum of 256 levels.
+                        code added to check for the max value and then add
+                         */
+                        int i = 1;
+                        int iSecId = 0;
+                        statement1 = con.prepareStatement("select max(security_id) from " + DBConstants.SECURITYLEVELS_TABLE + "");
+                        ResultSet rs = statement1.executeQuery();
+                        while (rs.next())
+                        {
+                            iSecId = rs.getInt(1);
+                        }
+                        rs.close();
+                        statement1.close();
+                        if (iSecId < 256)
+                        {
+                            iSecId = iSecId + i;
+
+                            //check whether that security name laready exists with the same security level
+                            try
+                            {
+                                statement2 = con.prepareStatement("Select name from " + DBConstants.SECURITYLEVELS_TABLE + " where name='" + szSecurityName + "' and \"level\"='" + iSecurityLevel + "'");
+                                ResultSet rs1 = statement2.executeQuery();
+                                while (rs1.next())
+                                {
+                                    bNameExists = true;
+                                }
+                                rs1.close();
+                                statement2.close();
+                            } catch (Exception e)
+                            {
+                                e.printStackTrace();
+
+                            }
+                            if (!bNameExists)
+                            {
+                                statement = con.prepareStatement("INSERT INTO " + DBConstants.SECURITYLEVELS_TABLE + " VALUES(?,?,?,?)");
+                                statement.setInt(1, iSecId);
+                                statement.setInt(2, iSecurityLevel);
+                                statement.setString(3, szSecurityName);
+                                statement.setString(4, szDescription);
+                                statement.executeUpdate();
+                                szCCActions = "Added New Security Level " + iSecurityLevel + " with name " + szSecurityName;
+                                //boolean check = commandinsert.CommandTask(con, sessions.getId(), szUsers, szCCActions);
+
+                                System.out.println("security level added successfully");
+                                log.info("security level added successfully");
+                                rolecount++;
+                                iSecurityLevel++;
+                                statement.close();
+                            } else
+                            {
+                                bNameExists = true;
+
+                                log.info("security level already exists");
+
+                            }
+                        } else
+                        {
+                            //LogWriter.writeDebug("Exception:More than 256 id");
+                        }
+                    }
+                }
+            }//if
+            else
+            {
+
+                log.info("unable to connect database");
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+
+            log.info("unable to perform request action");
+        } finally
+        {
+            try
+            {
+                statement.close();
+                if (con != null)
+                {
+                    con.close();
+                }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                log.error("error closing connection: ", e);
+            }
+        }
+
+        if(rolelength==rolecount)
+            return true;
+        else
+            return false;
+    }
+}

@@ -1,0 +1,59 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Model;
+
+import java.util.*;
+import java.io.*;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ * Created on May 21, 2012, 10:11:58 AM
+ */
+public class TargetEndpoint
+{
+
+    static Logger log = Logger.getLogger(TargetEndpoint.class);
+
+    public static String getTargetEndpoint(javax.servlet.http.HttpServletRequest request)
+    {
+
+        String serverName = null;
+        String szFileName = null;
+        int szPortNum;
+        String targetEndpoint =null;
+        try
+        {
+            String szUserHome_dir = System.getProperty("user.home");
+            String szFileseperator = System.getProperty("file.separator");
+            //String szServername = request.getServerName();
+            szFileName = szUserHome_dir + szFileseperator + "SA_Desk-" + "localhost" + ".properties";
+            Properties propsdAddressPath = new Properties();
+            propsdAddressPath.load(new FileInputStream(szFileName));
+            //serverName = propsdAddressPath.getProperty("ServerName");
+            serverName=request.getServerName();
+         
+            szPortNum = Integer.parseInt(propsdAddressPath.getProperty("PortNum"));
+            System.out.println("ServerName:"+serverName+":"+szPortNum);
+            //System.out.println("Portnumber:"+szPortNum);
+            targetEndpoint = "http://" + serverName + ":" + szPortNum;
+            System.out.println("targetEndpoint::"+targetEndpoint);//+ "/proChara/services/LoginService";
+            //esclog.info("Target End Point "+targetEndpoint);
+            log.info("Target End Point***************** " + targetEndpoint);
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+            System.out.println("PROPERTIES FILE NOT FOUND *****************");
+        }
+
+
+
+
+        return targetEndpoint;
+
+
+    }
+}

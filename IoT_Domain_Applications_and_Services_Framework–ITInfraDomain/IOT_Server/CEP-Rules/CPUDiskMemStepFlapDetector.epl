@@ -1,0 +1,222 @@
+module com.prokosha.cep.cpudiskmemorystepflapmonitor.v1;
+
+create variable int STEP_AVERAGING_TIME=3;//minutes
+create variable int STEP_TOLERANCE_PERC=5;//percentage
+create variable int FLAP_DETECTION_TIME=5;//minutes
+create variable string MEM_ACRO_STEP="[MEM_STEP]";
+create variable string CPU_ACRO_STEP="[CPU_STEP]";
+create variable string DISK_ACRO_STEP="[DISK_STEP]";
+create variable string MEM_ACRO_FLAP="[MEM_FLAP]";
+create variable string CPU_ACRO_FLAP="[CPU_FLAP]";
+create variable string DISK_ACRO_FLAP="[DISK_FLAP]";
+
+//@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.istream.1")
+insert into CPUDiskMemStreamSF
+        select HostName, HostAddress,(((MemTotal-MemFree)/MemTotal)*100) as MemUsage,
+	(((DiskTotal-DiskFree)/DiskTotal)*100) as DiskUsage,
+	(CpuUser+CpuSystem) as CPUUsage,CustomerID,resourceType,resourceId
+        from ServerStateStream;
+
+//@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.istream.2")
+insert into CurrentStreamSF
+        select HostName,HostAddress,MemUsage,DiskUsage,CPUUsage,CustomerID,resourceType,resourceId,
+        'CurrentStreamSF' as StreamName
+        from CPUDiskMemStreamSF.win:time(STEP_AVERAGING_TIME minutes)
+	group by HostName;
+
+//@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.istream.2.1")
+insert into TempStreamSF
+        select first(HostName) as HostName,first(HostAddress) as HostAddress,first(MemUsage) as MemUsage,
+	first(DiskUsage) as DiskUsage,first(CPUUsage) as CPUUsage,
+	first(CustomerID) as CustomerID,
+	first(resourceType) as resourceType ,first(resourceId) as resourceId,
+        'TempStreamSF' as StreamName
+        from CurrentStreamSF.win:time(2 minutes)
+	group by HostName;
+    
+//@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.istream.3")
+insert into PriorStreamSF
+        select HostName,HostAddress,MemUsage,DiskUsage,CPUUsage,
+	CustomerID as CustomerID,
+	resourceType as resourceType,resourceId as resourceId,
+        'PriorStreamSF' as StreamName
+        from TempStreamSF
+	group by HostName;
+
+//@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.istream.4")
+insert into AveragesStreamSF
+	select avg(CW.MemUsage) as currentMemAvg,avg(PW.MemUsage) as priorMemAvg,
+	avg(CW.DiskUsage) as currentDiskAvg,avg(PW.DiskUsage) as priorDiskAvg,
+	avg(CW.CPUUsage) as currentCPUAvg,avg(PW.CPUUsage) as priorCPUAvg,
+	CW.HostName as HostName,CW.HostAddress as HostAddress,CW.CustomerID as CustomerID,
+	CW.resourceType as resourceType,CW.resourceId as resourceId
+	from CurrentStreamSF.win:time(STEP_AVERAGING_TIME minutes) as CW,
+	PriorStreamSF.win:time(STEP_AVERAGING_TIME minutes) as PW
+	where (CW.HostName=PW.HostName)
+	group by CW.HostName;	
+
+@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.dispatch.5")
+select "Server" as EventType,
+	(("ALERT - Sudden raise in Mem Usage detected").concat(MEM_ACRO_STEP)) as EventDesc,
+	(("Sudden raise in Mem Usage detected")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentMemAvg,priorMemAvg from AveragesStreamSF
+	where ((priorMemAvg!=null) and (currentMemAvg!=null) and ((currentMemAvg-priorMemAvg) >= ((STEP_TOLERANCE_PERC/100)*priorMemAvg)))
+	group by HostName
+	output first every 30 minutes;	
+
+@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.dispatch.6")
+select "Server" as EventType,
+	(("ALERT - Sudden drop in Mem Usage detected").concat(MEM_ACRO_STEP)) as EventDesc,
+	(("Sudden drop in Mem Usage detected")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentMemAvg,priorMemAvg from AveragesStreamSF
+	where ((priorMemAvg!=null) and (currentMemAvg!=null) and ((priorMemAvg-currentMemAvg) >= ((STEP_TOLERANCE_PERC/100)*priorMemAvg)))
+	group by HostName
+	output first every 30 minutes;
+
+//@Name("com.prokosha.cep.memflap.istream.6")
+insert into MemStepFlapStream
+	select case when ((currentMemAvg-priorMemAvg) >= ((STEP_TOLERANCE_PERC/100)*priorMemAvg)) then 1
+	when ((priorMemAvg-currentMemAvg) >= ((STEP_TOLERANCE_PERC/100)*priorMemAvg)) then -1
+	else 0 end as MemStepFlapFlag,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentMemAvg,priorMemAvg from AveragesStreamSF
+	//where (priorMemAvg!=null)
+	group by HostName;
+
+//@Name("com.prokosha.cep.memflap.istream.7")
+insert into MemFlapStream
+	select case when ((last(MemStepFlapFlag)*last(MemStepFlapFlag,1))=-1) then 1
+	else 0 end as MemFlapFlag,
+	last(HostName) as HostName,last(HostAddress) as HostAddress,
+	last(CustomerID) as CustomerID,last(resourceType) as resourceType,last(resourceId) as resourceId,
+	last(currentMemAvg) as currentMemAvg,last(priorMemAvg) as priorMemAvg
+	from MemStepFlapStream.win:time(STEP_AVERAGING_TIME minutes)
+	group by HostName;
+
+//@Name("com.prokosha.cep.memflap.istream.8")
+insert into MemFlapMinStream
+	select avg(MemFlapFlag) as AvgMemFlapFlag,HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentMemAvg,priorMemAvg from MemFlapStream.win:time(FLAP_DETECTION_TIME minutes)
+	group by HostName;
+
+@Name("com.prokosha.cep.memflap.dispatch.9")
+select "Server" as EventType,
+	(("ALERT - Mem Usage has been Flapping in the past ").concat(cast(FLAP_DETECTION_TIME,String)).concat(" minutes").concat(MEM_ACRO_FLAP)) as EventDesc,
+	(("Mem Usage has been Flapping in the past ").concat(cast(FLAP_DETECTION_TIME,String)).concat(" minutes")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentMemAvg,priorMemAvg from MemFlapMinStream
+	where (AvgMemFlapFlag=1)
+	group by HostName;
+
+@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.dispatch.10")
+select "Server" as EventType,
+	(("ALERT - Sudden raise in Disk Usage detected").concat(DISK_ACRO_STEP)) as EventDesc,
+	(("Sudden raise in Disk Usage detected")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentDiskAvg,priorDiskAvg from AveragesStreamSF
+	where ((priorDiskAvg!=null) and (currentDiskAvg!=null) and ((currentDiskAvg-priorDiskAvg) >= ((STEP_TOLERANCE_PERC/100)*priorDiskAvg)))
+	group by HostName
+	output first every 30 minutes;	
+
+@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.dispatch.11")
+select "Server" as EventType,
+	(("ALERT - Sudden drop in Disk Usage detected").concat(DISK_ACRO_STEP)) as EventDesc,
+	(("Sudden drop in Disk Usage detected")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentDiskAvg,priorDiskAvg from AveragesStreamSF
+	where ((priorDiskAvg!=null) and (currentDiskAvg!=null) and ((priorDiskAvg-currentDiskAvg) >= ((STEP_TOLERANCE_PERC/100)*priorDiskAvg)))
+	group by HostName
+	output first every 30 minutes;
+
+//@Name("com.prokosha.cep.diskflap.istream.9")
+insert into DiskStepFlapStream
+	select case when ((currentDiskAvg-priorDiskAvg) >= ((STEP_TOLERANCE_PERC/100)*priorDiskAvg)) then 1
+	when ((priorDiskAvg-currentDiskAvg) >= ((STEP_TOLERANCE_PERC/100)*priorDiskAvg)) then -1
+	else 0 end as DiskStepFlapFlag,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentDiskAvg,priorDiskAvg from AveragesStreamSF
+	//where (priorDiskAvg!=null)
+	group by HostName;
+
+//@Name("com.prokosha.cep.diskflap.istream.10")
+insert into DiskFlapStream
+	select case when ((last(DiskStepFlapFlag)*last(DiskStepFlapFlag,1))=-1) then 1
+	else 0 end as DiskFlapFlag,
+	last(HostName) as HostName,last(HostAddress) as HostAddress,
+	last(CustomerID) as CustomerID,last(resourceType) as resourceType,last(resourceId) as resourceId,
+	last(currentDiskAvg) as currentDiskAvg,last(priorDiskAvg) as priorDiskAvg
+	from DiskStepFlapStream.win:time(STEP_AVERAGING_TIME minutes)
+	group by HostName;
+
+//@Name("com.prokosha.cep.diskflap.istream.11")
+insert into DiskFlapMinStream
+	select avg(DiskFlapFlag) as AvgDiskFlapFlag,HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentDiskAvg,priorDiskAvg from DiskFlapStream.win:time(FLAP_DETECTION_TIME minutes)
+	group by HostName;
+
+@Name("com.prokosha.cep.diskflap.dispatch.12")
+select "Server" as EventType,
+	(("ALERT - Disk Usage has been Flapping in the past ").concat(cast(FLAP_DETECTION_TIME,String)).concat(" minutes").concat(DISK_ACRO_FLAP)) as EventDesc,
+	(("Disk Usage has been Flapping in the past ").concat(cast(FLAP_DETECTION_TIME,String)).concat(" minutes")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentDiskAvg,priorDiskAvg from DiskFlapMinStream
+	where (AvgDiskFlapFlag=1)
+	group by HostName;
+
+@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.dispatch.10")
+select "Server" as EventType,
+	(("ALERT - Sudden raise in CPU Usage detected").concat(CPU_ACRO_STEP)) as EventDesc,
+	(("Sudden raise in CPU Usage detected")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentCPUAvg,priorCPUAvg from AveragesStreamSF
+	where ((priorCPUAvg!=null) and (currentCPUAvg!=null) and ((currentCPUAvg-priorCPUAvg) >= ((STEP_TOLERANCE_PERC/100)*priorCPUAvg)))
+	group by HostName
+	output first every 30 minutes;	
+
+@Name("com.prokosha.cep.cpudiskmemorystepflapmonitor.dispatch.11")
+select "Server" as EventType,
+	(("ALERT - Sudden drop in CPU Usage detected").concat(CPU_ACRO_STEP)) as EventDesc,
+	(("Sudden drop in CPU Usage detected")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentCPUAvg,priorCPUAvg from AveragesStreamSF
+	where ((priorCPUAvg!=null) and (currentCPUAvg!=null) and ((priorCPUAvg-currentCPUAvg) >= ((STEP_TOLERANCE_PERC/100)*priorCPUAvg)))
+	group by HostName
+	output first every 30 minutes;
+
+//@Name("com.prokosha.cep.cpuflap.istream.9")
+insert into CPUStepFlapStream
+	select case when ((currentCPUAvg-priorCPUAvg) >= ((STEP_TOLERANCE_PERC/100)*priorCPUAvg)) then 1
+	when ((priorCPUAvg-currentCPUAvg) >= ((STEP_TOLERANCE_PERC/100)*priorCPUAvg)) then -1
+	else 0 end as CPUStepFlapFlag,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentCPUAvg,priorCPUAvg from AveragesStreamSF
+	//where (priorCPUAvg!=null)
+	group by HostName;
+
+//@Name("com.prokosha.cep.cpuflap.istream.10")
+insert into CPUFlapStream
+	select case when ((last(CPUStepFlapFlag)*last(CPUStepFlapFlag,1))=-1) then 1
+	else 0 end as CPUFlapFlag,
+	last(HostName) as HostName,last(HostAddress) as HostAddress,
+	last(CustomerID) as CustomerID,last(resourceType) as resourceType,last(resourceId) as resourceId,
+	last(currentCPUAvg) as currentCPUAvg,last(priorCPUAvg) as priorCPUAvg
+	from CPUStepFlapStream.win:time(STEP_AVERAGING_TIME minutes)
+	group by HostName;
+
+//@Name("com.prokosha.cep.cpuflap.istream.11")
+insert into CPUFlapMinStream
+	select avg(CPUFlapFlag) as AvgCPUFlapFlag,HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentCPUAvg,priorCPUAvg from CPUFlapStream.win:time(FLAP_DETECTION_TIME minutes)
+	group by HostName;
+
+@Name("com.prokosha.cep.cpuflap.dispatch.12")
+select "Server" as EventType,
+	(("ALERT - CPU Usage has been Flapping in the past ").concat(cast(FLAP_DETECTION_TIME,String)).concat(" minutes").concat(CPU_ACRO_FLAP)) as EventDesc,
+	(("CPU Usage has been Flapping in the past ").concat(cast(FLAP_DETECTION_TIME,String)).concat(" minutes")) as EventSymptoms,
+	HostName,HostAddress,CustomerID,resourceType,resourceId,
+	currentCPUAvg,priorCPUAvg from CPUFlapMinStream
+	where (AvgCPUFlapFlag=1)
+	group by HostName;
+

@@ -1,0 +1,115 @@
+package controller;
+
+import java.util.*;
+import java.util.Date;
+import java.text.*;
+import java.io.*;
+import java.sql.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+public class HG_DBConstants
+{
+
+    private static String szMediumStringColumnType = "";
+    private static String szLongStringColumnType = "";
+    private static String szTextColumnType = "";
+    private static String szTimeStampColumnType = "";
+    private static String szBinaryColumnType = "";
+    private static String szIntegerColumnType = "";
+    public static final String DOMAININFO_TABLE = "domaininfo";
+    public static final String CANNED_RESPONSE_TABLE = "cannedresponse";
+    public static final String CANNED_USER_RESPONSE_TABLE = "canneduserresponse";
+    public static final String COMP_ADDRBOOK_TABLE = "compaddrbook";
+    public static final String CATEGORY_TABLE = "hgcategory";
+    public static final String INTERNATIONALIZE_TABLE = "hginternationalize";
+    public static final String LANGUAGE_TABLE = "hglanguage";
+    public static final String USER_OPTIONS_TABLE = "hguseroptions";
+    public static final String MAILS_TABLE = "mails";
+    public static final String TASK_TABLE = "task";
+    public static final String GT_MGRSUB_TABLE = "gtmgrsub";
+    public static final String GT_DEFAULT_SEARCH_TABLE = "gtdefaultsearch";
+    //public String
+
+    public void setColumnFields(String szDatabaseName)
+    {
+        System.out.println("Setting the column datatypes fields to the database " + szDatabaseName);
+        if ("Postgresql".equalsIgnoreCase(szDatabaseName))
+        {
+            szMediumStringColumnType = "VARCHAR(255)";
+            szLongStringColumnType = "VARCHAR(2048)";
+            szTextColumnType = "TEXT";
+            szTimeStampColumnType = "TIMESTAMP";
+            szBinaryColumnType = "OID";
+            szIntegerColumnType = "INTEGER";
+        }
+        if ("Mysql".equalsIgnoreCase(szDatabaseName))
+        {
+            szMediumStringColumnType = "VARCHAR(255)";
+            szLongStringColumnType = "TEXT";
+            szTextColumnType = "LONGTEXT";
+            szTimeStampColumnType = "TIMESTAMP";
+            szBinaryColumnType = "LONGBLOB";
+            szIntegerColumnType = "INTEGER";
+        }
+        if ("Sybase".equalsIgnoreCase(szDatabaseName))
+        {
+            szMediumStringColumnType = "VARCHAR(255)";
+            szLongStringColumnType = "VARCHAR(2048)";
+            szTextColumnType = "TEXT";
+            szTimeStampColumnType = "TIMESTAMP";
+            szBinaryColumnType = "IMAGE";
+            szIntegerColumnType = "INTEGER";
+        }
+        if ("MS Access".equalsIgnoreCase(szDatabaseName))
+        {
+//			szMediumStringColumnType = "VARCHAR(255)";
+            szMediumStringColumnType = "Text(255)";
+            szLongStringColumnType = "MEMO";
+            szTextColumnType = "MEMO";
+            szTimeStampColumnType = "DATETIME";
+            szBinaryColumnType = "IMAGE";
+            szIntegerColumnType = "INTEGER";
+        }
+        if ("IBM DB2".equalsIgnoreCase(szDatabaseName))
+        {
+
+            szMediumStringColumnType = "VARCHAR(255)";
+            szLongStringColumnType = "VARCHAR(2048)";
+            szTextColumnType = "\"LONG VARCHAR\"";
+            szTimeStampColumnType = "TIMESTAMP";
+            szBinaryColumnType = "BLOB";
+            szIntegerColumnType = "INTEGER";
+        }
+    }
+
+    public String getMediumStringColumnType()
+    {
+        return szMediumStringColumnType;
+    }
+
+    public String getLongStringColumnType()
+    {
+        return szLongStringColumnType;
+    }
+
+    public String getTextColumnType()
+    {
+        return szTextColumnType;
+    }
+
+    public String getTimeStampColumnType()
+    {
+        return szTimeStampColumnType;
+    }
+
+    public String getBinaryColumnType()
+    {
+        return szBinaryColumnType;
+    }
+
+    public String getIntegerColumnType()
+    {
+        return szIntegerColumnType;
+    }
+}

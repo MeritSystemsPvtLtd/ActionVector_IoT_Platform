@@ -1,0 +1,436 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/***************************************************************************
+ *
+ *                            Software Developed by
+ *                           Merit Systems Pvt. Ltd.,
+ *     #55/C-42/1, Nandi Mansion, Ist Floor 40th Cross, Jayanagar 8th Block
+ *                          Bangalore - 560 070, India
+ *               Work Created for Merit Systems Private Limited
+ *                             All rights reserved
+ *
+ *          THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT
+ *                              LAWS AND TREATIES
+ *       NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ *             DISTRIBUTED, REVISED, MODIFIED,TRANSLATED, ABRIDGED,
+ *                                  CONDENSED,
+ *        EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR
+ *                                   ADAPTED
+ *                      WITHOUT THE PRIOR WRITTEN CONSENT
+ *          ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION
+ *                                COULD SUBJECT
+ *               THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+ *
+ *
+ ***************************************************************************/
+package controller;
+
+import java.util.Date;
+import java.util.Vector;
+import java.util.Hashtable;
+import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.servlet.http.*;
+import javax.servlet.*;
+import java.io.*;
+import java.beans.*;
+import java.util.*;
+
+/**
+ *
+ * @author gopal
+ * Created on Sep 15, 2012, 3:30:20 PM
+ */
+public class CalenderOperations
+{
+
+    Hashtable hTable = null;
+    Connection con = null;
+
+    /** Creates a new instance of DateExample */
+    public CalenderOperations(Connection connection)
+    {
+        try
+        {
+            con = connection;
+            PreparedStatement statement = null;
+            ResultSet rs = null;
+            hTable = new Hashtable();
+            statement = con.prepareStatement("select days,starttime1,endtime1,starttime2,endtime2,starttime3,endtime3 from gacalendar ");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                Vector timings = new Vector();
+                String week = rs.getString("days");
+                String w1 = rs.getString("starttime1");
+                String w2 = rs.getString("endtime1");
+                String w3 = rs.getString("starttime2");
+                String w4 = rs.getString("endtime2");
+                String w5 = rs.getString("starttime3");
+                String w6 = rs.getString("endtime3");
+
+                w1 = trimToTime(w1);
+                w2 = trimToTime(w2);
+                w3 = trimToTime(w3);
+                w4 = trimToTime(w4);
+                w5 = trimToTime(w5);
+                w6 = trimToTime(w6);
+                timings.add(new Timing(w1, w2));
+                timings.add(new Timing(w3, w4));
+                timings.add(new Timing(w5, w6));
+                hTable.put(week, timings);
+            }
+            rs.close();
+            statement.close();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public String trimToTime(String time)
+    {
+        String trimedTime = "";
+        if (time.length() == 1)
+        {
+            trimedTime = "00:0" + time;
+        } else if (time.length() == 2)
+        {
+            trimedTime = "00:" + time;
+        } else if (time.length() == 3)
+        {
+            trimedTime = "0" + time.substring(0, 1) + ":" + time.substring(1, 3);
+        } else
+        {
+            trimedTime = time.substring(0, 2) + ":" + time.substring(2, 4);
+        }
+        return trimedTime;
+    }
+
+    public long getNonWorkingTime(Date dFromDate, Date dToDate)
+    {
+        long nonworking = 0;
+        java.util.Calendar fromDate = java.util.Calendar.getInstance();
+        java.util.Calendar toDate = java.util.Calendar.getInstance();
+        fromDate.setTime(dFromDate);
+        toDate.setTime(dToDate);
+
+        // System.out.println(fromDate.getTime()+"---"+toDate.getTime());
+        java.util.Calendar taskBeginTime = java.util.Calendar.getInstance();
+        taskBeginTime.setTime(fromDate.getTime());
+        java.util.Calendar taskEndTime = java.util.Calendar.getInstance();
+        taskEndTime.setTime(fromDate.getTime());
+        taskEndTime.set(java.util.Calendar.DATE, taskEndTime.get(java.util.Calendar.DATE) + 1);
+        taskEndTime.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        taskEndTime.set(java.util.Calendar.MINUTE, 0);
+        taskEndTime.set(java.util.Calendar.MILLISECOND, 0);
+        if (taskEndTime.getTimeInMillis() > toDate.getTimeInMillis())
+        {
+            taskEndTime.setTimeInMillis(toDate.getTimeInMillis());
+        }
+
+        //System.out.println("###############################");
+        long outOfWorkingHovers = 0;
+        while (taskBeginTime.getTimeInMillis() < toDate.getTimeInMillis())
+        {
+            //System.out.println("taskBeginTime ->"+taskBeginTime.getTime());
+            //System.out.println("taskEndTime  ->"+taskEndTime.getTime());
+            boolean holiday = chechHoliday(con, taskBeginTime.getTime());
+
+            String week = getWeek(taskBeginTime.get(java.util.Calendar.DAY_OF_WEEK));
+            Vector timings = null;
+            if (holiday)
+            {
+                timings = getWeekTimings("holiday");
+            } else
+            {
+                timings = getWeekTimings(week);
+            }
+            Timing t1 = (Timing) timings.get(0);
+            Timing t2 = (Timing) timings.get(1);
+            Timing t3 = (Timing) timings.get(2);
+            String fh1 = t1.fromTime.hh;
+            String fm1 = t1.fromTime.mm;
+            String th1 = t1.toTime.hh;
+            String tm1 = t1.toTime.mm;
+
+            String fh2 = t2.fromTime.hh;
+            String fm2 = t2.fromTime.mm;
+            String th2 = t2.toTime.hh;
+            String tm2 = t2.toTime.mm;
+
+            String fh3 = t3.fromTime.hh;
+            String fm3 = t3.fromTime.mm;
+            String th3 = t3.toTime.hh;
+            String tm3 = t3.toTime.mm;
+
+
+            java.util.Calendar section1Begin = java.util.Calendar.getInstance();
+            section1Begin.setTime(taskBeginTime.getTime());
+            section1Begin.set(java.util.Calendar.HOUR_OF_DAY, Integer.parseInt(fh1));
+            section1Begin.set(java.util.Calendar.MINUTE, Integer.parseInt(fm1));
+
+            java.util.Calendar section1End = java.util.Calendar.getInstance();
+            section1End.setTime(taskBeginTime.getTime());
+            section1End.set(java.util.Calendar.HOUR_OF_DAY, Integer.parseInt(th1));
+            section1End.set(java.util.Calendar.MINUTE, Integer.parseInt(tm1));
+            //System.out.println(section1Begin.getTime()+"-"+section1End.getTime());
+            ////////////////////////////////////////////////////////////////
+
+            java.util.Calendar section2Begin = java.util.Calendar.getInstance();
+            section2Begin.setTime(taskBeginTime.getTime());
+            section2Begin.set(java.util.Calendar.HOUR_OF_DAY, Integer.parseInt(fh2));
+            section2Begin.set(java.util.Calendar.MINUTE, Integer.parseInt(fm2));
+
+            java.util.Calendar section2End = java.util.Calendar.getInstance();
+            section2End.setTime(taskBeginTime.getTime());
+            section2End.set(java.util.Calendar.HOUR_OF_DAY, Integer.parseInt(th2));
+            section2End.set(java.util.Calendar.MINUTE, Integer.parseInt(tm2));
+            //System.out.println(section2Begin.getTime()+"-"+section2End.getTime());
+            ////////////////////////////////////////////////////////////////
+
+            java.util.Calendar section3Begin = java.util.Calendar.getInstance();
+            section3Begin.setTime(taskBeginTime.getTime());
+            section3Begin.set(java.util.Calendar.HOUR_OF_DAY, Integer.parseInt(fh3));
+            section3Begin.set(java.util.Calendar.MINUTE, Integer.parseInt(fm3));
+
+            java.util.Calendar section3End = java.util.Calendar.getInstance();
+            section3End.setTime(taskBeginTime.getTime());
+            section3End.set(java.util.Calendar.HOUR_OF_DAY, Integer.parseInt(th3));
+            section3End.set(java.util.Calendar.MINUTE, Integer.parseInt(tm3));
+            //System.out.println(section3Begin.getTime()+"-"+section3End.getTime());
+            /////////////////////////////////////////////////////////////////
+
+            if (taskBeginTime.getTimeInMillis() < section1Begin.getTimeInMillis())
+            {
+                outOfWorkingHovers += section1Begin.getTimeInMillis() - taskBeginTime.getTimeInMillis();
+            }
+
+            if (taskBeginTime.getTimeInMillis() < section2Begin.getTimeInMillis() && (section2Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section2Begin.get(java.util.Calendar.MINUTE) != 0) && taskEndTime.getTimeInMillis() > section1End.getTimeInMillis() && (section1End.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section1End.get(java.util.Calendar.MINUTE) != 0))
+            {
+                if (taskBeginTime.getTimeInMillis() < section1End.getTimeInMillis())
+                {
+                    if (taskEndTime.getTimeInMillis() > section2Begin.getTimeInMillis() && (section2Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section2Begin.get(java.util.Calendar.MINUTE) != 0))
+                    {
+                        outOfWorkingHovers += section2Begin.getTimeInMillis() - section1End.getTimeInMillis();
+
+                    } else if (section2Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section2Begin.get(java.util.Calendar.MINUTE) != 0)
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - section1End.getTimeInMillis();
+
+                    }
+                } else
+                {
+                    if (taskEndTime.getTimeInMillis() > section2Begin.getTimeInMillis() && (section2Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section2Begin.get(java.util.Calendar.MINUTE) != 0))
+                    {
+                        outOfWorkingHovers += section2Begin.getTimeInMillis() - taskBeginTime.getTimeInMillis();
+
+                    } else if (section2Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section2Begin.get(java.util.Calendar.MINUTE) != 0)
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - taskBeginTime.getTimeInMillis();
+
+                    }
+                }
+            }
+
+            if (taskBeginTime.getTimeInMillis() < section3Begin.getTimeInMillis() && (section3Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section3Begin.get(java.util.Calendar.MINUTE) != 0) && taskEndTime.getTimeInMillis() > section2End.getTimeInMillis() && (section2End.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section2End.get(java.util.Calendar.MINUTE) != 0))
+            {
+                if (taskBeginTime.getTimeInMillis() < section2End.getTimeInMillis())
+                {
+                    if (taskEndTime.getTimeInMillis() > section3Begin.getTimeInMillis() && (section3Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section3Begin.get(java.util.Calendar.MINUTE) != 0))
+                    {
+                        outOfWorkingHovers += section3Begin.getTimeInMillis() - section2End.getTimeInMillis();
+                    } else if ((section3Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section3Begin.get(java.util.Calendar.MINUTE) != 0))
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - section2End.getTimeInMillis();
+                    }
+                } else
+                {
+                    if (taskEndTime.getTimeInMillis() > section3Begin.getTimeInMillis() && (section3Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section3Begin.get(java.util.Calendar.MINUTE) != 0))
+                    {
+                        outOfWorkingHovers += section3Begin.getTimeInMillis() - taskBeginTime.getTimeInMillis();
+                    } else if ((section3Begin.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section3Begin.get(java.util.Calendar.MINUTE) != 0))
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - taskBeginTime.getTimeInMillis();
+                    }
+                }
+            }
+
+            if ((section3End.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section3End.get(java.util.Calendar.MINUTE) != 0))
+            {
+                if (taskEndTime.getTimeInMillis() > section3End.getTimeInMillis())
+                {
+                    if (taskBeginTime.getTimeInMillis() < section3End.getTimeInMillis())
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - section3End.getTimeInMillis();
+                    } else
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - taskBeginTime.getTimeInMillis();
+                    }
+                }
+            } else if ((section2End.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section2End.get(java.util.Calendar.MINUTE) != 0))
+            {
+                if (taskEndTime.getTimeInMillis() > section2End.getTimeInMillis())
+                {
+                    if (taskBeginTime.getTimeInMillis() < section2End.getTimeInMillis())
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - section2End.getTimeInMillis();
+                    } else
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - taskBeginTime.getTimeInMillis();
+                    }
+                }
+            } else if ((section1End.get(java.util.Calendar.HOUR_OF_DAY) != 0 || section1End.get(java.util.Calendar.MINUTE) != 0))
+            {
+                if (taskEndTime.getTimeInMillis() > section1End.getTimeInMillis())
+                {
+                    if (taskBeginTime.getTimeInMillis() < section1End.getTimeInMillis())
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - section1End.getTimeInMillis();
+                    } else
+                    {
+                        outOfWorkingHovers += taskEndTime.getTimeInMillis() - taskBeginTime.getTimeInMillis();
+                    }
+                }
+            } else
+            {
+                outOfWorkingHovers += taskEndTime.getTimeInMillis() - taskBeginTime.getTimeInMillis();
+            }
+
+            long millis = outOfWorkingHovers;
+            long msLong = millis % 1000;
+            long ts = millis / 1000;
+            long sLong = ts % 60;
+            long tm = ts / 60;
+            long mLong = tm % 60;
+            long hLong = tm / 60;
+            String timeString = String.valueOf(hLong) + "-" + String.valueOf(mLong) + "-" + String.valueOf(sLong) + "-" + String.valueOf(msLong);
+
+//            taskBeginTime.set(java.util.Calendar.DATE,taskBeginTime.get(java.util.Calendar.DATE)+1);
+//            taskEndTime.set(java.util.Calendar.DATE,taskEndTime.get(java.util.Calendar.DATE)+1);
+            taskBeginTime.setTimeInMillis(taskEndTime.getTimeInMillis());
+            taskEndTime.set(java.util.Calendar.DATE, taskEndTime.get(java.util.Calendar.DATE) + 1);
+            if (taskEndTime.getTimeInMillis() > toDate.getTimeInMillis())
+            {
+                taskEndTime.setTimeInMillis(toDate.getTimeInMillis());
+            }
+        }
+        return outOfWorkingHovers;
+    }
+
+    public boolean chechHoliday(Connection con, java.util.Date day)
+    {
+        boolean holiday = false;
+        PreparedStatement statement = null;
+        ResultSet rs = null;
+        try
+        {
+
+            statement = con.prepareStatement("select * from gaorganizationholidays where holidaydate=cast('" + day + "' as date)");
+            rs = statement.executeQuery();
+            while (rs.next())
+            {
+                holiday = true;
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        } finally
+        {
+            try
+            {
+                rs.close();
+                statement.close();
+            } catch (SQLException ex)
+            {
+                Logger.getLogger(CalenderOperations.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        //System.out.println("day "+day+" is a holiday "+holiday);
+        return holiday;
+    }
+
+    public Vector getWeekTimings(String week)
+    {
+        if (week.equalsIgnoreCase("holiday"))
+        {
+            Vector timings = new Vector();
+            timings.add(new Timing("00:00", "00:00"));
+            timings.add(new Timing("00:00", "00:00"));
+            timings.add(new Timing("00:00", "00:00"));
+            return timings;
+        } else
+        {
+            return (Vector) hTable.get(week);
+        }
+    }
+
+    public String getWeek(int w)
+    {
+        String week = "";
+        switch (w)
+        {
+            case 1:
+                week = "SUN";
+                break;
+            case 2:
+                week = "MON";
+                break;
+            case 3:
+                week = "TUE";
+                break;
+            case 4:
+                week = "WED";
+                break;
+            case 5:
+                week = "THU";
+                break;
+            case 6:
+                week = "FRI";
+                break;
+            case 7:
+                week = "SAT";
+                break;
+        }
+        return week;
+    }
+
+    class Timing
+    {
+
+        Time fromTime;
+        Time toTime;
+
+        public Timing(String from, String to)
+        {
+            fromTime = new Time(from);
+            toTime = new Time(to);
+        }
+    }
+
+    class Time
+    {
+
+        String hh;
+        String mm;
+
+        public Time(String time)
+        {
+            hh = new String(time.substring(0, time.indexOf(":")));
+            mm = new String(time.substring(time.indexOf(":") + 1, time.length()));
+        }
+
+        public String getHovers()
+        {
+            return hh;
+        }
+
+        public String getMinits()
+        {
+            return mm;
+        }
+    }
+}

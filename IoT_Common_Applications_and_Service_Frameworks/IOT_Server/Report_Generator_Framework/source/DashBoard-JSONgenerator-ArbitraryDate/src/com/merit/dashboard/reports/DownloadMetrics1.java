@@ -1,0 +1,156 @@
+/***********************************************************************
+ Software Developed by
+ Merit Systems Pvt. Ltd.,
+No. 42/1, 55/c, Nandi Mansion, 40th Cross, Jayanagar 8th Block
+Bangalore - 560 070, India
+ Work Created for Merit Systems Private Limited
+All rights reserved
+
+THIS WORK IS SUBJECT TO INDIAN AND INTERNATIONAL COPYRIGHT LAWS AND TREATIES
+ NO PART OF THIS WORK MAY BE USED, PRACTICED, PERFORMED, COPIED,
+ DISTRIBUTED, REVISED, MODIFIED, TRANSLATED, ABRIDGED, CONDENSED,
+ EXPANDED, COLLECTED, COMPILED, LINKED, RECAST, TRANSFORMED OR ADAPTED
+WITHOUT THE PRIOR WRITTEN CONSENT
+ ANY USE OR EXPLOITATION OF THIS WORK WITHOUT AUTHORIZATION COULD SUBJECT
+ THE PERPETRATOR TO CRIMINAL AND CIVIL LIABILITY.
+***********************************************************************/
+package com.merit.dashboard.reports;
+
+import com.lowagie.text.PageSize;
+import java.io.*;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.lowagie.text.pdf.PdfWriter;
+import javax.servlet.ServletException;
+
+/**
+ *
+ * @author satya
+ */
+public class DownloadMetrics1 extends HttpServlet {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	private static String home = System.getProperty("user.home");
+    private static String sz_fileseparator = System.getProperty("file.separator");
+    //private static String xlspath = home + sz_fileseparator + "Masterconfig" + sz_fileseparator + "xls" + sz_fileseparator;
+    private static String pdfpath = home + sz_fileseparator + "Masterconfig" + sz_fileseparator + "pdf" + sz_fileseparator;
+    private static String pdfDirectoryPath = home + sz_fileseparator + "Masterconfig" + sz_fileseparator + "pdf";
+    static String sz_File_Name = "";
+	static String sz_sheet_Name = "";
+
+	protected void processRequest(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException {
+		response.setContentType("text/html;charset=UTF-8");
+		ServletOutputStream stream = null;
+                File f;//modified
+		try {
+			//String sz_metrics_xml = "";
+			String sz_type = request.getParameter("type");
+			String sz_combo_selected = request.getParameter("comboboxselected");
+			if (!(sz_combo_selected.contains("Alerts"))) {
+				sz_File_Name = "Metrics_Summary";
+			} else {
+				sz_File_Name = "Alerts_Summary";
+			}
+
+			System.out.println("ComboBoxSelected===" + sz_combo_selected);
+
+			if (sz_type.equalsIgnoreCase("pdf")) {
+                                f = new File(pdfDirectoryPath);//modified
+				 f.mkdirs();//modified
+				FileOutputStream fout= new FileOutputStream(pdfpath+ sz_File_Name+".pdf");
+				com.lowagie.text.Document document = new com.lowagie.text.Document(PageSize.A4.rotate(), 0, 0, 20, 0);
+				PdfWriter.getInstance(document, fout);
+				document.open();
+				document.add(DAOHelper.getPdfObject());
+				document.close();
+				System.out.println("**Started Processing Pdf**");
+				BufferedInputStream buf = null;
+				stream = response.getOutputStream();
+				File pdf = null;
+				pdf = new File(pdfpath + sz_File_Name + ".pdf");
+				response.setContentType("application/octet-stream");
+				response.addHeader("Content-Disposition",
+						"attachment; filename=" + sz_File_Name + ".pdf");
+				response.setContentLength((int) pdf.length());
+				FileInputStream input = new FileInputStream(pdf);
+				buf = new BufferedInputStream(input);
+				int readBytes = 0;
+
+				while ((readBytes = buf.read()) != -1) {
+					stream.write(readBytes);
+				}
+				document=null;
+				pdf=null;
+				input=null;
+				buf=null;
+				fout=null;
+			} else if (sz_type.equalsIgnoreCase("xls")) {
+
+				System.out.println("**Started Processing Xls**");
+				stream = response.getOutputStream();
+				response.setContentType("application/octet-stream");
+				response.addHeader("Content-Disposition",
+						"attachment; filename=" + sz_File_Name + ".xls");
+				stream.write(DAOHelper.getXlsObject().getBytes());
+				System.out.println("DownLoad SucessFull");
+			}
+                        f = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+
+		}
+	}
+
+	/**
+	 * Handles the HTTP <code>GET</code> method.
+	 *
+	 * @param request
+	 *            servlet request
+	 * @param response
+	 *            servlet response
+	 * @throws ServletException
+	 *             if a servlet-specific error occurs
+	 * @throws IOException
+	 *             if an I/O error occurs
+	 */
+	@Override
+	protected void doGet(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+	/**
+	 * Handles the HTTP <code>POST</code> method.
+	 *
+	 * @param request
+	 *            servlet request
+	 * @param response
+	 *            servlet response
+	 * @throws ServletException
+	 *             if a servlet-specific error occurs
+	 * @throws IOException
+	 *             if an I/O error occurs
+	 */
+	@Override
+	protected void doPost(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+	/**
+	 * Returns a short description of the servlet.
+	 *
+	 * @return a String containing servlet description
+	 */
+	@Override
+	public String getServletInfo() {
+		return "Short description";
+	}// </editor-fold>
+}

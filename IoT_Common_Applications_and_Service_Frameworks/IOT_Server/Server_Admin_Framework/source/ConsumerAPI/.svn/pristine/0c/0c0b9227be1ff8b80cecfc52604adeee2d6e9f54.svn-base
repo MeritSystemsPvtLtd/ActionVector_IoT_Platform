@@ -1,0 +1,187 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package AV_Action;
+
+import java.util.logging.Level;
+import java.sql.*;
+import Model.*;
+import controller.LogWriter;
+import java.util.ArrayList;
+import org.apache.log4j.Logger;
+
+/**
+ *
+ * @author gopal
+ */
+public class AV_GetTaskStatusAction extends AV_Model {
+
+    static Logger log = Logger.getLogger(AV_GetTaskStatusAction.class);
+    static ArrayList<String> ostatuses = new ArrayList<String>();
+
+    public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+        Logger esclog = Logger.getLogger(LogWriter.class.getName());
+
+
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "task-status";
+        String szrespStr = null;
+        StringBuffer result = null;
+        String taskkind = null;
+        String Username = null;
+        String taskstatus = null;
+        boolean paramcheck = false;
+        Connection con = null;
+        Statement stat = null;
+        ResultSet rs = null;
+        boolean adminlevel = false;
+        String szfilter=null;
+        boolean bfromFilter = false;
+        try {
+
+            taskkind = request.getParameter("tasktype");
+            taskstatus = request.getParameter("taskstatus");
+            Username = request.getParameter("username");
+            szfilter = request.getParameter("filter");
+            bfromFilter=szfilter.equalsIgnoreCase("true")?true:false;
+         
+
+
+            log.info("------------I m in START of calling statuschangdetails service from Client----------------");
+            System.out.println("------------I m in START of calling statuschangdetails service from Client----------------");
+
+            if ((!taskkind.equalsIgnoreCase("") && taskkind != null) && (!Username.equalsIgnoreCase("") && Username != null)) {
+                paramcheck = true;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            AV_Constants.opStatus = AV_Constants.INVALID_INPUTS;
+        }
+        if (paramcheck) {
+
+            try {
+                con = DatabaseConnection.getAVSAConnection(request);
+                stat = con.createStatement();
+                if (con != null) {
+                    try {
+
+                        rs = stat.executeQuery("select security_level from gaoperator where lower(user_id)=lower('" + Username + "')");
+                        while (rs.next()) {
+                            String security_level = rs.getString("security_level");
+                            if (security_level.equalsIgnoreCase("Admin")) {
+                                adminlevel = true;
+                            }
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        log.debug("EXCEPTION WHILE CHECKING USER STATUS IN STATUS.DO");
+                    }
+                    /* IF->Here we will query the database to get
+                     * all possible statuses for a particular tasktype 
+                     * so that we can populate the filter in the GUI
+                     * 
+                     * Else->It will query the db based on the tasktype and the
+                     * user to populate all possbile statuses for a particular task in
+                     * change status
+                     * Added on 31-07-2013 
+                     */
+
+                    if (bfromFilter) {
+
+                        if (taskkind.equalsIgnoreCase("All")) {
+                            log.info("select status from gastatus where task_type='" + taskkind + "'");
+                            rs = stat.executeQuery("select distinct(status) from gastatus");
+                            while (rs.next()) {
+
+                                String validstatus = rs.getString("status");
+                                log.info(validstatus);
+                                ostatuses.add(validstatus);
+                            }
+
+                        } else {
+                            log.info("select status from gastatus where task_type='" + taskkind + "'");
+                            rs = stat.executeQuery("select status from gastatus where task_type='" + taskkind + "'");
+                            while (rs.next()) {
+
+                                String validstatus = rs.getString("status");
+                                log.info(validstatus);
+                                ostatuses.add(validstatus);
+                            }
+                        }
+                    } else {
+                        if (adminlevel == false) {
+                            System.out.println("getting users valid status");
+                            log.info("select validstatus from gastatusstatemachine where statusid =(select statusid from gastatus where task_type='" + taskkind + "' and status='" + taskstatus + "') ");
+                            rs = stat.executeQuery("select validstatus from gastatusstatemachine where statusid =(select statusid from gastatus where task_type='" + taskkind + "' and status='" + taskstatus + "') ");
+                            String validstatus = null;
+                            while (rs.next()) {
+                                validstatus = rs.getString("validstatus");
+                                System.out.println(validstatus);
+                           }
+                            String[] validstatuslist = validstatus.split(",");
+                            for (int i = 0; i < validstatuslist.length; i++) {
+                                String validone = validstatuslist[i];
+                                ostatuses.add(validone);
+                            }
+                        } else {
+                            System.out.println("getting Admin valid status");
+                            log.info("select status from gastatus where task_type='" + taskkind + "'");
+                            rs = stat.executeQuery("select status from gastatus where task_type='" + taskkind + "'");
+                            while (rs.next()) {
+                                String validstatus = rs.getString("status");
+                                ostatuses.add(validstatus);
+                            }
+                        }
+                    }
+                    result = new StringBuffer("<statuses>");
+                    if (!ostatuses.isEmpty()) {
+                        for (String s : ostatuses) {
+                            result.append("<state>");
+                            result.append(s);
+                            result.append("</state>");
+                        }
+                    }
+                    result.append("</statuses>");
+                    ostatuses.clear();
+                    AV_Constants.opStatus = AV_Constants.SUCCESS;
+                }//if
+                else {
+                    AV_Constants.opStatus = AV_Constants.DBERROR;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.debug("EXCEPTION WHILE GETTING VALID STATUS");
+            } finally {
+                try {
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    con.close();
+                    stat.close();
+                } catch (SQLException ex) {
+                    java.util.logging.Logger.getLogger(AV_GetTaskStatusAction.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } else {
+            AV_Constants.opStatus = AV_Constants.INVALID_INPUTS;
+        }
+        try {
+            szrespStr = AV_OutputFormat.formatOutPut(AV_Constants.opStatus, result, szopration, sc);
+            response.getWriter().write(szrespStr);
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogWriter.writeDebug("exception while writing output");
+        } finally {
+            try {
+                szrespStr = null;
+                szopration = null;
+                result = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}

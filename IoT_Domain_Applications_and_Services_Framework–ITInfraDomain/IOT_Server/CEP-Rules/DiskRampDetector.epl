@@ -1,0 +1,48 @@
+module com.prokosha.cep.diskramp.v1;
+
+create variable int DISK_RAMP_AVERAGING_TIME=5;//minutes
+create variable int DISK_RAMP_DETECTION_TIME=5;//minutes
+create variable int DISK_RAMP_TOLERANCE_PERC=10;//percentage
+create variable string DISK_ACRO_RAMP="[DISK_RAMP]";
+
+//@Name("com.prokosha.cep.diskramp.istream.1")
+insert into DiskUsage
+        select (((DiskTotal-DiskFree)/DiskTotal)*100) as DiskUsage,HostName,HostAddress,CustomerID,resourceType,
+	resourceId from ServerStateStream where ((DiskTotal>=0) and (DiskFree>=0) and (DiskTotal>0));
+
+//@Name("com.prokosha.cep.diskramp.istream.2")
+insert into DiskAverage
+        select HostName, HostAddress,avg(DiskUsage) as AvgDiskUsage,CustomerID,resourceType,resourceId
+        from DiskUsage.win:time(DISK_RAMP_AVERAGING_TIME minutes)
+        group by HostName;
+
+//@Name("com.prokosha.cep.diskramp.istream.3")
+insert into DiskDiffStream
+	select last(AvgDiskUsage) as currDiskAvg,last(HostName) as HostName,last(HostAddress) as HostAddress,
+	last(CustomerID) as CustomerID,last(resourceType) as resourceType,
+	last(resourceId) as resourceId,cast(last(AvgDiskUsage,1),float) as prevDiskAvg
+	from DiskAverage.win:time(DISK_RAMP_AVERAGING_TIME minutes)
+        group by HostName;
+
+//@Name("com.prokosha.cep.diskramp.istream.4")
+insert into DiskPSTFlagStream
+	select case when ((currDiskAvg-prevDiskAvg) >= (DISK_RAMP_TOLERANCE_PERC*prevDiskAvg/100)) then 1 else 0 end as pstflag,
+	currDiskAvg,prevDiskAvg,HostName,HostAddress,CustomerID,resourceType,resourceId from DiskDiffStream;
+
+//@Name("com.prokosha.cep.diskramp.istream.5")
+insert into DiskPSTRampStream
+	select min(pstflag) as minPstFlag,currDiskAvg,prevDiskAvg,HostName,HostAddress,CustomerID,resourceType,
+	resourceId from DiskPSTFlagStream.win:time(DISK_RAMP_DETECTION_TIME minutes)
+        group by HostName;
+
+@Name("com.prokosha.cep.diskramp.dispatch.6")
+select "Server" as EventType,
+        (("ALERT - Disk Usage has been increasing continously in the past ").concat(cast(DISK_RAMP_DETECTION_TIME,String)).concat(" minutes").concat(DISK_ACRO_RAMP)) as EventDesc,
+        ("Disk Usage has been increasing continously in the past ").concat(cast(DISK_RAMP_DETECTION_TIME,String)).concat(" minutes") as EventSymptoms,
+        HostName, HostAddress,CustomerID,
+        resourceType,resourceId,currDiskAvg as CurrentDiskAvg,prevDiskAvg as PreviousDiskAvg
+        from DiskPSTRampStream
+        where (minPstFlag >0)
+        group by HostName
+        output first every 30 minutes;
+

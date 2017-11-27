@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FroniusRequests>
+        <Request request="GetInverterRealTimeData" scope="Device" deviceIDs="1" dataCollection="PumpInverterData" froEvent="PumpInverterEvent"/>
+</FroniusRequests>
+

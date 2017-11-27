@@ -1,0 +1,227 @@
+package com.prokosha.sadeskCeP;
+
+import creatingvalidtask.Attribute;
+
+import gettaskdetails.GetTaskDetailsRequest;
+import gettaskdetails.GetTaskDetailsResponse;
+import gettaskdetails.GetTaskDetailsStub;
+
+import loginservice.ChkUserRequest;
+import loginservice.ChkUserResponse;
+import loginservice.GetGroupsRequest;
+import loginservice.LoginServiceStub;
+import loginservice.GroupInput;
+
+import userlogout.LogoutUserRequest;
+import userlogout.LogoutUserResponse;
+import userlogout.UserLogoutStub;
+
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+
+//import java.util.logging.Logger;
+import org.apache.log4j.Logger;
+
+public class TaskComparator extends Comparator {
+
+    public static Logger log = Logger.getLogger(TaskComparator.class.getName());
+    private static TaskComparator comparator = null;
+
+    private TaskComparator() {
+        super();
+    }
+
+    public static TaskComparator getComparatorInstance() {
+        if (comparator == null) {
+            comparator = new TaskComparator();
+        }
+        return comparator;
+    }
+
+    public boolean compare(Object originalTaskDetails) {
+        log.info("Inside compare() of TaskComparator.");
+        TaskDetails oriTaskDetails = (TaskDetails) originalTaskDetails;
+        TaskDetails taskDetails = getTaskDetails(oriTaskDetails);
+
+        log.info("Original Task Details A1: " + oriTaskDetails.getA1().getValue());
+        log.info("Get Task Details A1: " + taskDetails.getA1().getValue());
+        log.info("For A1: " + taskDetails.getA1().getValue().contains(oriTaskDetails.getA1().getValue()));
+        /*
+        log.info("Original Task Details A2: " + oriTaskDetails.getA2().getValue());
+        log.info("Get Task Details A2: " + taskDetails.getA2().getValue());
+        log.info("For A2: " + taskDetails.getA2().getValue().contains(oriTaskDetails.getA2().getValue()));
+
+        log.info("Original Task Details A3: " + oriTaskDetails.getA3().getValue());
+        log.info("Get Task Details A3: " + taskDetails.getA3().getValue());
+        log.info("For A3: " + taskDetails.getA3().getValue().contains(oriTaskDetails.getA3().getValue()));
+        */
+      log.info("Original Task Details A4: " + oriTaskDetails.getA4().getValue());
+        log.info("Get Task Details A4: " + taskDetails.getA4().getValue());
+        log.info("For A4: " + taskDetails.getA4().getValue().contains(oriTaskDetails.getA4().getValue()));
+
+        log.info("Original Task Details A5: " + oriTaskDetails.getA5().getValue());
+        log.info("Get Task Details A5: " + taskDetails.getA5().getValue());
+        log.info("For A5: " + taskDetails.getA5().getValue().contains(oriTaskDetails.getA5().getValue()));
+        
+        log.info("Original Task Details A6: " + oriTaskDetails.getA6().getValue());
+        log.info("Get Task Details A6: " + taskDetails.getA6().getValue());
+        log.info("For A6: " + taskDetails.getA6().getValue().contains(oriTaskDetails.getA6().getValue()));
+
+        log.info("Original Task Details A7: " + oriTaskDetails.getA7().getValue());
+        log.info("Get Task Details A7: " + taskDetails.getA7().getValue());
+        log.info("For A7: " + taskDetails.getA7().getValue().contains(oriTaskDetails.getA7().getValue()));
+
+        log.info("Original Task Details A8: " + oriTaskDetails.getA8().getValue());
+        log.info("Get Task Details A8: " + taskDetails.getA8().getValue());
+        log.info("For A8: " + taskDetails.getA8().getValue().contains(oriTaskDetails.getA8().getValue()));
+        
+
+        if (taskDetails.getA1().getValue().contains(oriTaskDetails.getA1().getValue())
+                //&& taskDetails.getA2().getValue().contains(oriTaskDetails.getA2().getValue())
+                //&& taskDetails.getA3().getValue().contains(oriTaskDetails.getA3().getValue())
+                && taskDetails.getA4().getValue().contains(oriTaskDetails.getA4().getValue())
+                && taskDetails.getA5().getValue().contains(oriTaskDetails.getA5().getValue())
+                && taskDetails.getA6().getValue().contains(oriTaskDetails.getA6().getValue())
+                && taskDetails.getA7().getValue().contains(oriTaskDetails.getA7().getValue())
+                && taskDetails.getA8().getValue().contains(oriTaskDetails.getA8().getValue())
+              ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public String callgetTaskDetails(String sessionId, String taskId, String argValue)
+    {
+        String attributevalue = null;
+        try
+        {
+            GetTaskDetailsRequest detailsreq = new GetTaskDetailsRequest();
+            GetTaskDetailsResponse detailsres = new GetTaskDetailsResponse();
+            String targetEndpoint = "http://192.168.1.61:8080/proChara/services/GetTaskDetails";
+            GetTaskDetailsStub detailsstub = new GetTaskDetailsStub(targetEndpoint);
+
+            detailsreq.setSzSessionId(sessionId);
+            detailsreq.setSzTaskID(taskId);
+            detailsreq.setSzUser("admin");
+            detailsreq.setSzField(argValue);
+            detailsres = detailsstub.getFieldValue(detailsreq);
+            attributevalue = (String) detailsres.getMessage();
+            log.info("The attribute value is: " + attributevalue);
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return attributevalue;
+
+    }
+
+    public TaskDetails getTaskDetails(TaskDetails taskDetails) {
+        String szUserName = "admin";
+        String szPassword = "admin";
+        String szTaskId=null;
+        String szSession=null;
+        String szGroups[]=null;
+        String targetEndpoint=null;
+        String output=null;
+        URLConnection conn=null;;
+        URL url=null;
+
+        String attValue1 = null;
+        //String attValue2 = null;
+        //String attValue3 = null;
+        String attValue4 = null;
+        String attValue5 = null;
+        String attValue6 = null;
+        String attValue7 = null;
+        String attValue8 = null;
+        
+        try{     
+            szTaskId = taskDetails.getSzTaskId();
+            //for login service call
+            targetEndpoint = "http://192.168.1.61:8080/proChara/services/LoginService";
+            LoginServiceStub loginStub = new LoginServiceStub(targetEndpoint);
+            ChkUserRequest input = new ChkUserRequest();
+            input.setSzUserName(szUserName);
+            input.setSzUserAddr(szPassword);
+            ChkUserResponse resp = loginStub.chkUser(input);
+            szSession = resp.getSzSession();
+            output = resp.getSzValidate();
+
+            GetGroupsRequest grpReq = new GetGroupsRequest();
+            grpReq.setSzSessionId(szSession);
+            GroupInput respOut = loginStub.getGroups(grpReq);
+            szGroups = respOut.getSzGroups();
+
+            attValue1 = callgetTaskDetails(szSession, szTaskId, "Reported By");
+            //attValue2 = callgetTaskDetails(szSession, szTaskId, "Description");
+            //attValue3 = callgetTaskDetails(szSession, szTaskId, "CI ID");
+            attValue4 = callgetTaskDetails(szSession, szTaskId, "Service/IT resource ID");
+            attValue5 = callgetTaskDetails(szSession, szTaskId, "HostGroup Name");
+            attValue6 = callgetTaskDetails(szSession, szTaskId, "HostName");
+            attValue7 = callgetTaskDetails(szSession, szTaskId, "Sub Service");
+            attValue8 = callgetTaskDetails(szSession, szTaskId, "Category");
+
+
+            targetEndpoint = "http://192.168.1.61:8080/proChara/services/UserLogout";
+            UserLogoutStub logoutStub = new UserLogoutStub(targetEndpoint);
+            LogoutUserRequest inputLogout = new LogoutUserRequest();
+            inputLogout.setSzUserName(szUserName);
+            inputLogout.setSzSession(szSession);
+
+            LogoutUserResponse respLogout = logoutStub.logoutUser(inputLogout);
+            output = respLogout.getSzLogout();
+            log.info(szUserName + " User bearing Session ID is: " + szSession);
+            //session.removeAttribute(szSession);
+            //session.invalidate();
+            log.info("LOGGED OUT SUCCESSFULLY from TaskComparator.");
+
+
+        }catch (Exception e) {
+            log.fatal("ERROR in Logout from TaskComparator.");
+            e.printStackTrace();
+        }
+        
+        
+        
+        Attribute a1 = new Attribute();
+        a1.setValue(URLEncoder.encode(attValue1));
+        /*
+        Attribute a2 = new Attribute();
+        a2.setValue(URLEncoder.encode(attValue2));
+        
+        Attribute a3 = new Attribute();
+        a3.setValue(URLEncoder.encode(attValue3));
+        */
+       Attribute a4 = new Attribute();
+        a4.setValue(URLEncoder.encode(attValue4));
+        
+        Attribute a5 = new Attribute();
+        a5.setValue(URLEncoder.encode(attValue5));
+        
+        Attribute a6 = new Attribute();
+        a6.setValue(URLEncoder.encode(attValue6));
+        
+        Attribute a7 = new Attribute();
+        a7.setValue(URLEncoder.encode(attValue7));
+
+        Attribute a8 = new Attribute();
+        a8.setValue(URLEncoder.encode(attValue8));
+
+        TaskDetails td = new TaskDetails();
+
+        td.setA1(a1);
+        //td.setA2(a2);
+        //td.setA3(a3);
+        td.setA4(a4);
+        td.setA5(a5);
+        td.setA6(a6);
+        td.setA7(a7);
+        td.setA8(a8);
+
+
+        return td;
+
+    }
+}

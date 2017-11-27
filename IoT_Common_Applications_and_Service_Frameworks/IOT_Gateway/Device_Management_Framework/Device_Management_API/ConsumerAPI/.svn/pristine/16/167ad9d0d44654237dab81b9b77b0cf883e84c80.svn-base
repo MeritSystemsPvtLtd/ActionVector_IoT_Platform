@@ -1,0 +1,383 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Model;
+
+import dbmanager.*;
+import java.io.FileInputStream;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.sql.*;
+import java.util.HashMap;
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ *
+ * @author gopal Created on Apr 24, 2012, 5:58:11 PM
+ */
+public class DatabaseConnection {
+
+    public static Connection con = null;
+    public static boolean fflag = false;
+    public static boolean finit = false;
+    public static Properties properties = null;
+    public static String szDatabaseName = "";
+    public static String szDatabaseDriver = "";
+    public static String szDataSourceName = "";
+    public static String szDatabaseUser = "";
+    public static String szDatabasePassword = "";
+    public static String szDomainName = "";
+    public static String Driver = null;
+    public static String password = null;
+    public static String user = null;
+    public static String DataSourceName = null;
+    public static String DataSource = null;
+    public static String DataBaseName = null;
+    public static HashMap<String, InitDBDomain> AVSA_Domains = new HashMap();
+
+    public static Connection getDatabaseConnection(javax.servlet.http.HttpServletRequest request) {
+
+
+        try {
+            String FileName = null;
+            try {
+                String UserHome_dir = System.getProperty("user.home");
+                String Fileseperator = System.getProperty("file.separator");
+                String Servername = request.getServerName();
+                FileName = UserHome_dir + Fileseperator + "SA_Desk-" + Servername + ".properties";
+
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                System.out.println("PROPERTIES FILE NOT FOUND *****************");
+            }
+            Properties propsdAddressPath = new Properties();
+            propsdAddressPath.load(new FileInputStream(FileName));
+            DataBaseName = propsdAddressPath.getProperty("DataBaseName");
+            System.out.println("Database:::" + DataBaseName);
+            user = propsdAddressPath.getProperty("User");
+            password = propsdAddressPath.getProperty("Password");
+            Driver = propsdAddressPath.getProperty("Driver");
+            Class.forName(Driver);
+
+            con = DriverManager.getConnection(DataBaseName, user, password);
+            System.out.println("connected");
+
+        } catch (Exception ex) {
+            System.out.println("ERROR WHILE GETTING DATABASE CONNECTION");
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return con;
+
+    }
+
+    public static Connection createDatabaseConnection(javax.servlet.http.HttpServletRequest request, String database) {
+        try {
+            String FileName = null;
+            try {
+                String UserHome_dir = System.getProperty("user.home");
+                String Fileseperator = System.getProperty("file.separator");
+                String Servername = request.getServerName();
+                FileName = UserHome_dir + Fileseperator + "SA_Desk-" + Servername + ".properties";
+
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                System.out.println("PROPERTIES FILE NOT FOUND *****************");
+            }
+            Properties propsdAddressPath = new Properties();
+            propsdAddressPath.load(new FileInputStream(FileName));
+            DataSourceName = propsdAddressPath.getProperty("DataSourceName");
+            System.out.println("Database:::" + DataSourceName + database);
+            user = propsdAddressPath.getProperty("User");
+            password = propsdAddressPath.getProperty("Password");
+            Driver = propsdAddressPath.getProperty("Driver");
+            Class.forName(Driver);
+            DataSource = DataSourceName + database;
+            con = DriverManager.getConnection(DataSource, user, password);
+            System.out.println("connected");
+
+        } catch (Exception ex) {
+            System.out.println("ERROR WHILE GETTING DATABASE CONNECTION");
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return con;
+
+    }
+
+    public static Connection getDatabaseConnection(HttpServletRequest request, String dbname) {
+
+
+        try {
+
+            if (properties == null) {
+                properties = initialize(request);
+
+            }
+            DataSourceName = properties.getProperty("DataSourceName");
+            System.out.println("Database:::" + DataSourceName + dbname);
+            user = properties.getProperty("User");
+            password = properties.getProperty("Password");
+            Driver = properties.getProperty("Driver");
+            Class.forName(Driver);
+            DataSource = DataSourceName + dbname;
+            //System.out.println("DataSource Name::" + DataSource);
+            con = DriverManager.getConnection(DataSource, user, password);
+            System.out.println("connected");
+
+        } catch (Exception ex) {
+
+            System.out.println("ERROR WHILE GETTING DATABASE CONNECTION");
+            ex.printStackTrace();
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return con;
+    }
+
+    public static Connection getDbConnection(HttpServletRequest request, String dbname) {
+
+
+
+        try {
+
+            if (properties == null) {
+                properties = initialize(request);
+
+            }
+            // propsdAddressPath.load(new FileInputStream(FileName));
+            System.out.println("Database name:" + dbname);
+            if (!dbname.equalsIgnoreCase("") && !dbname.equalsIgnoreCase("null")) {
+
+                DataSourceName = properties.getProperty("DataSourceName");
+                DataSource = DataSourceName + dbname;
+                System.out.println("DataSource-if::" + DataSource);
+            } else {
+                DataSource = properties.getProperty("DataBaseName");
+                System.out.println("DataSource-else::" + DataSource);
+            }
+            System.out.println("Database:::" + DataSourceName + dbname);
+            user = properties.getProperty("User");
+            password = properties.getProperty("Password");
+            Driver = properties.getProperty("Driver");
+            Class.forName(Driver);
+
+            con = DriverManager.getConnection(DataSource, user, password);
+            System.out.println("connected");
+
+        } catch (Exception ex) {
+            System.out.println("ERROR WHILE GETTING DATABASE CONNECTION");
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return con;
+    }
+
+    public static Connection getRefDatabaseConnection(javax.servlet.http.HttpServletRequest request) {
+        try {
+            //String FileName = null;
+
+            if (properties == null) {
+                properties = initialize(request);
+
+            }
+            //propsdAddressPath.load(new FileInputStream(FileName));
+            DataBaseName = properties.getProperty("DataBaseName");
+            System.out.println("Database:::" + DataBaseName);
+            user = properties.getProperty("User");
+            password = properties.getProperty("Password");
+            Driver = properties.getProperty("Driver");
+            Class.forName(Driver);
+            con = DriverManager.getConnection(DataBaseName, user, password);
+            System.out.println("connected");
+
+        } catch (Exception ex) {
+            System.out.println("ERROR WHILE GETTING DATABASE CONNECTION");
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return con;
+
+    }
+
+    public static Connection getGuiDatabaseConnection(javax.servlet.http.HttpServletRequest request) {
+
+
+
+        try {
+            if (properties == null) {
+                properties = initialize(request);
+
+            }
+            //propsdAddressPath..load(new FileInputStream(FileName));
+            DataBaseName = properties.getProperty("RefDataBaseName");
+            System.out.println("Database:::" + DataBaseName);
+            user = properties.getProperty("User");
+            password = properties.getProperty("Password");
+            Driver = properties.getProperty("Driver");
+            Class.forName(Driver);
+            con = DriverManager.getConnection(DataBaseName, user, password);
+            System.out.println("connected");
+
+        } catch (Exception ex) {
+            System.out.println("ERROR WHILE GETTING DATABASE CONNECTION");
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return con;
+    }
+
+    public static Connection getAVSAConnection(javax.servlet.http.HttpServletRequest request) {
+
+        szDomainName = request.getServerName();
+        InitDBDomain szINITDomain = null;
+        boolean isDomainINIT = AVSA_Domains.containsKey(szDomainName);
+        try {
+            if (!isDomainINIT) {
+                System.out.println("initializing con pops");
+                Logger.getLogger(DatabaseConnection.class.getName()).log(Level.INFO, 
+                        "connection attributes not initialized for domain: " + szDomainName + " doing it...");
+                szINITDomain = new InitDBDomain();
+                szINITDomain.initialize(szDomainName);
+                AVSA_Domains.put(szDomainName, szINITDomain);
+                isDomainINIT = AVSA_Domains.containsKey(szDomainName);
+            }
+            if (isDomainINIT) {
+                Logger.getLogger(DatabaseConnection.class.getName()).log(Level.INFO,"connection attributes initialized for domain: " + szDomainName);
+                szINITDomain = AVSA_Domains.get(szDomainName);
+                szDatabaseName = szINITDomain.getSzDatabaseName();
+                //  System.out.println("Database name::"+szDatabaseName);
+                szDatabaseDriver = szINITDomain.getSzDatabaseDriver();
+                // System.out.println("Db Driver::"+szDatabaseDriver);
+                szDataSourceName = szINITDomain.getSzDataSourceName();
+                //  System.out.println("Data source Name::"+szDataSourceName);
+                szDatabaseUser = szINITDomain.getSzDatabaseUser();
+                // System.out.println("db user::"+szDatabaseUser);
+                szDatabasePassword = szINITDomain.getSzDatabasePassword();
+                fflag = true;
+            } else {
+                System.out.println("Fail to configure the database settings");
+            }
+            /*try {
+             if (!finit)
+             {
+             System.out.println("initializing con pops");
+             finit = InitDBDomain.initialize(szDomainName);
+             }
+             if (finit) {
+             szDatabaseName = InitDBDomain.getSzDatabaseName();
+             //  System.out.println("Database name::"+szDatabaseName);
+             szDatabaseDriver = InitDBDomain.getSzDatabaseDriver();
+             // System.out.println("Db Driver::"+szDatabaseDriver);
+             szDataSourceName = InitDBDomain.getSzDataSourceName();
+             //  System.out.println("Data source Name::"+szDataSourceName);
+             szDatabaseUser = InitDBDomain.getSzDatabaseUser();
+             // System.out.println("db user::"+szDatabaseUser);
+             szDatabasePassword = InitDBDomain.getSzDatabasePassword();
+             fflag = true;
+             } else {
+             System.out.println("Fail to configure the database settings");
+             }*/
+            //  System.out.println("Database Driver name::"+szDatabaseDriver);
+            Class.forName(szDatabaseDriver);
+            con = DriverManager.getConnection(szDataSourceName, szDatabaseUser, szDatabasePassword);
+            System.out.println("connected");
+        } catch (Exception ex) {
+            System.out.println("ERROR WHILE GETTING DATABASE CONNECTION");
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return con;
+    }
+
+    public static String GetPropertyattribute(javax.servlet.http.HttpServletRequest request, String Propertyname) {
+        String Attributevalue = null;
+
+
+        try {
+            if (properties == null) {
+                properties = initialize(request);
+
+            }
+            //propsdAddressPath.load(new FileInputStream(FileName));
+            Attributevalue = properties.getProperty(Propertyname);
+
+        } catch (Exception ex) {
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+
+
+        return Attributevalue;
+    }
+
+    public static String GetRefPropertyattribute(javax.servlet.http.HttpServletRequest request, String Propertyname) {
+        String Attributevalue = null;
+
+
+        try {
+            String FileName = null;
+            try {
+                String UserHome_dir = System.getProperty("user.home");
+                System.out.println("User Home:" + UserHome_dir);
+                String Fileseperator = System.getProperty("file.separator");
+                String Servername = request.getServerName();
+                FileName = UserHome_dir + Fileseperator + "SA_Desk-" + Servername + ".properties";
+
+
+            } catch (Exception ex) {
+                Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("PROPERTIES FILE NOT FOUND *****************");
+            }
+
+            Properties propsdAddressPath = new Properties();
+            propsdAddressPath.load(new FileInputStream(FileName));
+            Attributevalue = propsdAddressPath.getProperty(Propertyname);
+
+        } catch (Exception ex) {
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return Attributevalue;
+    }
+
+    public static Connection getDatabaseConnection(javax.servlet.http.HttpServletRequest request, String Driver, String DataBaseName, String user, String password) {
+
+        try {
+
+            Class.forName(Driver);
+
+            con = DriverManager.getConnection(DataBaseName, user, password);
+            System.out.println("connected");
+
+        } catch (Exception ex) {
+            System.out.println("ERROR WHILE GETTING DATABASE CONNECTION");
+            Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return con;
+    }
+
+    public static Properties initialize(javax.servlet.http.HttpServletRequest request) {
+
+        properties = new Properties();
+        try {
+            String FileName = null;
+            try {
+                String UserHome_dir = System.getProperty("user.home");
+                System.out.println("User Home:" + UserHome_dir);
+                String Fileseperator = System.getProperty("file.separator");
+                String Servername = request.getServerName();
+                FileName = UserHome_dir + Fileseperator + "SA_Desk-" + "localhost" + ".properties";
+
+
+            } catch (Exception ex) {
+                Logger.getLogger(DatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("PROPERTIES FILE NOT FOUND *****************");
+            }
+            Properties propsdAddressPath = new Properties();
+            propsdAddressPath.load(new FileInputStream(FileName));
+            properties.load(new FileInputStream(FileName));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return properties;
+    }
+}

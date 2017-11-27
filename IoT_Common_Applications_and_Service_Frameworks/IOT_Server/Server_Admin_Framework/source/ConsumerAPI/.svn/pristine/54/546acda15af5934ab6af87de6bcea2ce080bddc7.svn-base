@@ -1,0 +1,146 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package AV_Action;
+import java.util.logging.Level;
+import javax.servlet.http.HttpUtils.*;
+import java.sql.*;
+import Model.*;
+import controller.LogWriter;
+import java.util.ArrayList;
+import org.apache.log4j.Logger;
+/**
+ *
+ * @author gopal
+ */
+public class AV_AssignServlet extends AV_Model{
+     static Logger log = Logger.getLogger(AV_AssignServlet.class);
+public void performRequestAction(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, javax.servlet.ServletContext sc) {
+
+        response.setContentType("text/xml;charset=UTF-8");
+        String szopration = "getAssignee";
+        String szrespStr=null;
+        StringBuffer result = null;
+        Connection con = null;
+        String szGroup = null;
+        String szAssignType = null;
+        String szRoleName = null;
+        String taskkind = null;
+        boolean checkparam = false;
+        String szSessionid = "";
+        
+        GroupsAndRolesAndAssignees assignees = null;
+        ArrayList Assigneelist = null;
+        try
+        {
+            szGroup = request.getParameter("group");
+            szAssignType = request.getParameter("assigntype");
+            szRoleName = request.getParameter("role");
+            taskkind = request.getParameter("tasktype");
+            szSessionid = request.getParameter("szsessionid");
+            System.out.println(taskkind + szGroup + szAssignType + szRoleName);
+            if ((!szGroup.equalsIgnoreCase("") && szGroup != null) && (!szAssignType.equalsIgnoreCase("") && szAssignType != null) && (!szRoleName.equalsIgnoreCase("") && szRoleName != null))
+            {
+                checkparam = true;
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        if (checkparam)
+        {
+              try
+                {
+                    con = DatabaseConnection.getAVSAConnection(request);
+
+                    if (con != null)
+                    {
+                        assignees = new GroupsAndRolesAndAssignees();
+                        Assigneelist = assignees.getAssignees(szAssignType, szRoleName, szGroup, con);
+
+                        int Assigneelistsize = Assigneelist.size();
+                        result = new StringBuffer("<assignees>");
+                        if (Assigneelistsize > 0)
+                        {
+                            for (int i = 0; i < Assigneelistsize; i++)
+                            {
+
+                                result.append("<assignee>");
+
+                                result.append(Assigneelist.get(i));
+
+                                result.append("</assignee>");
+
+                            }
+                        } else
+                        {
+                            result.append("no assignee found");
+                        }
+                        result.append("</assignees>");
+
+                        AV_Constants.opStatus=AV_Constants.SUCCESS;
+                       
+                    } else
+                    {
+                        AV_Constants.opStatus=AV_Constants.DBERROR;
+                        log.error("Unable to process database operation");
+
+                     
+                    }
+                } catch (Exception e)
+                {
+                    e.printStackTrace();
+                    AV_Constants.opStatus=AV_Constants.FAILURE;
+                    log.error("Unable to process request action");
+                } finally
+                {
+                    assignees = null;
+                    Assigneelist = null;
+                    try
+                    {
+
+                        if (con != null)
+                        {
+                            con.close();
+                        }
+
+                    } catch (SQLException ex)
+                    {
+                        java.util.logging.Logger.getLogger(AV_AssignServlet.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+         
+        } else
+        {
+            AV_Constants.opStatus=AV_Constants.INVALID_INPUTS;
+       
+        }
+
+        try
+        {
+            szrespStr=AV_OutputFormat.formatOutPut(AV_Constants.opStatus,result,szopration,sc);
+            response.getWriter().write(szrespStr);
+            log.info("response sent successfully");
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            LogWriter.writeDebug("exception while writing output");
+        } finally
+        {
+            try
+            {
+                szrespStr=null;
+                result = null;
+                szopration=null;
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+}
+}

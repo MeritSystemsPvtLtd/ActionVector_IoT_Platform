@@ -1,0 +1,10 @@
+SMTPServer=smtp.gmail.com
+SMTPPort=465
+SMTPUser=yedu1991@gmail.com
+SMTPPassword=konda256981
+xlsxFilesPath=/home/yedukondalu/Desktop/DashBoardReports/
+periods=Day
+bodyPart=This system generated SummarySheet please dont relay to this mail.
+subject=summaryReports
+receipentMailIdsPath=config/recepient_mapping.properties
+
